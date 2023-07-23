@@ -34,23 +34,23 @@ const PlayingScreen = () => {
     }, [])
 
 
-    useEffect(() => {
-        if (state !== GameStates.PLAYING) {
-            return
-        }
-        const interval = setInterval(() => {
-            endGame()
-        }, calculateInterval(score))
-        return () => clearInterval(interval)
-    }, [activeColor])
+    // useEffect(() => {
+    //     if (state !== GameStates.PLAYING) {
+    //         return
+    //     }
+    //     const interval = setInterval(() => {
+    //         endGame()
+    //     }, calculateInterval(score))
+    //     return () => clearInterval(interval)
+    // }, [activeColor])
 
 
     return (
         <DragProvider>
             <View className='flex-1 flex flex-col relative'>
-                <View className='m-auto left-0 right-0  absolute top-[48%]'>
+                <View className='m-auto left-0 right-0  absolute top-[5%]'>
                     <Typography className='text-3xl m-auto'>
-                        {score} {state}
+                        {score}
                     </Typography>
                 </View>
                 <View className='flex-1 items-center justify-center '>
