@@ -22,10 +22,17 @@ interface GameStateStore {
     changeColor: () => void,
     backToMenu: () => void,
     getHighscore: () => Promise<number>,
+    oldHighscore: number;
+    showStartScreen: () => void,
+
 }
 
 function setHighScore(score: number) {
     setStorageValue('highScore', String(score))
+}
+
+async function setOldHighScore(score: number) {
+    setStorageValue('oldHighScore', String(score))
 }
 
 async function getHighScore(): Promise<number> {
@@ -37,6 +44,8 @@ async function getHighScore(): Promise<number> {
 
 export const useGameStateStore = create<GameStateStore>((set, get) => ({
     score: 0,
+    oldHighscore: 0,
+
     getHighscore: async () => {
         const value = await getStorageValue<string>('highScore') || '0'
         return parseInt(value)
@@ -53,24 +62,20 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
 
         const state = get()
 
-        // Check if score is higher than high score
-        const parsedHighScore = await getHighScore() || 0  // use await here
+        const parsedHighScore = await getHighScore() || 0
         console.log('parsedHighScore', parsedHighScore)
-        if (parsedHighScore) {
-            if (parsedHighScore < state.score) {
-                setHighScore(state.score)
-                set(() => ({ state: GameStates.GAME_OVER, highScore: state.score }))
-            } else {
-                setHighScore(state.score)
 
-                set(() => ({ state: GameStates.GAME_OVER, highScore: parsedHighScore }))
-            }
-        } else {
-            setHighScore(state.score)
-            set(() => ({ state: GameStates.GAME_OVER, highScore: state.score }))
+        let newHighScore = parsedHighScore;
+        // If current score is higher than high score, update it
+        if (state.score > parsedHighScore) {
+            newHighScore = state.score;
+            await setOldHighScore(parsedHighScore);
+            setHighScore(newHighScore)
         }
 
-        set(() => ({ state: GameStates.GAME_OVER, highScore: state.score }))
+        set(() => ({ state: GameStates.GAME_OVER, highScore: newHighScore, oldHighscore: parsedHighScore }));
     },
+    showStartScreen: () => set(() => ({ state: GameStates.IDLE })),
+
     changeColor: () => set(() => ({ activeColor: getRandomEnumValue(RingColors) })),
 }))
