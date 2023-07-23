@@ -2,7 +2,7 @@ import { Dot, Ring, Screen, Typography } from '@components'
 import { GameStates, useDragStore, useGameStateStore } from '@stores'
 import { RingColors } from '@types'
 import { cn, useSound } from '@utils'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { View, Text, SafeAreaView } from 'react-native'
 import { DragProvider, useDragContext } from './drag-provider'
 
@@ -33,6 +33,38 @@ const PlayingScreen = () => {
         startGame()
     }, [])
 
+    const [column1Rings, setColumn1Rings] = useState([RingColors.BLUE, RingColors.PURPLE]);
+    const [column2Rings, setColumn2Rings] = useState([RingColors.GREEN, RingColors.RED]);
+    const [column1Dots, setColumn1Dots] = useState([RingColors.BLUE, RingColors.GREEN]);
+    const [column2Dots, setColumn2Dots] = useState([RingColors.PURPLE, RingColors.RED]);
+
+
+    const shuffleArray = (array) => {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    };
+
+    useEffect(() => {
+        startGame();
+
+        // Randomize the order of the rings and dots for each column
+        const shuffledColumn1Rings = [...column1Rings];
+        const shuffledColumn2Rings = [...column2Rings];
+        const shuffledColumn1Dots = [...column1Dots];
+        const shuffledColumn2Dots = [...column2Dots];
+        shuffleArray(shuffledColumn1Rings);
+        shuffleArray(shuffledColumn2Rings);
+        shuffleArray(shuffledColumn1Dots);
+        shuffleArray(shuffledColumn2Dots);
+        setColumn1Rings(shuffledColumn1Rings);
+        setColumn2Rings(shuffledColumn2Rings);
+        setColumn1Dots(shuffledColumn1Dots);
+        setColumn2Dots(shuffledColumn2Dots);
+    }, []);
+
+
 
     // useEffect(() => {
     //     if (state !== GameStates.PLAYING) {
@@ -57,19 +89,19 @@ const PlayingScreen = () => {
                     <View className='flex flex-row space-x-[80px]'>
                         <View className={cn(ringColumn)}>
                             <View className={cn(ringGridCell, 'justify-end items-end h-auto')}>
-                                <Ring color={RingColors.BLUE} />
+                                <Ring color={column1Rings[0]} />
                             </View>
                             <View className={cn(ringGridCell, 'justify-start items-end')}>
-                                <Ring color={RingColors.PURPLE} />
+                                <Ring color={column1Rings[1]} />
                             </View>
                         </View>
                         <View className={cn(ringColumn)}>
                             <View className={cn(ringColumn)}>
                                 <View className={cn(ringGridCell, 'justify-end items-start')}>
-                                    <Ring color={RingColors.GREEN} />
+                                    <Ring color={column2Rings[0]} />
                                 </View>
                                 <View className={cn(ringGridCell, 'justify-start items-start')}>
-                                    <Ring color={RingColors.RED} />
+                                    <Ring color={column2Rings[1]} />
                                 </View>
                             </View>
                         </View>
@@ -77,12 +109,12 @@ const PlayingScreen = () => {
 
                     <View className='absolute flex flex-row space-x-10  '>
                         <View className={cn(dotColumn, 'items-end')}>
-                            <Dot color={RingColors.BLUE} />
-                            <Dot color={RingColors.GREEN} />
+                            <Dot color={column1Dots[0]} />
+                            <Dot color={column1Dots[1]} />
                         </View>
                         <View className={cn(dotColumn)}>
-                            <Dot color={RingColors.PURPLE} />
-                            <Dot color={RingColors.RED} />
+                            <Dot color={column2Dots[0]} />
+                            <Dot color={column2Dots[1]} />
                         </View>
                     </View>
                 </View>
