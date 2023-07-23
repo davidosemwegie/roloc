@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "roloc",
+    "name": "Roloc Color Game",
     "slug": "roloc",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -18,10 +18,11 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.osazi.roloc",
       "googleServicesFile": "./GoogleService-Info.plist",
+      "icon": "./assets/icon.png",
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.osazi.roloc",
