@@ -2,20 +2,29 @@
     "compilerOptions": {
         "baseUrl": ".",
         "paths": {
-            "@components/*": [
-                "./src/components/*"
+            "@components": [
+                "./src/components/index"
             ],
             "@layouts": [
                 "./src/layouts/index"
             ],
-            "@stores/*": [
-                "./src/stores/*"
+            "@stores": [
+                "./src/stores/index"
             ],
-            "@utils/*": [
-                "./src/utils/*"
+            "@utils": [
+                "./src/utils/index"
             ],
             "@screens/*": [
                 "./src/screens/*"
+            ],
+            "@types": [
+                "./src/types/index"
+            ],
+            "@assets/*": [
+                "./src/assets/*"
+            ],
+            "local-storage": [
+                "./src/utils/local-storage"
             ],
         }
     },
