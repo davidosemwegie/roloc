@@ -25,7 +25,7 @@ export const useSound = (soundToPlay: Sounds, options?: SoundOptions) => {
 
 
     async function playSound() {
-        console.log('Loading Sound');
+        // console.log('Loading Sound');
         const { sound } = await Audio.Sound.createAsync(pathToSoundToPlay, {
             isLooping: options?.looping ?? false
         })
