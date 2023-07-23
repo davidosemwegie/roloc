@@ -1,13 +1,14 @@
 import { Dot, Ring, Screen, Typography } from '@components'
-import { useGameStateStore } from '@stores'
+import { useDragStore, useGameStateStore } from '@stores'
 import { RingColors } from '@types'
 import { cn, useSound } from '@utils'
 import React, { useEffect } from 'react'
 import { View, Text, SafeAreaView } from 'react-native'
-import { DragProvider } from './drag-provider'
+import { DragProvider, useDragContext } from './drag-provider'
 
 const PlayingScreen = () => {
     const { score } = useGameStateStore()
+    const { dragging, draggableItem } = useDragContext()
 
     const { playSound } = useSound('game-start', {
         looping: true
@@ -25,9 +26,12 @@ const PlayingScreen = () => {
         <DragProvider>
             <View className='flex-1 flex flex-col relative'>
                 <View className='m-auto left-0 right-0  absolute top-[48%]'>
-                    <Typography className='text-3xl m-auto'>
+                    {/* <Typography className='text-3xl m-auto'>
                         {score}
-                    </Typography>
+                    </Typography> */}
+                    {/* <Typography>
+                        {JSON.stringify({ dragging, draggableItem })}
+                    </Typography> */}
                 </View>
                 <View className='flex-1 items-center justify-center '>
                     <View className='flex flex-row space-x-[80px]'>

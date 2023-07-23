@@ -1,7 +1,7 @@
 
 import { useDragContext } from '@screens/playing/drag-provider'
 import { RingColors } from '@types'
-import React, { FC, useEffect, useRef } from 'react'
+import React, { FC, useEffect, useLayoutEffect, useRef } from 'react'
 import { View } from 'react-native'
 import { Typography } from './typography'
 
@@ -11,6 +11,7 @@ export interface RingProps {
 
 
 import { BoundingBox, } from '@utils'
+import { useDragStore } from '@stores'
 
 
 export const Ring: FC<RingProps> = ({
@@ -21,14 +22,17 @@ export const Ring: FC<RingProps> = ({
 
     const elementRef = useRef<View>(null);
 
+    const [boundingBox, setBoundingBox] = React.useState<BoundingBox | null>(null);
+
 
     const id = `ring-${color}`
 
     const COLOR = `${color}`
 
-    const { draggableItem } = useDragContext();
+    const { draggableItem, dragging, setDraggableItem } = useDragContext();
+    const { setRingPosition, ringPositions } = useDragStore();
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         elementRef.current.measure((x, y, width, height, pageX, pageY) => {
             const topLeft = { x: pageX, y: pageY };
             const topRight = { x: pageX + width, y: pageY };
@@ -42,31 +46,66 @@ export const Ring: FC<RingProps> = ({
                 bottomRight,
                 center,
             };
-            setPosition({ x: center.x, y: center.y });
+            // only set the position if it hasn't been set yet
+
+            if (ringPositions[id]) {
+                return;
+            }
+
+
+            // setRingPosition(`dot-${color}`, center.x, center.y);
+            // setPosition({ x: center.x, y: center.y });
+            setBoundingBox(boundingBox);
         });
 
-    }, [elementRef, position])
+    }, [elementRef, position, dragging])
 
 
     useEffect(() => {
-        if (draggableItem) {
-            const dotPosition = draggableItem.position;
+        if (draggableItem && !dragging && draggableItem.color === color) {
 
-            console.log('dotPosition', dotPosition)
+            console.log("Run checker", color)
 
-            // const ringRadius = 140 / 2;
+            const dotPosition = draggableItem.position
 
-            // // Calculate the distance between the centers of the dot and the ring
-            // const dist = Math.hypot(dotPosition.x - position.x, dotPosition.y - position.y);
+            // console.log('dotPosition', { dotPosition, boundingBox, dotColor: draggableItem.color, ringColor: color })
 
-            // // If the distance is less than or equal to the ring's radius minus the dot's radius, the dot is over the ring
-            // if (dist <= ringRadius) {
-            //     console.log('Dot has been dropped over the ring.');
-            // }
+            const bottomLimit = boundingBox?.bottomLeft.y;
+            const topLimit = boundingBox?.topLeft.y;
+            const leftLimit = boundingBox?.topLeft.x;
+            const rightLimit = boundingBox?.topRight.x;
 
-            // If center point of dot is within the ring, then it's a match
+
+
+            const isWithinX = dotPosition?.x >= leftLimit && dotPosition?.x <= rightLimit;
+            const isWithinY = dotPosition?.y >= topLimit && dotPosition?.y <= bottomLimit;
+
+            const isColorMatch = draggableItem.color === color;
+
+            const isWithin = isWithinX && isWithinY && isColorMatch;
+
+            console.log({
+                topLimit,
+                bottomLimit,
+                leftLimit,
+                rightLimit,
+                isWithinX,
+                isWithinY,
+                isColorMatch,
+                isWithin,
+                dotPosition
+            })
+
+
+            if (isWithin) {
+                console.log('Dot has been dropped over the ring.');
+            } else {
+                console.log('Dot has been dropped outside the ring.');
+            }
+
+            setDraggableItem(null);
         }
-    }, [draggableItem]);
+    }, [dragging]);
 
     return (
         <>
@@ -78,9 +117,9 @@ export const Ring: FC<RingProps> = ({
                     borderColor: `${COLOR}`
                 }}
             >
-                <Typography className='text-sm'>
-                    {JSON.stringify({ position })}
-                </Typography>
+                {/* <Typography className='text-sm'>
+                    {JSON.stringify({ boundingBox })}
+                </Typography> */}
             </View>
 
         </>

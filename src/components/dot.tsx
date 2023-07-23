@@ -14,7 +14,7 @@ export const Dot: FC<DotProps> = ({
     color
 }) => {
 
-    const [position, setPosition] = React.useState({ x: 0, y: 0 });
+    // const [position, setPosition] = React.useState({ x: 0, y: 0 });
     const [initialPosition, setInitialPosition] = React.useState({ x: 0, y: 0 });
 
     const ref = useRef<View>(null)
@@ -22,24 +22,36 @@ export const Dot: FC<DotProps> = ({
 
     const pan = useRef(new Animated.ValueXY()).current;
 
-    const { setDraggableItem } = useDragContext();
+    const { setDraggableItem, setDragging, dragging } = useDragContext();
 
     const panResponder = useRef(
         PanResponder.create({
             onMoveShouldSetPanResponder: () => true,
             onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
             onPanResponderGrant: () => {
+                setDragging(true);
                 setDraggableItem({
                     id, pan,
-                    position: { x: position.x, y: position.y },
+                    position: { x: initialPosition.x, y: initialPosition.y },
+                    color
                 });
             },
-            onPanResponderRelease: () => {
+            onPanResponderRelease: (e) => {
+
+                const finalPosition = {
+                    x: e.nativeEvent.pageX,
+                    y: e.nativeEvent.pageY
+                };
+                setDraggableItem({
+                    id, pan,
+                    position: finalPosition,
+                    color
+                })
+                setDragging(false);
                 Animated.spring(pan, {
                     toValue: { x: 0, y: 0 },
                     useNativeDriver: false
                 }).start();
-                setDraggableItem(null);
             },
         }),
     ).current;
@@ -55,34 +67,38 @@ export const Dot: FC<DotProps> = ({
         //opacity: disabled ? 0.2 : 1
     };
 
-    // useEffect(() => {
-    //     ref.current.measure((x, y, width, height, pageX, pageY) => {
-    //         const topLeft = { x: pageX, y: pageY };
-    //         const topRight = { x: pageX + width, y: pageY };
-    //         const bottomLeft = { x: pageX, y: pageY + height };
-    //         const bottomRight = { x: pageX + width, y: pageY + height };
-    //         const center = { x: pageX + width / 2, y: pageY + height / 2 };
-    //         const boundingBox: BoundingBox = {
-    //             topLeft,
-    //             topRight,
-    //             bottomLeft,
-    //             bottomRight,
-    //             center,
-    //         };
-    //         setInitialPosition({ x: center.x, y: center.y });
-    //     });
-    // }, [initialPosition])
+    useEffect(() => {
+        ref.current.measure((x, y, width, height, pageX, pageY) => {
+            const topLeft = { x: pageX, y: pageY };
+            const topRight = { x: pageX + width, y: pageY };
+            const bottomLeft = { x: pageX, y: pageY + height };
+            const bottomRight = { x: pageX + width, y: pageY + height };
+            const center = { x: pageX + width / 2, y: pageY + height / 2 };
+            const boundingBox: BoundingBox = {
+                topLeft,
+                topRight,
+                bottomLeft,
+                bottomRight,
+                center,
+            };
+            setInitialPosition({ x: center.x, y: center.y });
+        });
+    }, [dragging])
 
 
     // useEffect(() => {
 
     //     pan.addListener((value) => {
-    //         setPosition({
-    //             x: initialPosition.x + value.x,
-    //             y: initialPosition.y + value.y,
+    //         setDraggableItem({
+    //             color,
+    //             id,
+    //             pan,
+    //             position: {
+    //                 x: initialPosition.x + value.x,
+    //                 y: initialPosition.y + value.y,
+    //             }
     //         });
-    //     }
-    //     )
+    //     })
 
 
     //     return () => {
@@ -92,8 +108,8 @@ export const Dot: FC<DotProps> = ({
     // }, [ref])
 
     // useEffect(() => {
-    //     console.log({ position, initialPosition })
-    // }, [position])
+    //     console.log({ initialPosition })
+    // }, [initialPosition])
 
     return (
         <Animated.View
