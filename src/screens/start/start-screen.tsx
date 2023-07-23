@@ -21,7 +21,7 @@ const StartScreen = () => {
 
 
     return (
-        <Screen className='justify-between space-y-10'>
+        <Screen className=' space-y-10'>
             <View className="flexf flex-row" >
                 <Typography className="text-6xl mx-1 font-bold text-blue-500">R</Typography>
                 <Typography className="text-6xl mx-1 font-bold text-yellow-500">O</Typography>

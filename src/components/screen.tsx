@@ -8,8 +8,10 @@ export interface ScreenProps {
 
 export const Screen: FC<PropsWithChildren<ScreenProps>> = ({ children, className }) => {
     return (
-        <SafeAreaView className={cn('flex-1 bg-black flex flex-col justify-center items-center', className)}>
-            {children}
+        <SafeAreaView className={cn('flex-1 bg-black flex flex-col justify-center items-center')}>
+            <View className={className}>
+                {children}
+            </View>
         </SafeAreaView>
     )
 }

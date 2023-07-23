@@ -1,10 +1,17 @@
 import { PulsingButton, Screen, Typography } from '@components'
 import { useGameStateStore } from '@stores'
-import React from 'react'
+import { useSound } from '@utils'
+import React, { useEffect } from 'react'
 
 export const GameOverScreen = () => {
 
+    const { playSound } = useSound('game-over')
+
     const { score, startGame } = useGameStateStore()
+
+    useEffect(() => {
+        playSound()
+    }, [])
 
     return (
         <Screen className='space-y-10'>

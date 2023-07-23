@@ -7,9 +7,8 @@ import { Text, View } from 'react-native'
 
 export const MainLayout = () => {
 
-    // const { state } = useGameStateStore()
+    const { state } = useGameStateStore()
 
-    const state = GameStates.GAME_OVER
 
     let ACTIVE_SCREEN = null
 
