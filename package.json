@@ -1,11 +1,10 @@
 {
   "name": "roloc",
   "version": "1.0.0",
-  "main": "node_modules/expo/AppEntry.js",
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "update": "eas update --auto",
     "build:ios": "eas build --platform ios",
@@ -29,10 +28,13 @@
     "react-native": "0.71.8",
     "react-native-drag-and-drop": "^1.0.0",
     "react-native-gesture-handler": "^2.12.0",
+    "react-native-mmkv": "^2.10.1",
+    "react-native-mmkv-storage": "^0.9.1",
     "react-native-reanimated": "^3.3.0",
     "tailwind-merge": "^1.14.0",
     "typescript": "^4.9.4",
-    "zustand": "^4.3.9"
+    "zustand": "^4.3.9",
+    "expo-splash-screen": "~0.18.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

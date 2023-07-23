@@ -43,7 +43,7 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     },
     activeColor: undefined,
     addPoint: () => set((state) => ({ score: state.score + 1, activeColor: getRandomEnumValue(RingColors) })),
-    state: GameStates.PLAYING,
+    state: GameStates.IDLE,
     startGame: () => set(() => ({ state: GameStates.PLAYING, score: 0, activeColor: getRandomEnumValue(RingColors) })),
     pauseGame: () => set(() => ({ state: GameStates.PAUSED })),
     resumeGame: () => set(() => ({ state: GameStates.PLAYING, })),
@@ -55,17 +55,22 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
 
         // Check if score is higher than high score
         const parsedHighScore = await getHighScore() || 0  // use await here
+        console.log('parsedHighScore', parsedHighScore)
         if (parsedHighScore) {
             if (parsedHighScore < state.score) {
                 setHighScore(state.score)
-                return { state: GameStates.GAME_OVER, highScore: state.score }
+                set(() => ({ state: GameStates.GAME_OVER, highScore: state.score }))
             } else {
                 setHighScore(state.score)
-                return { state: GameStates.GAME_OVER, highScore: state.score }
+
+                set(() => ({ state: GameStates.GAME_OVER, highScore: parsedHighScore }))
             }
+        } else {
+            setHighScore(state.score)
+            set(() => ({ state: GameStates.GAME_OVER, highScore: state.score }))
         }
 
-        return { state: GameStates.GAME_OVER }
+        set(() => ({ state: GameStates.GAME_OVER, highScore: state.score }))
     },
     changeColor: () => set(() => ({ activeColor: getRandomEnumValue(RingColors) })),
 }))

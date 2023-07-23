@@ -64,7 +64,7 @@ export const Dot: FC<DotProps> = ({
 
     const style = {
         backgroundColor: color,
-        //opacity: disabled ? 0.2 : 1
+        opacity: disabled ? 0.2 : 1
     };
 
     useEffect(() => {

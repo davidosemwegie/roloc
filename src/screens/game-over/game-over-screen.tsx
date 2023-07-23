@@ -5,13 +5,24 @@ import React, { useEffect } from 'react'
 
 export const GameOverScreen = () => {
 
+    const [highscore, setHighscore] = React.useState(0)
+
     const { playSound } = useSound('game-over')
 
-    const { score, startGame } = useGameStateStore()
+    const { score, getHighscore, startGame } = useGameStateStore()
 
     useEffect(() => {
         playSound()
     }, [])
+
+    useEffect(() => {
+        const getHS = async () => {
+            const hs = await getHighscore()
+            setHighscore(hs)
+        }
+        getHS()
+    }, [])
+
 
     return (
         <Screen className='space-y-10'>
@@ -20,6 +31,9 @@ export const GameOverScreen = () => {
             </Typography>
             <Typography className='mb-10'>
                 Score: {score}
+            </Typography>
+            <Typography className='mb-10'>
+                High score: {String(highscore)}
             </Typography>
             <PulsingButton onPress={startGame}>
                 Play Again

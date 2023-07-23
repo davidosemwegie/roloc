@@ -2,7 +2,7 @@
 import { useDragContext } from '@screens/playing/drag-provider'
 import { RingColors } from '@types'
 import React, { FC, useEffect, useLayoutEffect, useRef } from 'react'
-import { View } from 'react-native'
+import { Alert, View } from 'react-native'
 import { Typography } from './typography'
 
 export interface RingProps {
@@ -10,8 +10,8 @@ export interface RingProps {
 }
 
 
-import { BoundingBox, } from '@utils'
-import { useDragStore } from '@stores'
+import { BoundingBox, useSound, } from '@utils'
+import { useDragStore, useGameStateStore } from '@stores'
 
 
 export const Ring: FC<RingProps> = ({
@@ -23,6 +23,10 @@ export const Ring: FC<RingProps> = ({
     const elementRef = useRef<View>(null);
 
     const [boundingBox, setBoundingBox] = React.useState<BoundingBox | null>(null);
+    const { activeColor, addPoint, startGame, endGame } = useGameStateStore()
+
+    const { playSound: playMatchSound } = useSound('match')
+
 
 
     const id = `ring-${color}`
@@ -30,7 +34,6 @@ export const Ring: FC<RingProps> = ({
     const COLOR = `${color}`
 
     const { draggableItem, dragging, setDraggableItem } = useDragContext();
-    const { setRingPosition, ringPositions } = useDragStore();
 
     useLayoutEffect(() => {
         elementRef.current.measure((x, y, width, height, pageX, pageY) => {
@@ -48,9 +51,6 @@ export const Ring: FC<RingProps> = ({
             };
             // only set the position if it hasn't been set yet
 
-            if (ringPositions[id]) {
-                return;
-            }
 
 
             // setRingPosition(`dot-${color}`, center.x, center.y);
@@ -60,8 +60,7 @@ export const Ring: FC<RingProps> = ({
 
     }, [elementRef, position, dragging])
 
-
-    useEffect(() => {
+    async function checker() {
         if (draggableItem && !dragging && draggableItem.color === color) {
 
             console.log("Run checker", color)
@@ -84,27 +83,31 @@ export const Ring: FC<RingProps> = ({
 
             const isWithin = isWithinX && isWithinY && isColorMatch;
 
-            console.log({
-                topLimit,
-                bottomLimit,
-                leftLimit,
-                rightLimit,
-                isWithinX,
-                isWithinY,
-                isColorMatch,
-                isWithin,
-                dotPosition
-            })
-
 
             if (isWithin) {
                 console.log('Dot has been dropped over the ring.');
+                addPoint()
+                playMatchSound()
             } else {
                 console.log('Dot has been dropped outside the ring.');
+                await endGame()
+                // Alert.alert('Game Over', 'You missed the ring', [
+                //     {
+                //         text: 'Try Again',
+                //         onPress: () => {
+                //             startGame()
+                //         }
+                //     }
+                // ])
             }
 
             setDraggableItem(null);
         }
+    }
+
+
+    useEffect(() => {
+        checker()
     }, [dragging]);
 
     return (

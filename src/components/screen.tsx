@@ -8,7 +8,7 @@ export interface ScreenProps {
 
 export const Screen: FC<PropsWithChildren<ScreenProps>> = ({ children, className }) => {
     return (
-        <View className={cn('flex-1 bg-black flex flex-col justify-center', className)}>
+        <View className={cn('flex-1 bg-black flex flex-col justify-center items-center', className)}>
             {children}
         </View>
     )
