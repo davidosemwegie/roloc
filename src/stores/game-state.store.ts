@@ -43,7 +43,7 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     },
     activeColor: undefined,
     addPoint: () => set((state) => ({ score: state.score + 1, activeColor: getRandomEnumValue(RingColors) })),
-    state: GameStates.IDLE,
+    state: GameStates.PLAYING,
     startGame: () => set(() => ({ state: GameStates.PLAYING, score: 0, activeColor: getRandomEnumValue(RingColors) })),
     pauseGame: () => set(() => ({ state: GameStates.PAUSED })),
     resumeGame: () => set(() => ({ state: GameStates.PLAYING, })),

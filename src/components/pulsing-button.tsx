@@ -1,6 +1,6 @@
 import { Typography } from '@components';
 import React, { FC, PropsWithChildren, useEffect, useRef } from 'react'
-import { Animated, TouchableOpacity } from 'react-native';
+import { Animated, TouchableOpacity, View } from 'react-native';
 
 export interface PulsingButtonProps {
     onPress: () => void,
@@ -40,18 +40,21 @@ export const PulsingButton: FC<PropsWithChildren<PulsingButtonProps>> = ({ onPre
     }, []);
 
     return (
-        <Animated.View
-            style={{ transform: [{ scale: scale }] }} // Bind scale to animated value
-        >
-            <TouchableOpacity
-                onPress={onPress}
-                className='flex flex-row justify-center items-center rounded-lg bg-green-600 p-4 w-auto'
-            >
-                <Typography className='text-4xl font-bold'>
-                    {children}
-                </Typography>
-            </TouchableOpacity>
+        <View>
 
-        </Animated.View>
+            <Animated.View
+                style={{ transform: [{ scale: scale }] }} // Bind scale to animated value
+            >
+                <TouchableOpacity
+                    onPress={onPress}
+                    className='flex flex-row justify-center items-center rounded-lg bg-green-600 p-4 w-auto'
+                >
+                    <Typography className='text-4xl font-bold'>
+                        {children}
+                    </Typography>
+                </TouchableOpacity>
+
+            </Animated.View>
+        </View>
     )
 }
