@@ -66,15 +66,15 @@ const PlayingScreen = () => {
 
 
 
-    // useEffect(() => {
-    //     if (state !== GameStates.PLAYING) {
-    //         return
-    //     }
-    //     const interval = setInterval(() => {
-    //         endGame()
-    //     }, calculateInterval(score))
-    //     return () => clearInterval(interval)
-    // }, [activeColor])
+    useEffect(() => {
+        if (state !== GameStates.PLAYING) {
+            return
+        }
+        const interval = setInterval(() => {
+            endGame()
+        }, calculateInterval(score))
+        return () => clearInterval(interval)
+    }, [activeColor])
 
 
     return (
