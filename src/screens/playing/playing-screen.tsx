@@ -22,15 +22,15 @@ const PlayingScreen = () => {
 
     return (
         <View className='flex-1 flex flex-col relative'>
-            <View className='m-auto'>
-                <Typography >
+            <View className='m-auto left-0 right-0  absolute top-[48%]'>
+                <Typography className='text-3xl m-auto'>
                     {score}
                 </Typography>
             </View>
             <View className='flex-1 items-center justify-center '>
                 <View className='flex flex-row space-x-[80px]'>
                     <View className={cn(ringColumn)}>
-                        <View className={cn(ringGridCell, 'justify-end items-end')}>
+                        <View className={cn(ringGridCell, 'justify-end items-end h-auto')}>
                             <Ring color={RingColors.BLUE} />
                         </View>
                         <View className={cn(ringGridCell, 'justify-start items-end')}>
@@ -61,6 +61,7 @@ const PlayingScreen = () => {
                 </View>
             </View>
         </View>
+
     )
 }
 

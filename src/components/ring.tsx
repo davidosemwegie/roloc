@@ -29,7 +29,7 @@ export const Ring: FC<RingProps> = ({
         <View
             // ref={setNodeRef}
             id={id}
-            className={`w-[160px] h-[160px] rounded-full  border-solid border-[20px] `}
+            className={`w-[140px] h-[140px] rounded-full  border-solid border-[20px] `}
             style={{
                 borderColor: `${COLOR}`
             }}
