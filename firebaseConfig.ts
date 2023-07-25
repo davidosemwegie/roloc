@@ -68,7 +68,7 @@ export async function updateUserHighscore(score: number) {
 
             if (userScoreDoc.exists) {
                 // User score record already exists, update the highscore
-                const currentHighscore = userScoreDoc.get('high-score') as number;
+                const currentHighscore = userScoreDoc.get('high-score') as number ?? 0;
                 if (score > currentHighscore) {
                     await userScoreRef.update({
                         'high-score': score,
@@ -185,5 +185,33 @@ export async function getTotalGamesPlayed(): Promise<number> {
     }
 
     // In case of an error or no user, return 0 as total games played
+    return 0;
+}
+
+
+export async function getHighscore(): Promise<number> {
+    const user = auth().currentUser;
+
+    try {
+        if (user) {
+            const userRef = firestore().collection('scores').doc(user.uid);
+            const userDoc = await userRef.get();
+
+            if (userDoc.exists) {
+                // Get the high-score field from the user's document
+                const highscore = userDoc.get('high-score') as number;
+
+                return highscore;
+            } else {
+                // User document does not exist in the scores collection, return 0 as highscore
+                return 0;
+            }
+        }
+    } catch (error) {
+        crashlytics().recordError(error);
+        console.log(error);
+    }
+
+    // In case of an error or no user, return 0 as highscore
     return 0;
 }

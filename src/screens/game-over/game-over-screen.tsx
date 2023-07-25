@@ -1,4 +1,5 @@
 import { PulsingButton, Screen, Typography } from '@components'
+import { getHighscore } from '@fb'
 import { useGameStateStore } from '@stores'
 import { useSound } from '@utils'
 import React, { useEffect } from 'react'
@@ -12,7 +13,7 @@ export const GameOverScreen = () => {
 
     const { playSound } = useSound('game-over')
 
-    const { score, getHighscore, startGame, oldHighscore: gameStoreOldHighscore, backToMenu } = useGameStateStore()
+    const { score, startGame, oldHighscore: gameStoreOldHighscore, backToMenu } = useGameStateStore()
 
     useEffect(() => {
         playSound()
@@ -53,7 +54,7 @@ export const GameOverScreen = () => {
                 </Typography>}
             </View>
             <Typography className='mb-10'>
-                High score: {String(highscore)}
+                High score: {String(Math.max(score, highscore))}
             </Typography>
             <PulsingButton onPress={startGame}>
                 Play Again

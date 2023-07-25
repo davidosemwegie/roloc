@@ -1,5 +1,5 @@
 import { PulsingButton, Screen, Typography } from '@components';
-import { calculateAverageScore, calculateTotalScore, getTotalGamesPlayed } from '@fb';
+import { calculateAverageScore, calculateTotalScore, getHighscore, getTotalGamesPlayed } from '@fb';
 import { useGameStateStore } from '@stores';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
@@ -9,19 +9,10 @@ const StartScreen = () => {
     const [averageScore, setAverageScore] = useState<number>(0);
     const [totalScore, setTotalScore] = useState<number>(0);
     const [gamesPlayed, setGamesPlayed] = useState<number>(0);
-
-    const { startGame, getHighscore } = useGameStateStore();
-
     const [highScore, setHighScore] = useState<number>(0);
 
-    useEffect(() => {
-        async function loadHighScore() {
-            const fetchedHighScore = await getHighscore();
-            setHighScore(fetchedHighScore);
-        }
+    const { startGame } = useGameStateStore();
 
-        loadHighScore();
-    }, []);
 
     useEffect(() => {
         async function getStats() {
@@ -33,6 +24,9 @@ const StartScreen = () => {
 
             const gamesPlayed = await getTotalGamesPlayed();
             setGamesPlayed(gamesPlayed);
+
+            const fetchedHighScore = await getHighscore();
+            setHighScore(fetchedHighScore);
         }
 
         getStats();

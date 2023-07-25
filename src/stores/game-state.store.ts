@@ -1,14 +1,9 @@
 import { RingColors } from '@types'
 import { getRandomEnumValue } from '@utils'
-import { updateGamesArrayWithScore, updateUserHighscore } from '@fb'
+import { getHighscore, updateGamesArrayWithScore, updateUserHighscore } from '@fb'
 import { getStorageValue, setStorageValue } from 'local-storage'
 import { create } from 'zustand'
 import analytics from '@react-native-firebase/analytics';
-import crashlytics from '@react-native-firebase/crashlytics';
-import database from '@react-native-firebase/database';
-import { Audio } from 'expo-av';
-
-
 
 
 
@@ -31,7 +26,6 @@ interface GameStateStore {
     endGame: (callback?: () => void) => void,
     changeColor: () => void,
     backToMenu: () => void,
-    getHighscore: () => Promise<number>,
     oldHighscore: number;
     showStartScreen: () => void,
     dotOrder: RingColors[],
@@ -47,10 +41,6 @@ async function setOldHighScore(score: number) {
     setStorageValue('oldHighScore', String(score))
 }
 
-async function getHighScore(): Promise<number> {
-    const value = await getStorageValue<string>('highScore')
-    return parseInt(value)
-}
 
 function generateRandomRingOrder(): RingColors[] {
     const colorsArray: RingColors[] = Object.values(RingColors);
@@ -112,10 +102,6 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
             dotOrder: generateRandomRingOrder(), // New function to generate dot order with unique ids
         }))
     },
-    getHighscore: async () => {
-        const value = await getStorageValue<string>('highScore') || '0'
-        return parseInt(value)
-    },
     activeColor: undefined,
     addPoint: () => {
 
@@ -138,10 +124,10 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
         if (typeof callback === 'function') callback()
 
         const state = get()
-
-        const parsedHighScore = await getHighScore() || 0
-
         updateGamesArrayWithScore(state.score)
+
+        const parsedHighScore = await getHighscore() || 0
+
 
 
         let newHighScore = parsedHighScore;
