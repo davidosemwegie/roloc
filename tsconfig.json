@@ -26,6 +26,9 @@
             "local-storage": [
                 "./src/utils/local-storage"
             ],
+            "@fb": [
+                "./firebaseConfig"
+            ],
         }
     },
     "extends": "expo/tsconfig.base"

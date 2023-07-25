@@ -16,6 +16,7 @@ module.exports = function (api) {
             "@types": "./src/types",
             "@stores": "./src/stores",
             "local-storage": "./src/utils/local-storage",
+            "@fb": "./firebaseConfig",
           },
         },
       ]

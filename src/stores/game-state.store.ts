@@ -1,7 +1,10 @@
 import { RingColors } from '@types'
 import { getRandomEnumValue } from '@utils'
+import { trackEvent } from '@fb'
 import { getStorageValue, setStorageValue } from 'local-storage'
 import { create } from 'zustand'
+import analytics from '@react-native-firebase/analytics';
+
 
 
 export enum GameStates {
@@ -92,13 +95,16 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     dotOrder: [],
 
     // After initializing dotOrder...
-    startGame: () => set(() => ({
-        state: GameStates.PLAYING,
-        score: 0,
-        activeColor: getRandomEnumValue(RingColors),
-        ringOrder: generateRandomRingOrder(),
-        dotOrder: generateRandomRingOrder(), // New function to generate dot order with unique ids
-    })),
+    startGame: () => {
+        // trackEvent('start_game')
+        return set(() => ({
+            state: GameStates.PLAYING,
+            score: 0,
+            activeColor: getRandomEnumValue(RingColors),
+            ringOrder: generateRandomRingOrder(),
+            dotOrder: generateRandomRingOrder(), // New function to generate dot order with unique ids
+        }))
+    },
     getHighscore: async () => {
         const value = await getStorageValue<string>('highScore') || '0'
         return parseInt(value)
@@ -137,6 +143,18 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
         }
 
         set(() => ({ state: GameStates.GAME_OVER, highScore: newHighScore, oldHighscore: parsedHighScore }));
+
+        await analytics().logEvent('game_over', {
+            score: state.score,
+            highScore: newHighScore,
+            oldHighScore: parsedHighScore,
+        });
+
+        await trackEvent('game_over', {
+            score: state.score,
+            highScore: newHighScore,
+            oldHighScore: parsedHighScore,
+        });
     },
     showStartScreen: () => set(() => ({ state: GameStates.IDLE })),
 
