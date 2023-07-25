@@ -7,7 +7,9 @@ import { View, Text, SafeAreaView } from 'react-native'
 import { DragProvider, useDragContext } from './drag-provider'
 
 const PlayingScreen = () => {
-    const { score, state, activeColor, endGame, changeColor, startGame } = useGameStateStore()
+    const { score, state, activeColor, endGame, changeColor, startGame, } = useGameStateStore()
+
+
 
     const { playSound } = useSound('game-start', {
         looping: true
@@ -35,7 +37,7 @@ const PlayingScreen = () => {
 
     const [column1Rings, setColumn1Rings] = useState([RingColors.BLUE, RingColors.PURPLE]);
     const [column2Rings, setColumn2Rings] = useState([RingColors.GREEN, RingColors.RED]);
-    const [column1Dots, setColumn1Dots] = useState([RingColors.BLUE, RingColors.GREEN]);
+    const [column1Dots, setColumn1Dots] = useState([RingColors.GREEN, RingColors.BLUE,]);
     const [column2Dots, setColumn2Dots] = useState([RingColors.PURPLE, RingColors.RED]);
 
 
@@ -66,15 +68,15 @@ const PlayingScreen = () => {
 
 
 
-    useEffect(() => {
-        if (state !== GameStates.PLAYING) {
-            return
-        }
-        const interval = setInterval(() => {
-            endGame()
-        }, calculateInterval(score))
-        return () => clearInterval(interval)
-    }, [activeColor])
+    // useEffect(() => {
+    //     if (state !== GameStates.PLAYING) {
+    //         return
+    //     }
+    //     const interval = setInterval(() => {
+    //         endGame()
+    //     }, calculateInterval(score))
+    //     return () => clearInterval(interval)
+    // }, [activeColor])
 
 
     return (

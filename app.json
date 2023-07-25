@@ -19,6 +19,7 @@
       "bundleIdentifier": "com.osazi.roloc",
       "googleServicesFile": "./GoogleService-Info.plist",
       "icon": "./assets/icon.png",
+      "buildNumber": "1.0.0"
     },
     "android": {
       "adaptiveIcon": {
