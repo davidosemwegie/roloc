@@ -4,6 +4,10 @@ import { trackEvent } from '@fb'
 import { getStorageValue, setStorageValue } from 'local-storage'
 import { create } from 'zustand'
 import analytics from '@react-native-firebase/analytics';
+import crashlytics from '@react-native-firebase/crashlytics';
+import database from '@react-native-firebase/database';
+
+
 
 
 
@@ -96,7 +100,7 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
 
     // After initializing dotOrder...
     startGame: () => {
-        // trackEvent('start_game')
+        analytics().logEvent('start_game')
         return set(() => ({
             state: GameStates.PLAYING,
             score: 0,
@@ -142,19 +146,16 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
             setHighScore(newHighScore)
         }
 
-        set(() => ({ state: GameStates.GAME_OVER, highScore: newHighScore, oldHighscore: parsedHighScore }));
-
         await analytics().logEvent('game_over', {
             score: state.score,
             highScore: newHighScore,
             oldHighScore: parsedHighScore,
-        });
+        })
 
-        await trackEvent('game_over', {
-            score: state.score,
-            highScore: newHighScore,
-            oldHighScore: parsedHighScore,
-        });
+
+        set(() => ({ state: GameStates.GAME_OVER, highScore: newHighScore, oldHighscore: parsedHighScore }));
+
+
     },
     showStartScreen: () => set(() => ({ state: GameStates.IDLE })),
 
