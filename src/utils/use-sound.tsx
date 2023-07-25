@@ -39,7 +39,10 @@ export const useSound = (soundToPlay: Sounds = 'game-start', options?: SoundOpti
 
         sound.playAsync();
 
+    }
 
+    async function stopSound() {
+        sound?.stopAsync()
     }
 
     React.useEffect(() => {
@@ -54,6 +57,7 @@ export const useSound = (soundToPlay: Sounds = 'game-start', options?: SoundOpti
     return {
         playSound,
         toggleMute,
+        stopSound,
         isMuted
     }
 }

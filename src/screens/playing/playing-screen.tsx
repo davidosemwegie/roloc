@@ -6,7 +6,7 @@ import { View } from 'react-native'
 import { DragProvider } from './drag-provider'
 
 const PlayingScreen = () => {
-    const { score, state, endGame, ringOrder, dotOrder } = useGameStateStore()
+    const { score, state, endGame, ringOrder, dotOrder, activeColor } = useGameStateStore()
 
 
 
@@ -38,7 +38,7 @@ const PlayingScreen = () => {
             endGame()
         }, calculateInterval(score));
         return () => clearInterval(interval);
-    }, [state, score]); // Replaced activeColor with state and score
+    }, [activeColor]); // Replaced activeColor with state and score
 
 
 
