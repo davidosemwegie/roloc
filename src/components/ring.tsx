@@ -49,12 +49,7 @@ export const Ring: FC<RingProps> = ({
                 bottomRight,
                 center,
             };
-            // only set the position if it hasn't been set yet
 
-
-
-            // setRingPosition(`dot-${color}`, center.x, center.y);
-            // setPosition({ x: center.x, y: center.y });
             setBoundingBox(boundingBox);
         });
 
@@ -67,7 +62,6 @@ export const Ring: FC<RingProps> = ({
 
             const dotPosition = draggableItem.position
 
-            // console.log('dotPosition', { dotPosition, boundingBox, dotColor: draggableItem.color, ringColor: color })
 
             const bottomLimit = boundingBox?.bottomLeft.y;
             const topLimit = boundingBox?.topLeft.y;
@@ -79,7 +73,7 @@ export const Ring: FC<RingProps> = ({
             const isWithinX = dotPosition?.x >= leftLimit && dotPosition?.x <= rightLimit;
             const isWithinY = dotPosition?.y >= topLimit && dotPosition?.y <= bottomLimit;
 
-            const isColorMatch = draggableItem.color === color;
+            const isColorMatch = draggableItem.color === activeColor;
 
             const isWithin = isWithinX && isWithinY && isColorMatch;
 
@@ -111,7 +105,9 @@ export const Ring: FC<RingProps> = ({
     }, [dragging]);
 
     return (
-        <>
+        <View
+            ref={elementRef}
+            className='bg-red-500 flex justify-center items-center'>
             <View
                 ref={elementRef}
                 id={id}
@@ -125,6 +121,6 @@ export const Ring: FC<RingProps> = ({
                 </Typography> */}
             </View>
 
-        </>
+        </View>
     )
 }
