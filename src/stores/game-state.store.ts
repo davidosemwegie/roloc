@@ -1,6 +1,6 @@
 import { RingColors } from '@types'
 import { getRandomEnumValue } from '@utils'
-import { trackEvent } from '@fb'
+import { updateUserScore } from '@fb'
 import { getStorageValue, setStorageValue } from 'local-storage'
 import { create } from 'zustand'
 import analytics from '@react-native-firebase/analytics';
@@ -147,12 +147,11 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
             newHighScore = state.score;
             await setOldHighScore(parsedHighScore);
             setHighScore(newHighScore)
+            updateUserScore(newHighScore)
         }
 
         await analytics().logEvent('game_over', {
             score: state.score,
-            highScore: newHighScore,
-            oldHighScore: parsedHighScore,
         })
 
 
