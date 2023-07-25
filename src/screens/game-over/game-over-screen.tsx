@@ -12,7 +12,7 @@ export const GameOverScreen = () => {
 
     const { playSound } = useSound('game-over')
 
-    const { score, getHighscore, startGame, oldHighscore: gameStoreOldHighscore, showStartScreen } = useGameStateStore()
+    const { score, getHighscore, startGame, oldHighscore: gameStoreOldHighscore, backToMenu } = useGameStateStore()
 
     useEffect(() => {
         playSound()
@@ -48,7 +48,7 @@ export const GameOverScreen = () => {
                 <Typography >
                     Score: {score}
                 </Typography>
-                {beatOldHighscore && <Typography className='text-sm'>
+                {beatOldHighscore && <Typography className='text-lxl font-semibold text-yellow-500 mt-5'>
                     You beat your old highscore of {oldHighscore}!
                 </Typography>}
             </View>
@@ -59,7 +59,7 @@ export const GameOverScreen = () => {
                 Play Again
             </PulsingButton>
             <View>
-                <Button title="Back to main screen" color='grey' onPress={startGame} />
+                <Button title="Back to main screen" color='grey' onPress={backToMenu} />
             </View>
         </Screen>
     )

@@ -18,12 +18,13 @@ export const Ring: FC<RingProps> = ({
     color
 }) => {
 
-    const [position, setPosition] = React.useState({ x: 0, y: 0 });
+    const [isRing, setIsInRing] = React.useState(false)
+
 
     const elementRef = useRef<View>(null);
 
     const [boundingBox, setBoundingBox] = React.useState<BoundingBox | null>(null);
-    const { activeColor, addPoint, startGame, endGame } = useGameStateStore()
+    const { activeColor, addPoint, endGame } = useGameStateStore()
 
     const { playSound: playMatchSound } = useSound('match')
 
@@ -53,12 +54,13 @@ export const Ring: FC<RingProps> = ({
             setBoundingBox(boundingBox);
         });
 
-    }, [elementRef, position, dragging])
+    }, [elementRef, dragging])
 
     async function checker() {
-        if (draggableItem && !dragging && draggableItem.color === color) {
+        if (draggableItem && !dragging && activeColor === color) {
 
-            console.log("Run checker", color)
+            // console.log(`RING: ${color}`)
+            console.log(`DOT: ${draggableItem.color}`)
 
             const dotPosition = draggableItem.position
 
@@ -79,20 +81,13 @@ export const Ring: FC<RingProps> = ({
 
 
             if (isWithin) {
+                setIsInRing(true)
                 console.log('Dot has been dropped over the ring.');
                 addPoint()
                 playMatchSound()
             } else {
-                console.log('Dot has been dropped outside the ring.');
-                await endGame()
-                // Alert.alert('Game Over', 'You missed the ring', [
-                //     {
-                //         text: 'Try Again',
-                //         onPress: () => {
-                //             startGame()
-                //         }
-                //     }
-                // ])
+                setIsInRing(false)
+                endGame()
             }
 
             setDraggableItem(null);
@@ -102,12 +97,25 @@ export const Ring: FC<RingProps> = ({
 
     useEffect(() => {
         checker()
+        setIsInRing(false)
+
+        // console.log({
+        //     draggableItem,
+        //     color
+        // })
     }, [dragging]);
 
     return (
         <View
             ref={elementRef}
-            className='bg-red-500 flex justify-center items-center'>
+            className=' flex justify-center items-center'
+            style={{
+                borderColor: isRing ? `white` : 'black',
+                borderWidth: isRing ? 1 : 0,
+                borderStyle: 'solid'
+            }}
+            id={id}
+        >
             <View
                 ref={elementRef}
                 id={id}
