@@ -11,7 +11,7 @@ export interface RingProps {
 
 
 import { BoundingBox, useSound, } from '@utils'
-import { useDragStore, useGameStateStore } from '@stores'
+import { useGameStateStore } from '@stores'
 
 
 export const Ring: FC<RingProps> = ({
@@ -99,10 +99,6 @@ export const Ring: FC<RingProps> = ({
         checker()
         setIsInRing(false)
 
-        // console.log({
-        //     draggableItem,
-        //     color
-        // })
     }, [dragging]);
 
     return (
@@ -124,9 +120,6 @@ export const Ring: FC<RingProps> = ({
                     borderColor: `${COLOR}`
                 }}
             >
-                {/* <Typography className='text-sm'>
-                    {JSON.stringify({ boundingBox })}
-                </Typography> */}
             </View>
 
         </View>

@@ -7,7 +7,6 @@ import { Typography } from './typography'
 
 interface DotProps {
     color: RingColors,
-    id: string;
 }
 
 interface DraggableItem {
@@ -17,17 +16,12 @@ interface DraggableItem {
     color: RingColors
 }
 
-export const Dot: FC<DotProps> = ({ color, id }) => {
+export const Dot: FC<DotProps> = ({ color, }) => {
     const [initialPosition, setInitialPosition] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
 
     const ref = useRef<View>(null)
     const pan = useRef(new Animated.ValueXY()).current;
     const { setDraggableItem, setDragging, dragging } = useDragContext();
-
-    const { dotOrder } = useGameStateStore();
-    const dotState = dotOrder.find(dot => dot.id === id);
-    const bg = dotState ? dotState.color : null;
-
 
     const panResponder = useRef(
         PanResponder.create({
@@ -52,7 +46,7 @@ export const Dot: FC<DotProps> = ({ color, id }) => {
     const disabled = color !== activeColor
     const _id = `dot-${color}`
     const style = {
-        backgroundColor: bg,
+        backgroundColor: color,
         opacity: disabled ? 0.2 : 1
     }
 

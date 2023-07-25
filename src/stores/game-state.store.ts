@@ -3,10 +3,6 @@ import { getRandomEnumValue } from '@utils'
 import { getStorageValue, setStorageValue } from 'local-storage'
 import { create } from 'zustand'
 
-interface DotState {
-    id: string;
-    color: RingColors;
-}
 
 export enum GameStates {
     IDLE = 'idle',
@@ -30,7 +26,7 @@ interface GameStateStore {
     getHighscore: () => Promise<number>,
     oldHighscore: number;
     showStartScreen: () => void,
-    dotOrder: DotState[],
+    dotOrder: RingColors[],
     ringOrder: RingColors[],
 
 }
@@ -61,18 +57,30 @@ function generateRandomRingOrder(): RingColors[] {
     return shuffledColors;
 }
 
-function generateRandomDotOrder(): DotState[] {
-    const colorsArray: RingColors[] = Object.values(RingColors);
-    const shuffledDots: DotState[] = [];
 
-    while (colorsArray.length > 0) {
-        const randomIndex = Math.floor(Math.random() * colorsArray.length);
-        const randomColor = colorsArray.splice(randomIndex, 1)[0];
-        shuffledDots.push({ id: `dot-${randomColor}`, color: randomColor });
+function getCondition(score: number) {
+
+    // When the user score is above 150 we will change the dot order
+    if (score > 150) {
+        return true
     }
-    console.log("shuffled: ", shuffledDots.map((dot) => dot.color))
 
-    return shuffledDots;
+    // When the user score is above 100 and a multiple of 2 we will change the ring order
+    if (score > 100 && score % 2 === 0) {
+        return true
+    }
+
+    // When the user score is above 70 and a multiple of 5 we will change the dot order
+    if (score > 70 && score % 5 === 0) {
+        return true
+    }
+
+    // when user score is above 30 and a multiple of 10 we will change the ring order
+    if (score > 30 && score % 10 === 0) {
+        return true;
+    }
+
+    return false
 }
 
 
@@ -89,20 +97,25 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
         score: 0,
         activeColor: getRandomEnumValue(RingColors),
         ringOrder: generateRandomRingOrder(),
-        dotOrder: generateRandomDotOrder(), // New function to generate dot order with unique ids
+        dotOrder: generateRandomRingOrder(), // New function to generate dot order with unique ids
     })),
     getHighscore: async () => {
         const value = await getStorageValue<string>('highScore') || '0'
         return parseInt(value)
     },
     activeColor: undefined,
-    addPoint: () => set((state) => ({
-        score: state.score + 1,
-        activeColor: getRandomEnumValue(RingColors),
-        ...(state.score > 20 && {
-            ringOrder: generateRandomRingOrder()
-        }),
-    }))
+    addPoint: () => {
+
+        const condition = getCondition(get().score)
+
+        return set((state) => ({
+            score: state.score + 1,
+            activeColor: getRandomEnumValue(RingColors),
+            ...(condition && {
+                ringOrder: generateRandomRingOrder(),
+            }),
+        }))
+    }
     ,
     state: GameStates.IDLE,
     pauseGame: () => set(() => ({ state: GameStates.PAUSED })),

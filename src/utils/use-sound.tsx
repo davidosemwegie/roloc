@@ -11,9 +11,9 @@ interface SoundOptions {
     looping?: boolean
 }
 
-
 export const useSound = (soundToPlay: Sounds, options?: SoundOptions) => {
     const [sound, setSound] = React.useState<Audio.Sound>();
+    const [isMuted, setIsMuted] = React.useState(false);
 
     const soundMap: Record<Sounds, any> = {
         "game-start": gameStart,
@@ -23,9 +23,15 @@ export const useSound = (soundToPlay: Sounds, options?: SoundOptions) => {
 
     const pathToSoundToPlay = soundMap[soundToPlay]
 
+    const toggleMute = () => {
+        setIsMuted(!isMuted);
+    }
 
     async function playSound() {
-        // console.log('Loading Sound');
+        if (isMuted) {
+            return;
+        }
+
         const { sound } = await Audio.Sound.createAsync(pathToSoundToPlay, {
             isLooping: options?.looping ?? false
         })
@@ -45,6 +51,8 @@ export const useSound = (soundToPlay: Sounds, options?: SoundOptions) => {
 
 
     return {
-        playSound
+        playSound,
+        toggleMute,
+        isMuted
     }
 }
