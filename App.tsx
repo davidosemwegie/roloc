@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import { MainLayout } from '@layouts';
 import auth from '@react-native-firebase/auth';
 import { useEffect, useState } from 'react';
+import crashlytics from '@react-native-firebase/crashlytics';
 
 
 
@@ -10,8 +11,11 @@ export default function App() {
   function SignInAnonymously() {
     auth()
       .signInAnonymously()
-      .then(() => {
-        console.log('User signed in anonymously');
+      .then(async (user) => {
+        await Promise.all([
+          crashlytics().setUserId(user.user.uid),
+          crashlytics().log('User signed in anonymously'),
+        ])
       })
       .catch(error => {
         if (error.code === 'auth/operation-not-allowed') {

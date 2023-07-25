@@ -1,8 +1,7 @@
 import { Dot, Ring, Typography } from '@components'
 import { GameStates, useGameStateStore } from '@stores'
-import { RingColors } from '@types'
 import { cn, useSound } from '@utils'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { View } from 'react-native'
 import { DragProvider } from './drag-provider'
 
@@ -12,7 +11,7 @@ const PlayingScreen = () => {
 
 
     const { playSound } = useSound('game-start', {
-        looping: true
+        looping: true,
     })
 
     useEffect(() => {

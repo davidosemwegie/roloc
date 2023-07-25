@@ -6,6 +6,7 @@ import { create } from 'zustand'
 import analytics from '@react-native-firebase/analytics';
 import crashlytics from '@react-native-firebase/crashlytics';
 import database from '@react-native-firebase/database';
+import { Audio } from 'expo-av';
 
 
 
@@ -100,7 +101,9 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
 
     // After initializing dotOrder...
     startGame: () => {
+
         analytics().logEvent('start_game')
+
         return set(() => ({
             state: GameStates.PLAYING,
             score: 0,

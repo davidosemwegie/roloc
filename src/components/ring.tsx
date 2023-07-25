@@ -59,8 +59,6 @@ export const Ring: FC<RingProps> = ({
     async function checker() {
         if (draggableItem && !dragging && activeColor === color) {
 
-            // console.log(`RING: ${color}`)
-            console.log(`DOT: ${draggableItem.color}`)
 
             const dotPosition = draggableItem.position
 
@@ -82,7 +80,6 @@ export const Ring: FC<RingProps> = ({
 
             if (isWithin) {
                 setIsInRing(true)
-                console.log('Dot has been dropped over the ring.');
                 addPoint()
                 playMatchSound()
             } else {
@@ -105,11 +102,6 @@ export const Ring: FC<RingProps> = ({
         <View
             ref={elementRef}
             className=' flex justify-center items-center'
-            style={{
-                borderColor: isRing ? `white` : 'black',
-                borderWidth: isRing ? 1 : 0,
-                borderStyle: 'solid'
-            }}
             id={id}
         >
             <View
