@@ -1,9 +1,15 @@
 import { PulsingButton, Screen, Typography } from '@components';
+import { calculateAverageScore, calculateTotalScore, getTotalGamesPlayed } from '@fb';
 import { useGameStateStore } from '@stores';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
 const StartScreen = () => {
+
+    const [averageScore, setAverageScore] = useState<number>(0);
+    const [totalScore, setTotalScore] = useState<number>(0);
+    const [gamesPlayed, setGamesPlayed] = useState<number>(0);
+
     const { startGame, getHighscore } = useGameStateStore();
 
     const [highScore, setHighScore] = useState<number>(0);
@@ -16,6 +22,21 @@ const StartScreen = () => {
 
         loadHighScore();
     }, []);
+
+    useEffect(() => {
+        async function getStats() {
+            const averageScore = await calculateAverageScore();
+            setAverageScore(averageScore);
+
+            const totalScore = await calculateTotalScore();
+            setTotalScore(totalScore);
+
+            const gamesPlayed = await getTotalGamesPlayed();
+            setGamesPlayed(gamesPlayed);
+        }
+
+        getStats();
+    }, [])
 
 
 
@@ -35,7 +56,7 @@ const StartScreen = () => {
                         PLAY
                     </PulsingButton>
                 </View>
-                <Typography className="text-2xl m-auto">High Score: {highScore}</Typography>
+
                 <View className='flex flex-col items-center '>
                     <Typography className='text-center mb-2'>
                         How to play:
@@ -46,6 +67,27 @@ const StartScreen = () => {
                     <Typography className='text-center text-[16px]'>
                         There are some twists though... so be careful! 😊
                     </Typography>
+                </View>
+                <View className=''>
+                    <Typography className='mb-6'>
+                        Stats
+                    </Typography>
+                    <View className='flex flex-row justify-between'>
+                        <Typography className="text-xl">High Score: </Typography>
+                        <Typography className="text-xl "> {highScore}</Typography>
+                    </View>
+                    <View className='flex flex-row justify-between'>
+                        <Typography className="text-xl ">Average Score: </Typography>
+                        <Typography className="text-xl"> {averageScore}</Typography>
+                    </View>
+                    <View className='flex flex-row justify-between'>
+                        <Typography className="text-xl ">Total Score: </Typography>
+                        <Typography className="text-xl "> {totalScore}</Typography>
+                    </View>
+                    <View className='flex flex-row justify-between'>
+                        <Typography className="text-xl ">Games Played: </Typography>
+                        <Typography className="text-xl "> {gamesPlayed}</Typography>
+                    </View>
                 </View>
             </View>
         </Screen>

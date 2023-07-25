@@ -10,13 +10,16 @@ const PlayingScreen = () => {
 
 
 
-    const { playSound } = useSound('game-start', {
-        looping: true,
-    })
+    // const { playSound } = useSound('game-start', {
+    //     looping: true,
+    // })
 
-    useEffect(() => {
-        playSound()
-    }, [])
+    // useEffect(() => {
+    //     if (state !== GameStates.PLAYING) {
+    //         return;
+    //     }
+    //     playSound()
+    // }, [])
 
     const ringColumn = 'flex-1 space-y-[250px] flex-1 flex flex-col'
     const ringGridCell = ''
