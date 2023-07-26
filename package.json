@@ -2,7 +2,8 @@
   "name": "roloc",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start  --dev-client",
+    "start": "expo start",
+    "dev": "expo start  --dev-client",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
