@@ -4,8 +4,6 @@ import auth from '@react-native-firebase/auth';
 import { useEffect, useState } from 'react';
 import crashlytics from '@react-native-firebase/crashlytics';
 
-
-
 export default function App() {
 
   function SignInAnonymously() {

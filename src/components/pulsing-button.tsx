@@ -1,6 +1,6 @@
-import { Typography } from '@components';
 import React, { FC, PropsWithChildren, useEffect, useRef } from 'react'
 import { Animated, TouchableOpacity, View } from 'react-native';
+import { Typography } from './typography';
 
 export interface PulsingButtonProps {
     onPress: () => void,

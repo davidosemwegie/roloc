@@ -3,7 +3,7 @@ import PlayingScreen from '@screens/playing/playing-screen'
 import StartScreen from '@screens/start/start-screen'
 import { GameStates, useGameStateStore } from '@stores'
 import React from 'react'
-import { SafeAreaView, Text, View } from 'react-native'
+import { SafeAreaView } from 'react-native'
 
 export const MainLayout = () => {
 

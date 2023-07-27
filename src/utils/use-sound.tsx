@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Audio } from 'expo-av';
 
-const gameStart = require('../assets/game-start.mp3')
+const gameStart = require('../assets/playing.wav')
 const gameOver = require('../assets/game-over.wav')
 const match = require('../assets/match.wav')
 
@@ -11,7 +11,7 @@ interface SoundOptions {
     looping?: boolean
 }
 
-export const useSound = (soundToPlay: Sounds = 'game-start', options?: SoundOptions) => {
+export const useSound = (soundToPlay: Sounds, options?: SoundOptions) => {
     const [sound, setSound] = React.useState<Audio.Sound>();
     const [isMuted, setIsMuted] = React.useState(false);
 

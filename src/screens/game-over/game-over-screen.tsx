@@ -1,4 +1,4 @@
-import { PulsingButton, Screen, Typography } from '@components'
+import { PulsingButton, Screen, Typography, useSoundContext } from '@components'
 import { getHighscore } from '@fb'
 import { useGameStateStore } from '@stores'
 import { useSound } from '@utils'
@@ -11,12 +11,12 @@ export const GameOverScreen = () => {
     const [highscore, setHighscore] = React.useState(0)
     const [oldHighscore, setOldHighscore] = React.useState(0)
 
-    const { playSound } = useSound('game-over')
+    const { playSound } = useSoundContext()
 
     const { score, startGame, oldHighscore: gameStoreOldHighscore, backToMenu } = useGameStateStore()
 
     useEffect(() => {
-        playSound()
+        playSound('game-over')
     }, [])
 
     useEffect(() => {

@@ -4,22 +4,16 @@ import { cn, useSound } from '@utils'
 import React, { useEffect } from 'react'
 import { View } from 'react-native'
 import { DragProvider } from './drag-provider'
+import { useSoundContext } from '@components'
 
 const PlayingScreen = () => {
     const { score, state, endGame, ringOrder, dotOrder, activeColor } = useGameStateStore()
 
+    const { playSound } = useSoundContext()
 
-
-    // const { playSound } = useSound('game-start', {
-    //     looping: true,
-    // })
-
-    // useEffect(() => {
-    //     if (state !== GameStates.PLAYING) {
-    //         return;
-    //     }
-    //     playSound()
-    // }, [])
+    useEffect(() => {
+        playSound('game-start')
+    }, [])
 
     const ringColumn = 'flex-1 space-y-[250px] flex-1 flex flex-col'
     const ringGridCell = ''
