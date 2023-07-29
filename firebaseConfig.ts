@@ -9,12 +9,19 @@ interface Game {
     endTime: FirebaseFirestoreTypes.Timestamp
 }
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 export async function trackEvent(eventName: string, eventParams?: any) {
     try {
-        await analytics().logEvent(eventName, eventParams);
+        if (isProduction) {
+            await analytics().logEvent(eventName, eventParams);
+        }
     } catch (error) {
-        crashlytics().recordError(error);
-        console.log(error);
+        if (isProduction) {
+            crashlytics().recordError(error);
+            crashlytics().recordError(error);
+            console.log(error);
+        }
     }
 }
 
