@@ -288,3 +288,36 @@ export async function getExtraLives(): Promise<number> {
     // In case of an error or no user, return 0 as extra lives
     return 0;
 }
+
+
+export async function useExtraLife(): Promise<void> {
+    const user = auth().currentUser;
+
+    try {
+        if (user) {
+            const playerRef = firestore().collection('players').doc(user.uid);
+            const playerDoc = await playerRef.get();
+
+            if (playerDoc.exists) {
+                // Player document exists, decrement the extra_lives field by 1
+                const currentExtraLives = playerDoc.get('extra_lives') as number;
+
+                if (currentExtraLives > 0) {
+                    await playerRef.update({
+                        extra_lives: firestore.FieldValue.increment(-1),
+                    });
+
+                    console.log('Extra life used');
+                } else {
+                    console.log('No extra lives left to use');
+                }
+            } else {
+                // Player document does not exist in the players collection, log error
+                console.log('No player document found for current user');
+            }
+        }
+    } catch (error) {
+        crashlytics().recordError(error);
+        console.log(error);
+    }
+}

@@ -1,7 +1,7 @@
 import { PulsingButton, Screen, Typography, useSoundContext } from '@components'
 import { getHighscore, trackEvent } from '@fb'
 import { useAdContext } from '@layouts'
-import { useGameStateStore } from '@stores'
+import { useExtraLifeStore, useGameStateStore } from '@stores'
 import React, { useEffect } from 'react'
 import { Button, View } from 'react-native'
 
@@ -24,6 +24,8 @@ export const GameOverScreen = () => {
     const [highscore, setHighscore] = React.useState(0)
     const [oldHighscore, setOldHighscore] = React.useState(0)
 
+    const { setExtraLives, extraLives } = useExtraLifeStore()
+
 
     const { playSound } = useSoundContext()
     const { interstitialAd: {
@@ -32,7 +34,7 @@ export const GameOverScreen = () => {
         load
     } } = useAdContext()
 
-    const { score, startGame, oldHighscore: gameStoreOldHighscore, backToMenu } = useGameStateStore()
+    const { score, startGame, oldHighscore: gameStoreOldHighscore, backToMenu, resumeWithExtraLife, extraLifeUsed } = useGameStateStore()
 
     useEffect(() => {
         if (showAd) {
@@ -43,6 +45,11 @@ export const GameOverScreen = () => {
         }
         playSound('game-over')
     }, [])
+
+    useEffect(() => {
+        setExtraLives()
+    }, [])
+
 
 
 
@@ -66,6 +73,7 @@ export const GameOverScreen = () => {
     } else if (matchedHighscore) {
         copy = "You matched your highscore!"
     }
+
 
     return (
         <Screen className='space-y-10'>
@@ -93,6 +101,22 @@ export const GameOverScreen = () => {
             >
                 Play Again
             </PulsingButton>
+            {extraLives > 0 && !extraLifeUsed && (
+                <View>
+                    <Typography className='text-[20px]'>
+                        You have {extraLives} extra lives
+                    </Typography>
+                    <Button
+                        title="Use an extra life"
+                        onPress={() => {
+                            resumeWithExtraLife(async () => {
+                                load()
+                            })
+                        }}
+                    />
+                </View>
+            )}
+
             <View>
                 <Button title="Back to main screen" color='grey' onPress={backToMenu} />
             </View>

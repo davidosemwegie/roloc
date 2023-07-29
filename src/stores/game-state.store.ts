@@ -1,6 +1,6 @@
 import { RingColors } from '@types'
 import { getRandomEnumValue } from '@utils'
-import { getHighscore, trackEvent, updateGamesArrayWithScore, updateUserHighscore } from '@fb'
+import { getExtraLives, getHighscore, trackEvent, updateGamesArrayWithScore, updateUserHighscore, useExtraLife } from '@fb'
 import { setStorageValue } from 'local-storage'
 import { create } from 'zustand'
 
@@ -20,6 +20,7 @@ interface GameStateStore {
     activeColor?: RingColors,
     state: GameStates,
     startGame: (callback?: () => void) => void,
+    resumeWithExtraLife: (callback?: () => void) => void,
     pauseGame: () => void,
     resumeGame: () => void,
     endGame: (callback?: () => void) => void,
@@ -30,6 +31,7 @@ interface GameStateStore {
     dotOrder: RingColors[],
     ringOrder: RingColors[],
     extraLives: number,
+    extraLifeUsed: boolean,
 
 }
 
@@ -89,6 +91,7 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     ringOrder: [],
     dotOrder: [],
     extraLives: 0,
+    extraLifeUsed: false,
 
     // After initializing dotOrder...
     startGame: async (callback?: () => void) => {
@@ -104,6 +107,7 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
             activeColor: getRandomEnumValue(RingColors),
             ringOrder: generateRandomRingOrder(),
             dotOrder: generateRandomRingOrder(), // New function to generate dot order with unique ids
+            extraLifeUsed: false,
         }))
     },
     activeColor: undefined,
@@ -154,6 +158,28 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
         set(() => ({ state: GameStates.GAME_OVER, highScore: newHighScore, oldHighscore: parsedHighScore }));
 
 
+    },
+    resumeWithExtraLife: async (callback?: () => void) => {
+
+        const extraLives = await getExtraLives();
+        const { state } = get()
+
+        if (state === GameStates.GAME_OVER && extraLives > 0) {
+
+
+            await useExtraLife()
+                .then(() => {
+                    // Deduct one extra life and resume the game
+                    if (typeof callback === 'function') callback()
+
+                    set({
+                        state: GameStates.PLAYING,
+                        extraLifeUsed: true,
+                    });
+                })
+        } else {
+            console.error("Cannot resume game: game is not over or no extra lives left.");
+        }
     },
     showStartScreen: () => set(() => ({ state: GameStates.IDLE })),
 

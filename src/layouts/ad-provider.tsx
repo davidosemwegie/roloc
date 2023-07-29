@@ -28,27 +28,6 @@ export const AdProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
         requestNonPersonalizedAdsOnly: true,
     });
 
-    const { isClosed, isEarnedReward } = rewardedInterstitialAd
-
-
-    useEffect(() => {
-        rewardedInterstitialAd.load();
-    }, [rewardedInterstitialAd.load])
-
-    useEffect(() => {
-        if (isClosed && isEarnedReward) {
-            // Log the reward when the rewarded ad is closed
-            console.log("Reward:", isEarnedReward ? "Earned" : "Not Earned");
-            console.log("Reward amount:", rewardedInterstitialAd.reward);
-            addExtraLife();
-
-            // Load another ad
-            rewardedInterstitialAd.load();
-        }
-    }, [isEarnedReward]);
-
-
-
     const value = {
         interstitialAd,
         rewardedInterstitialAd

@@ -34,11 +34,10 @@ export const Instructions = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 30,
                     padding: 40,
                     borderRadius: 20,
                 }}>
-                <View className='flex flex-col items-center '>
+                <View className='flex flex-col items-center mb-10'>
                     <Typography className='text-center mb-2'>
                         How to play:
                     </Typography>
