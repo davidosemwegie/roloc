@@ -16,6 +16,7 @@
     "tsc": "tsc"
   },
   "dependencies": {
+    "@expo/html-elements": "^0.5.1",
     "@react-native-async-storage/async-storage": "1.17.11",
     "@react-native-firebase/analytics": "^18.3.0",
     "@react-native-firebase/app": "^18.3.0",
@@ -35,6 +36,7 @@
     "expo-status-bar": "~1.4.4",
     "expo-tracking-transparency": "~3.0.3",
     "firebase": "^10.1.0",
+    "googleapis": "^123.0.0",
     "nativewind": "^2.0.11",
     "react": "18.2.0",
     "react-native": "0.71.8",

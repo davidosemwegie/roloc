@@ -1,4 +1,3 @@
-import { addExtraLife } from "@fb";
 import { useGameStateStore } from "@stores";
 import { PropsWithChildren, createContext, useContext, useEffect } from "react";
 import { Platform } from "react-native";

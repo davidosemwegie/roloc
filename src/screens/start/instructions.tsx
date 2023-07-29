@@ -42,10 +42,10 @@ export const Instructions = () => {
                         How to play:
                     </Typography>
                     <Typography className='text-center text-[16px]'>
-                        Match the color of the ring with the color of the dot.
+                        Drag the highlighted dot to the matching color ring.
                     </Typography>
                     <Typography className='text-center text-[16px]'>
-                        There are some twists though... so be careful! 😊
+                        There are some twists though along the way... so be careful! 😊
                     </Typography>
                 </View>
                 <PulsingButton

@@ -321,3 +321,51 @@ export async function useExtraLife(): Promise<void> {
         console.log(error);
     }
 }
+
+export async function setUserEmail(email: string): Promise<void> {
+    const user = auth().currentUser;
+
+    try {
+        if (user) {
+            const userRef = firestore().collection('players').doc(user.uid);
+
+            await userRef.update({
+                email: email,
+            });
+
+            console.log('User email updated in the database');
+        }
+    } catch (error) {
+        crashlytics().recordError(error);
+        console.log(error);
+    }
+}
+
+export async function getUserEmail(): Promise<string | null> {
+    const user = auth().currentUser;
+
+    try {
+        if (user) {
+            const userRef = firestore().collection('players').doc(user.uid);
+            const userDoc = await userRef.get();
+
+            if (userDoc.exists) {
+                // Get the email field from the user's document
+                const email = userDoc.get('email') as string;
+
+                return email;
+            } else {
+                // User document does not exist in the users collection, return null for email
+                return null;
+            }
+        }
+    } catch (error) {
+        crashlytics().recordError(error);
+        console.log(error);
+    }
+
+    // In case of an error or no user, return null for email
+    return null;
+}
+
+

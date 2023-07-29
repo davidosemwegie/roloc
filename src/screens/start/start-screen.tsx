@@ -1,10 +1,8 @@
 import { GameStats, GetExtraLivesModal, PulsingButton, Screen, Typography } from '@components';
-import { addExtraLife, calculateAverageScore, calculateTotalScore, getExtraLives, getHighscore, getTotalGamesPlayed } from '@fb';
 import { useGameStateStore } from '@stores';
-import React, { useEffect, useState } from 'react';
-import { Button, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { View } from 'react-native';
 import { useAdContext } from '../../layouts';
-import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 import { Instructions } from './instructions';
 
 const StartScreen = () => {

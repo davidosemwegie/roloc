@@ -8,7 +8,7 @@ interface ExtraLifeStore {
     useExtraLife: () => void;
 }
 
-export const useExtraLifeStore = create<ExtraLifeStore>((set, get) => ({
+export const useExtraLifeStore = create<ExtraLifeStore>((set) => ({
     extraLives: 0,
     setExtraLives: async () => {
         const lives = await getExtraLives(); // Assume this function gets the extra lives from Firestore
