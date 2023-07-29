@@ -1,9 +1,8 @@
 import { RingColors } from '@types'
 import { getRandomEnumValue } from '@utils'
-import { getHighscore, updateGamesArrayWithScore, updateUserHighscore } from '@fb'
-import { getStorageValue, setStorageValue } from 'local-storage'
+import { getHighscore, trackEvent, updateGamesArrayWithScore, updateUserHighscore } from '@fb'
+import { setStorageValue } from 'local-storage'
 import { create } from 'zustand'
-import analytics from '@react-native-firebase/analytics';
 
 
 
@@ -20,7 +19,7 @@ interface GameStateStore {
     addPoint: () => void,
     activeColor?: RingColors,
     state: GameStates,
-    startGame: () => void,
+    startGame: (callback?: () => void) => void,
     pauseGame: () => void,
     resumeGame: () => void,
     endGame: (callback?: () => void) => void,
@@ -90,9 +89,12 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     dotOrder: [],
 
     // After initializing dotOrder...
-    startGame: () => {
+    startGame: async (callback?: () => void) => {
 
-        analytics().logEvent('start_game')
+        if (typeof callback === 'function') callback()
+
+
+        trackEvent('start_game')
 
         return set(() => ({
             state: GameStates.PLAYING,
@@ -142,7 +144,7 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
 
 
 
-        await analytics().logEvent('game_over', {
+        await trackEvent('game_over', {
             score: state.score,
         })
 

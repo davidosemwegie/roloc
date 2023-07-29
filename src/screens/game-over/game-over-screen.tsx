@@ -1,23 +1,48 @@
 import { PulsingButton, Screen, Typography, useSoundContext } from '@components'
-import { getHighscore } from '@fb'
+import { getHighscore, trackEvent } from '@fb'
+import { useAdContext } from '@layouts'
 import { useGameStateStore } from '@stores'
-import { useSound } from '@utils'
 import React, { useEffect } from 'react'
 import { Button, View } from 'react-native'
-import { TouchableOpacity } from 'react-native-gesture-handler'
+
+function shouldShowAd() {
+    const num = Math.floor(Math.random() * 3) + 1;
+
+    if (num === 1) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 
 export const GameOverScreen = () => {
 
+    const [showAd] = React.useState(() => shouldShowAd())
     const [highscore, setHighscore] = React.useState(0)
     const [oldHighscore, setOldHighscore] = React.useState(0)
 
+
     const { playSound } = useSoundContext()
+    const { interstitialAd: {
+        isLoaded,
+        show,
+        load
+    } } = useAdContext()
 
     const { score, startGame, oldHighscore: gameStoreOldHighscore, backToMenu } = useGameStateStore()
 
     useEffect(() => {
+        if (showAd && isLoaded) {
+            show()
+            trackEvent('ad_shown', {
+                type: 'interstitial'
+            })
+        }
         playSound('game-over')
     }, [])
+
+
 
     useEffect(() => {
         const getHS = async () => {
@@ -43,7 +68,7 @@ export const GameOverScreen = () => {
     return (
         <Screen className='space-y-10'>
             <Typography className='text-3xl font-bold text-red-500'>
-                Game Over
+                Game Over {isLoaded && '🚀'}
             </Typography>
             <View className='flex items-center'>
                 <Typography >
@@ -56,7 +81,11 @@ export const GameOverScreen = () => {
             <Typography className='mb-10'>
                 High score: {String(Math.max(score, highscore))}
             </Typography>
-            <PulsingButton onPress={startGame}>
+            <PulsingButton onPress={() => {
+                startGame(async () => {
+                    load()
+                })
+            }}>
                 Play Again
             </PulsingButton>
             <View>

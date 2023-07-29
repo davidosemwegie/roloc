@@ -5,6 +5,7 @@ import StartScreen from '@screens/start/start-screen'
 import { GameStates, useGameStateStore } from '@stores'
 import React from 'react'
 import { SafeAreaView } from 'react-native'
+import { AdProvider } from './ad-provider'
 
 
 
@@ -31,9 +32,11 @@ export const MainLayout = () => {
     }
 
     return (
-        <SafeAreaView className='bg-black flex-1 w-full text-white'>
-            {ACTIVE_SCREEN}
-            {state !== GameStates.PLAYING && <BannerAds />}
-        </SafeAreaView>
+        <AdProvider>
+            <SafeAreaView className='bg-black flex-1 w-full text-white'>
+                {ACTIVE_SCREEN}
+                {state !== GameStates.PLAYING && <BannerAds />}
+            </SafeAreaView>
+        </AdProvider>
     )
 }

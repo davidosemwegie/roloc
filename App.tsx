@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { MainLayout } from '@layouts';
+import { AdProvider, MainLayout } from '@layouts';
 import auth from '@react-native-firebase/auth';
 import { useEffect, useState } from 'react';
 import crashlytics from '@react-native-firebase/crashlytics';

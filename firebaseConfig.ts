@@ -1,10 +1,21 @@
 import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import crashlytics from '@react-native-firebase/crashlytics'
+import analytics from '@react-native-firebase/analytics';
+
 
 interface Game {
     score: number;
     endTime: FirebaseFirestoreTypes.Timestamp
+}
+
+export async function trackEvent(eventName: string, eventParams?: any) {
+    try {
+        await analytics().logEvent(eventName, eventParams);
+    } catch (error) {
+        crashlytics().recordError(error);
+        console.log(error);
+    }
 }
 
 

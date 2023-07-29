@@ -4,6 +4,7 @@ import { useGameStateStore } from '@stores';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { BannerAds } from '@components';
+import { useAdContext } from '@layouts';
 
 const StartScreen = () => {
 
@@ -11,6 +12,8 @@ const StartScreen = () => {
     const [totalScore, setTotalScore] = useState<number>(0);
     const [gamesPlayed, setGamesPlayed] = useState<number>(0);
     const [highScore, setHighScore] = useState<number>(0);
+
+    const { interstitialAd } = useAdContext();
 
     const { startGame } = useGameStateStore();
 
@@ -47,7 +50,9 @@ const StartScreen = () => {
                 </View>
                 <View className='max-w-[80%] w-full m-auto'>
 
-                    <PulsingButton onPress={startGame}>
+                    <PulsingButton onPress={() => {
+                        startGame(() => interstitialAd.load())
+                    }}>
                         PLAY
                     </PulsingButton>
                 </View>
