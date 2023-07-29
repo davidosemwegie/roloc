@@ -9,15 +9,14 @@ interface Game {
     endTime: FirebaseFirestoreTypes.Timestamp
 }
 
-const isProduction = process.env.NODE_ENV === 'production';
 
 export async function trackEvent(eventName: string, eventParams?: any) {
     try {
-        if (isProduction) {
+        if (!__DEV__) {
             await analytics().logEvent(eventName, eventParams);
         }
     } catch (error) {
-        if (isProduction) {
+        if (!__DEV__) {
             crashlytics().recordError(error);
             crashlytics().recordError(error);
             console.log(error);
@@ -28,8 +27,6 @@ export async function trackEvent(eventName: string, eventParams?: any) {
 
 export async function updateGamesArrayWithScore(score: number) {
     const user = auth().currentUser;
-
-    console.log({ user });
 
     try {
         if (user) {

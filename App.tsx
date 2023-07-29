@@ -23,6 +23,12 @@ export default function App() {
         console.log('Yay! I have user permission to track data');
       }
     })();
+
+    const env = process.env.NODE_ENV;
+
+    console.log('env', env);
+    console.log(__DEV__ ? 'Running in dev mode' : 'Running in production mode')
+
   }, []);
 
 

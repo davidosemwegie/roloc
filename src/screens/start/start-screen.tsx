@@ -68,9 +68,6 @@ const StartScreen = () => {
                     </Typography>
                 </View>
                 <View className=''>
-                    <Typography className='mb-6'>
-                        Stats
-                    </Typography>
                     <View className='flex flex-row justify-between'>
                         <Typography className="text-xl">High Score: </Typography>
                         <Typography className="text-xl "> {highScore}</Typography>
