@@ -1,4 +1,4 @@
-import { GetExtraLivesModal, PulsingButton, Screen, Typography } from '@components';
+import { GameStats, GetExtraLivesModal, PulsingButton, Screen, Typography } from '@components';
 import { addExtraLife, calculateAverageScore, calculateTotalScore, getExtraLives, getHighscore, getTotalGamesPlayed } from '@fb';
 import { useGameStateStore } from '@stores';
 import React, { useEffect, useState } from 'react';
@@ -70,15 +70,23 @@ const StartScreen = () => {
     return (
         <Screen className='justify-between'>
             <View className='space-y-10'>
-                <View className="flex flex-row mb-10 mx-auto" >
+                <View className="flex flex-row mx-auto" >
                     <Typography className="text-6xl mx-1 font-bold text-blue-500">R</Typography>
                     <Typography className="text-6xl mx-1 font-bold text-yellow-500">O</Typography>
                     <Typography className="text-6xl mx-1 font-bold text-red-500">L</Typography>
                     <Typography className="text-6xl mx-1 font-bold text-green-500">O</Typography>
                     <Typography className="text-6xl mx-1 font-bold text-white-500">C</Typography>
                 </View>
-                <View className='max-w-[80%] w-full m-auto'>
-
+                <View>
+                    <GameStats />
+                </View>
+                <View className='space-y-10'>
+                    <View className='flex justify-between items-center mb-6'>
+                        <GetExtraLivesModal />
+                    </View>
+                    <Instructions />
+                </View>
+                <View className='m-auto'>
                     <PulsingButton
                         onPress={() => {
                             startGame(() => interstitialAd.load())
@@ -86,37 +94,6 @@ const StartScreen = () => {
                     >
                         PLAY
                     </PulsingButton>
-
-                </View>
-
-                <View className=''>
-
-                    <View className='flex flex-row justify-between'>
-                        <Typography className="text-xl">High Score: </Typography>
-                        <Typography className="text-xl "> {highScore}</Typography>
-                    </View>
-                    <View className='flex flex-row justify-between'>
-                        <Typography className="text-xl ">Average Score: </Typography>
-                        <Typography className="text-xl"> {averageScore}</Typography>
-                    </View>
-                    <View className='flex flex-row justify-between'>
-                        <Typography className="text-xl ">Total Score: </Typography>
-                        <Typography className="text-xl "> {totalScore}</Typography>
-                    </View>
-                    <View className='flex flex-row justify-between'>
-                        <Typography className="text-xl ">Games Played: </Typography>
-                        <Typography className="text-xl "> {gamesPlayed}</Typography>
-                    </View>
-                    <View className='flex flex-row justify-between'>
-                        <Typography className="text-xl">Extra Lives: </Typography>
-                        <Typography className="text-xl "> {extraLives}</Typography>
-                    </View>
-                </View>
-                <View className='space-y-10'>
-                    <View className='flex justify-between items-center mb-6'>
-                        <GetExtraLivesModal />
-                    </View>
-                    <Instructions />
                 </View>
             </View>
 

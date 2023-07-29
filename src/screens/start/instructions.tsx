@@ -17,9 +17,9 @@ export const Instructions = () => {
         <>
             <TouchableOpacity
                 onPress={() => setShowPopover(true)}
-                className="bg-gray-900 p-3 rounded-lg flex items-center justify-center"
+                className="bg-gray-900 w-auto p-4 rounded-lg flex items-center justify-center m-auto"
                 style={{
-                    opacity: 0.5,
+                    opacity: 0.8,
                 }}
             >
                 <Typography className="text-md">Instructions</Typography>
