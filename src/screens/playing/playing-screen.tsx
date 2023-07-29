@@ -1,6 +1,6 @@
 import { Dot, Ring, Typography } from '@components'
 import { GameStates, useGameStateStore } from '@stores'
-import { cn, useSound } from '@utils'
+import { cn, } from '@utils'
 import React, { useEffect } from 'react'
 import { View } from 'react-native'
 import { DragProvider } from './drag-provider'

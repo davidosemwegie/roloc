@@ -3,8 +3,28 @@ import { MainLayout } from '@layouts';
 import auth from '@react-native-firebase/auth';
 import { useEffect, useState } from 'react';
 import crashlytics from '@react-native-firebase/crashlytics';
+import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
+import mobileAds from 'react-native-google-mobile-ads';
+
+mobileAds()
+  .initialize()
+  .then(adapterStatuses => {
+    console.log({ adapterStatuses });
+  });
+
+
 
 export default function App() {
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await requestTrackingPermissionsAsync();
+      if (status === 'granted') {
+        console.log('Yay! I have user permission to track data');
+      }
+    })();
+  }, []);
+
 
   function SignInAnonymously() {
     auth()

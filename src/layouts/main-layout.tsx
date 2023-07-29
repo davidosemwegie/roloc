@@ -1,9 +1,12 @@
+import { BannerAds } from '@components'
 import { GameOverScreen } from '@screens/game-over/game-over-screen'
 import PlayingScreen from '@screens/playing/playing-screen'
 import StartScreen from '@screens/start/start-screen'
 import { GameStates, useGameStateStore } from '@stores'
 import React from 'react'
 import { SafeAreaView } from 'react-native'
+
+
 
 export const MainLayout = () => {
 
@@ -30,6 +33,7 @@ export const MainLayout = () => {
     return (
         <SafeAreaView className='bg-black flex-1 w-full text-white'>
             {ACTIVE_SCREEN}
+            {state !== GameStates.PLAYING && <BannerAds />}
         </SafeAreaView>
     )
 }
