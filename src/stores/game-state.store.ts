@@ -29,6 +29,7 @@ interface GameStateStore {
     showStartScreen: () => void,
     dotOrder: RingColors[],
     ringOrder: RingColors[],
+    extraLives: number,
 
 }
 
@@ -87,6 +88,7 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     oldHighscore: 0,
     ringOrder: [],
     dotOrder: [],
+    extraLives: 0,
 
     // After initializing dotOrder...
     startGame: async (callback?: () => void) => {

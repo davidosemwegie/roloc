@@ -8,10 +8,6 @@ import mobileAds from 'react-native-google-mobile-ads';
 
 mobileAds()
   .initialize()
-  .then(adapterStatuses => {
-    console.log({ adapterStatuses });
-  });
-
 
 
 export default function App() {
