@@ -101,7 +101,7 @@ const StartScreen = () => {
                         Extra Lives: {extraLives}
                     </Typography>
                     {rewardedInterstitialAd.isLoaded && <Button
-                        title="Watch Ad for Extra Life"
+                        title="Get Extra Lives"
                         onPress={() => {
                             rewardedInterstitialAd.show();
                         }}
