@@ -6,6 +6,7 @@ import crashlytics from '@react-native-firebase/crashlytics';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import mobileAds from 'react-native-google-mobile-ads';
 
+
 mobileAds()
   .initialize()
 

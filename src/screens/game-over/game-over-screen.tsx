@@ -5,6 +5,7 @@ import { useGameStateStore } from '@stores'
 import React, { useEffect } from 'react'
 import { Button, View } from 'react-native'
 
+
 function shouldShowAd() {
     const num = Math.floor(Math.random() * 3) + 1;
 
@@ -17,6 +18,7 @@ function shouldShowAd() {
 
 
 export const GameOverScreen = () => {
+
 
     const [showAd] = React.useState(() => shouldShowAd())
     const [highscore, setHighscore] = React.useState(0)
@@ -81,11 +83,14 @@ export const GameOverScreen = () => {
             <Typography className='mb-10'>
                 High score: {String(Math.max(score, highscore))}
             </Typography>
-            <PulsingButton onPress={() => {
-                startGame(async () => {
-                    load()
-                })
-            }}>
+            <PulsingButton
+                onPress={() => {
+                    startGame(async () => {
+                        load()
+                    })
+                }}
+                size={40}
+            >
                 Play Again
             </PulsingButton>
             <View>

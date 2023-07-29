@@ -1,4 +1,5 @@
 import { addExtraLife } from "@fb";
+import { useGameStateStore } from "@stores";
 import { PropsWithChildren, createContext, useContext, useEffect } from "react";
 import { Platform } from "react-native";
 import { TestIds, useInterstitialAd, AdHookReturns, useRewardedInterstitialAd } from 'react-native-google-mobile-ads';
@@ -12,6 +13,8 @@ export interface AdContext {
 export const AdContext = createContext<AdContext>(undefined);
 
 export const AdProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
+
+    const { } = useGameStateStore();
 
     const interstitialAdId = __DEV__ ? TestIds.INTERSTITIAL : Platform.OS === 'ios' ? 'ca-app-pub-6400654457067913/4850883993' : "ca-app-pub-6400654457067913/2711751913";
 
@@ -33,7 +36,7 @@ export const AdProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
     }, [rewardedInterstitialAd.load])
 
     useEffect(() => {
-        if (isClosed) {
+        if (isClosed && isEarnedReward) {
             // Log the reward when the rewarded ad is closed
             console.log("Reward:", isEarnedReward ? "Earned" : "Not Earned");
             console.log("Reward amount:", rewardedInterstitialAd.reward);
@@ -42,7 +45,7 @@ export const AdProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
             // Load another ad
             rewardedInterstitialAd.load();
         }
-    }, [isClosed, isEarnedReward, rewardedInterstitialAd]);
+    }, [isEarnedReward]);
 
 
 

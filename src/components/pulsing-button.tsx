@@ -1,15 +1,21 @@
-import React, { FC, PropsWithChildren, useEffect, useRef } from 'react'
+import React, { FC, PropsWithChildren, useEffect, useRef } from 'react';
 import { Animated, TouchableOpacity, View } from 'react-native';
 import { Typography } from './typography';
 
 export interface PulsingButtonProps {
-    onPress: () => void,
+    onPress: () => void;
+    color?: string; // New color prop
+    size?: number; // New size prop
 }
 
-export const PulsingButton: FC<PropsWithChildren<PulsingButtonProps>> = ({ onPress, children }) => {
-
+export const PulsingButton: FC<PropsWithChildren<PulsingButtonProps>> = ({
+    onPress,
+    children,
+    color = 'green', // Default color is green
+    size = 48, // Default size is 48 (assuming it's in pixels)
+}) => {
     const lettersRef = useRef(null);
-    const scale = useRef(new Animated.Value(1)).current;  // Animation value
+    const scale = useRef(new Animated.Value(1)).current; // Animation value
 
     // Assign a random delay to each letter
     useEffect(() => {
@@ -34,27 +40,23 @@ export const PulsingButton: FC<PropsWithChildren<PulsingButtonProps>> = ({ onPre
                     duration: 1000,
                     useNativeDriver: true, // Add This line
                 }),
-            ]),
+            ])
         ).start();
-
     }, []);
 
     return (
         <View>
-
-            <Animated.View
-                style={{ transform: [{ scale: scale }] }} // Bind scale to animated value
-            >
+            <Animated.View style={{ transform: [{ scale: scale }] }}>
                 <TouchableOpacity
                     onPress={onPress}
-                    className='flex flex-row justify-center items-center rounded-lg bg-green-600 p-4 w-auto'
+                    style={{
+                        backgroundColor: color, // Use the color prop for background color
+                    }}
+                    className='flex flex-row justify-center items-center rounded-lg bg-green-600 p-4 max-w-fit'
                 >
-                    <Typography className='text-4xl font-bold'>
-                        {children}
-                    </Typography>
+                    <Typography className={`text-${size / 8}xl font-bold`}>{children}</Typography>
                 </TouchableOpacity>
-
             </Animated.View>
         </View>
-    )
-}
+    );
+};

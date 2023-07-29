@@ -1,10 +1,11 @@
-import { PulsingButton, Screen, Typography } from '@components';
+import { GetExtraLivesModal, PulsingButton, Screen, Typography } from '@components';
 import { addExtraLife, calculateAverageScore, calculateTotalScore, getExtraLives, getHighscore, getTotalGamesPlayed } from '@fb';
 import { useGameStateStore } from '@stores';
 import React, { useEffect, useState } from 'react';
 import { Button, View } from 'react-native';
 import { useAdContext } from '../../layouts';
 import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { Instructions } from './instructions';
 
 const StartScreen = () => {
 
@@ -78,37 +79,18 @@ const StartScreen = () => {
                 </View>
                 <View className='max-w-[80%] w-full m-auto'>
 
-                    <PulsingButton onPress={() => {
-                        startGame(() => interstitialAd.load())
-                    }}>
+                    <PulsingButton
+                        onPress={() => {
+                            startGame(() => interstitialAd.load())
+                        }}
+                    >
                         PLAY
                     </PulsingButton>
-                </View>
-
-                <View className='flex flex-col items-center '>
-                    <Typography className='text-center mb-2'>
-                        How to play:
-                    </Typography>
-                    <Typography className='text-center text-[16px]'>
-                        Match the color of the ring with the color of the dot.
-                    </Typography>
-                    <Typography className='text-center text-[16px]'>
-                        There are some twists though... so be careful! 😊
-                    </Typography>
-                </View>
-                <View>
-                    <Typography className='text-center text-xl'>
-                        Extra Lives: {extraLives}
-                    </Typography>
-                    {rewardedInterstitialAd.isLoaded && <Button
-                        title="Get Extra Lives"
-                        onPress={() => {
-                            rewardedInterstitialAd.show();
-                        }}
-                    />}
 
                 </View>
+
                 <View className=''>
+
                     <View className='flex flex-row justify-between'>
                         <Typography className="text-xl">High Score: </Typography>
                         <Typography className="text-xl "> {highScore}</Typography>
@@ -125,8 +107,19 @@ const StartScreen = () => {
                         <Typography className="text-xl ">Games Played: </Typography>
                         <Typography className="text-xl "> {gamesPlayed}</Typography>
                     </View>
+                    <View className='flex flex-row justify-between'>
+                        <Typography className="text-xl">Extra Lives: </Typography>
+                        <Typography className="text-xl "> {extraLives}</Typography>
+                    </View>
+                </View>
+                <View className='space-y-10'>
+                    <View className='flex justify-between items-center mb-6'>
+                        <GetExtraLivesModal />
+                    </View>
+                    <Instructions />
                 </View>
             </View>
+
         </Screen>
     );
 };
