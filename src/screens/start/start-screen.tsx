@@ -1,5 +1,5 @@
 import { PulsingButton, Screen, Typography } from '@components';
-import { calculateAverageScore, calculateTotalScore, getExtraLives, getHighscore, getTotalGamesPlayed } from '@fb';
+import { addExtraLife, calculateAverageScore, calculateTotalScore, getExtraLives, getHighscore, getTotalGamesPlayed } from '@fb';
 import { useGameStateStore } from '@stores';
 import React, { useEffect, useState } from 'react';
 import { Button, View } from 'react-native';
@@ -25,11 +25,8 @@ const StartScreen = () => {
 
     // Function to update extra lives by fetching from the server
     const updateExtraLives = async () => {
-        getExtraLives().then((extraLives) => {
-            setExtraLives(extraLives);
-            console.log({
-                extraLives
-            });
+        await addExtraLife().then((res) => {
+            setExtraLives(extraLives + 1)
         });
 
     };
