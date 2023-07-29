@@ -3,7 +3,6 @@ import { calculateAverageScore, calculateTotalScore, getHighscore, getTotalGames
 import { useGameStateStore } from '@stores';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { BannerAds } from '@components';
 import { useAdContext } from '@layouts';
 
 const StartScreen = () => {

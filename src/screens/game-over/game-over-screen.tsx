@@ -33,7 +33,7 @@ export const GameOverScreen = () => {
     const { score, startGame, oldHighscore: gameStoreOldHighscore, backToMenu } = useGameStateStore()
 
     useEffect(() => {
-        if (showAd && isLoaded) {
+        if (showAd) {
             show()
             trackEvent('ad_shown', {
                 type: 'interstitial'
