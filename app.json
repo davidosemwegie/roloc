@@ -2,7 +2,7 @@
   "expo": {
     "name": "ROLOC",
     "slug": "roloc",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -19,7 +19,7 @@
       "bundleIdentifier": "com.osazi.roloc",
       "googleServicesFile": "./GoogleService-Info.plist",
       "icon": "./assets/icon.png",
-      "buildNumber": "0.0.2",
+      "buildNumber": "1",
       "infoPlist": {
         "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you."
       }
