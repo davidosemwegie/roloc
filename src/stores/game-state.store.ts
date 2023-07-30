@@ -62,7 +62,7 @@ function getCondition(score: number) {
 
 
     // When the user score is above 100 change the ring order
-    if (score > 100) {
+    if (score > 80) {
         return true
     }
 
