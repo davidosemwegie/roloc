@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "637282075027",
+    "project_id": "roloc-app",
+    "storage_bucket": "roloc-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:637282075027:android:86094be302b812087aa866",
+        "android_client_info": {
+          "package_name": "com.osazi.roloc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "637282075027-0rrng85rogmre368ai06acss8987fru3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATT1Rubxqw3Vo-GSr3_-9WUzsRXoe8eO8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "637282075027-0rrng85rogmre368ai06acss8987fru3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "637282075027-rvkhop5gio2ffc0n9aqd70nsbv05t0t3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.osazi.roloc"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
