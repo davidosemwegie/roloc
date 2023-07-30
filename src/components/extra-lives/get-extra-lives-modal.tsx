@@ -6,7 +6,7 @@ import { Typography } from "../typography";
 import { useAdContext } from "@layouts";
 import { useExtraLifeStore } from "@stores";
 import { TextInput } from "react-native-gesture-handler";
-import { getUserEmail, setUserEmail, trackEvent } from "@fb";
+import { getUserEmail, mixpanel, setUserEmail, trackEvent } from "@fb";
 import { A } from '@expo/html-elements';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Feather from '@expo/vector-icons/Feather';
@@ -35,7 +35,7 @@ export const GetExtraLivesModal = () => {
 
     const { extraLives, setExtraLives, addExtraLife } = useExtraLifeStore();
 
-    const { rewardedInterstitialAd } = useAdContext();
+    const { rewardedInterstitialAd, shouldShowAds } = useAdContext();
 
     const [isLoadingEmail, setIsLoadingEmail] = useState(true);
 
@@ -68,7 +68,9 @@ export const GetExtraLivesModal = () => {
     }, [rewardedInterstitialAd.isLoaded])
 
     const onWatchAdButtonClicked = () => {
-        rewardedInterstitialAd.show();
+        if (shouldShowAds) {
+            rewardedInterstitialAd.show();
+        }
     };
 
     const onGetExtraLivesButtonClicked = async () => {
@@ -176,29 +178,35 @@ export const GetExtraLivesModal = () => {
                     <Typography className="text-xl">Extra Lives: </Typography>
                     <Typography className="text-xl "> {extraLives}</Typography>
                 </View>
-                {isLoadingAd ? (
-                    <Typography className="text-center text-[16px] mt-4">
-                        Loading...
-                    </Typography>
-                ) : rewardedInterstitialAd.isLoaded ? (
-                    <View className="mt-6">
-                        <PulsingButton
-                            onPress={onWatchAdButtonClicked}
-                            color="#1d4ed8"
-                        >
-                            <Typography style={{
-                                fontSize: 16,
-                            }}>Watch ad to get an extra life
-                            </Typography>
-                        </PulsingButton>
-                    </View>
-                ) : (
-                    <View className="mt-4">
-                        <Typography className="text-center text-[16px]">
-                            Come back later to get more free extra lives
+                {shouldShowAds && (
+
+                    isLoadingAd ? (
+                        <Typography className="text-center text-[16px] mt-4" >
+                            Loading...
                         </Typography>
-                    </View>
-                )}
+                    ) : rewardedInterstitialAd.isLoaded ? (
+                        <View className="mt-6">
+                            <PulsingButton
+                                onPress={onWatchAdButtonClicked}
+                                color="#1d4ed8"
+                            >
+                                <Typography style={{
+                                    fontSize: 16,
+                                }}>Watch ad to get an extra life
+                                </Typography>
+                            </PulsingButton>
+                        </View>
+                    ) : (
+                        <View className="mt-4">
+                            <Typography className="text-center text-[16px]">
+                                Come back later to get more free extra lives
+                            </Typography>
+                        </View>
+                    )
+                )
+                }
+
+
                 <View className="mb-10 mt-10 w-full">
                     {/* Show the user's email if it's available */}
                     {isLoadingEmail ? (
@@ -226,6 +234,9 @@ export const GetExtraLivesModal = () => {
                                             alert('Email saved! and you got an extra life!');
                                             setDbEmail(email);
                                             setEmail('');
+                                            mixpanel.getPeople().set({
+                                                $email: email,
+                                            })
                                         })
                                         trackEvent('email_saved')
                                     }}

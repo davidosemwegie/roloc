@@ -60,23 +60,19 @@ function generateRandomRingOrder(): RingColors[] {
 
 function getCondition(score: number) {
 
-    // When the user score is above 150 we will change the dot order
-    if (score > 150) {
+
+    // When the user score is above 100 change the ring order
+    if (score > 100) {
         return true
     }
 
-    // When the user score is above 100 and a multiple of 2 we will change the ring order
-    if (score > 100 && score % 2 === 0) {
+    // When the user score is above 50 and a multiple of 2 we will change the dot order
+    if (score > 50 && score % 2 === 0) {
         return true
     }
 
-    // When the user score is above 70 and a multiple of 5 we will change the dot order
-    if (score > 70 && score % 5 === 0) {
-        return true
-    }
-
-    // when user score is above 30 and a multiple of 10 we will change the ring order
-    if (score > 30 && score % 10 === 0) {
+    // when user score is above 30 and a multiple of 5 we will change the ring order
+    if (score > 30 && score % 5 === 0) {
         return true;
     }
 

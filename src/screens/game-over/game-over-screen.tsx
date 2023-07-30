@@ -41,14 +41,15 @@ export const GameOverScreen = () => {
     const { score, startGame, oldHighscore: gameStoreOldHighscore, backToMenu, resumeWithExtraLife, extraLifeUsed } = useGameStateStore()
 
     useEffect(() => {
-        if (showAd && shouldShowAds) {
+        if (showAd && shouldShowAds && isLoaded) {
             show()
             trackEvent('ad_shown', {
                 type: 'interstitial'
             })
         }
         playSound()
-    }, [])
+    }, [isLoaded])
+
 
     useEffect(() => {
         setExtraLives()

@@ -1,55 +1,62 @@
 import { View } from 'react-native';
-import { AdProvider, MainLayout } from '@layouts';
+import { MainLayout } from '@layouts';
 import auth from '@react-native-firebase/auth';
 import { useEffect, useState } from 'react';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import mobileAds from 'react-native-google-mobile-ads';
 import remoteConfig from '@react-native-firebase/remote-config';
+import { mixpanel } from '@fb';
 
 
 mobileAds()
   .initialize()
 
+mixpanel.init()
 
 export default function App() {
 
   useEffect(() => {
     (async () => {
+
       const { status } = await requestTrackingPermissionsAsync();
       if (status === 'granted') {
         console.log('Yay! I have user permission to track data');
       }
 
-      // // Remove configs
-      // await remoteConfig()
-      //   .setDefaults({
-      //     show_ads: false,
-      //   })
-      //   .then(() => remoteConfig().fetchAndActivate())
+      // Remove configs
+      await remoteConfig()
+        .setDefaults({
+          show_ads: false,
+        })
+        .then(() => remoteConfig().fetchAndActivate())
 
 
-      //   .then(fetchedRemotely => {
-      //     if (fetchedRemotely) {
-      //       console.log(
-      //         '+++Configs were retrieved from the backend and activated.',
-      //       );
-      //       console.log(fetchedRemotely);
-      //     } else {
-      //       console.log(
-      //         '+++++No configs were fetched from the backend, and the local configs were already activated',
-      //       );
-      //     }
-      //   });
+        .then(fetchedRemotely => {
+          if (fetchedRemotely) {
+            console.log(
+              '+++Configs were retrieved from the backend and activated.',
+            );
+            console.log(fetchedRemotely);
+          } else {
+            console.log(
+              '+++++No configs were fetched from the backend, and the local configs were already activated',
+            );
+          }
+        });
 
-      // const parameters = remoteConfig().getAll();
-      // Object.entries(parameters).forEach($ => {
-      //   const [key, entry] = $;
-      //   console.log('--Key: ', key);
-      //   console.log('--Source: ', entry.getSource());
-      //   console.log('--Value: ', entry.asString());
-      //   console.log('--------------------------------');
-      // });
+      await remoteConfig().setConfigSettings({
+        minimumFetchIntervalMillis: 30 * 1000,
+      });
+
+      const parameters = remoteConfig().getAll();
+      Object.entries(parameters).forEach($ => {
+        const [key, entry] = $;
+        console.log('--Key: ', key);
+        console.log('--Source: ', entry.getSource());
+        console.log('--Value: ', entry.asString());
+        console.log('--------------------------------');
+      });
     })();
 
     const env = process.env.NODE_ENV;
@@ -67,6 +74,7 @@ export default function App() {
         await Promise.all([
           crashlytics().setUserId(user.user.uid),
           crashlytics().log('User signed in anonymously'),
+          mixpanel.identify(user.user.uid),
         ])
       })
       .catch(error => {

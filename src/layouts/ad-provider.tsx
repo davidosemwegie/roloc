@@ -16,14 +16,18 @@ export const AdProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
 
     const fetchShouldShowAds = async () => {
         await remoteConfig().fetchAndActivate();
+        await remoteConfig().setDefaults({
+            show_ads: false,
+        });
         const shouldShow = await remoteConfig().getBoolean('show_ads');
         setShouldShowAds(shouldShow);
+        console.log('shouldShowAds', shouldShow);
     };
 
     useEffect(() => {
         fetchShouldShowAds();
 
-        const intervalId = setInterval(fetchShouldShowAds, 60000); // Fetch every 60 seconds
+        const intervalId = setInterval(fetchShouldShowAds, 60 * 1000); // Fetch every 60 seconds
 
         return () => {
             clearInterval(intervalId);

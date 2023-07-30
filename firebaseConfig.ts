@@ -4,6 +4,14 @@ import crashlytics from '@react-native-firebase/crashlytics'
 import analytics from '@react-native-firebase/analytics';
 import remoteConfig from '@react-native-firebase/remote-config';
 
+import { Mixpanel } from 'mixpanel-react-native'
+
+
+const mixPanelToken = __DEV__ ? 'd28e4c5d2cd75b5de542b6fc9fa052a4' : 'c45110ff303aad488299c3067a3ef433'
+
+export const mixpanel = new Mixpanel(mixPanelToken, true);
+
+
 
 interface Game {
     score: number;
@@ -16,6 +24,7 @@ export async function trackEvent(eventName: string, eventParams?: any) {
         if (!__DEV__) {
             await analytics().logEvent(eventName, eventParams);
         }
+        mixpanel.track(eventName, eventParams);
     } catch (error) {
         if (!__DEV__) {
             crashlytics().recordError(error);
