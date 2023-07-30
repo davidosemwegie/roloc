@@ -24,8 +24,8 @@ const PlayingScreen = () => {
     const calculateInterval = (score: number) => {
         // if (score >= 30) return 1000;    // 1 second
         // if (score >= 20) return 1500;    // 1.5 seconds
-        if (score >= 5) return 2000;    // 2 seconds
-        return 3000;                    // Default 3 seconds
+        // if (score >= 5) return 3000;    // 3 seconds
+        return 2500;                    // Default 3 seconds
     };
 
     useEffect(() => {
