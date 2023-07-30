@@ -67,7 +67,7 @@ function getCondition(score: number) {
     }
 
     // When the user score is above 50 and a multiple of 2 we will change the dot order
-    if (score > 50 && score % 2 === 0) {
+    if (score > 60 && score % 2 === 0) {
         return true
     }
 
