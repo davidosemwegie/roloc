@@ -2,6 +2,7 @@ import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firest
 import auth from '@react-native-firebase/auth';
 import crashlytics from '@react-native-firebase/crashlytics'
 import analytics from '@react-native-firebase/analytics';
+import remoteConfig from '@react-native-firebase/remote-config';
 
 
 interface Game {
@@ -369,3 +370,22 @@ export async function getUserEmail(): Promise<string | null> {
 }
 
 
+export async function getShouldShowAds(): Promise<boolean> {
+    try {
+        // Fetch and activate the config from Firebase
+        await remoteConfig().fetchAndActivate();
+
+        // Get the remote config value
+        const showAds = remoteConfig().getValue('show_ads');
+
+        // If 'show_ads' is not available or set to 'false' in Firebase, it will return false.
+        // If 'show_ads' is set to 'true', it will return true.
+        return showAds.asBoolean();
+    } catch (error) {
+        crashlytics().recordError(error);
+        console.log(error);
+    }
+
+    // In case of an error, don't show ads
+    return false;
+}

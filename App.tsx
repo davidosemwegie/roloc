@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import mobileAds from 'react-native-google-mobile-ads';
+import remoteConfig from '@react-native-firebase/remote-config';
 
 
 mobileAds()
@@ -19,6 +20,36 @@ export default function App() {
       if (status === 'granted') {
         console.log('Yay! I have user permission to track data');
       }
+
+      // // Remove configs
+      // await remoteConfig()
+      //   .setDefaults({
+      //     show_ads: false,
+      //   })
+      //   .then(() => remoteConfig().fetchAndActivate())
+
+
+      //   .then(fetchedRemotely => {
+      //     if (fetchedRemotely) {
+      //       console.log(
+      //         '+++Configs were retrieved from the backend and activated.',
+      //       );
+      //       console.log(fetchedRemotely);
+      //     } else {
+      //       console.log(
+      //         '+++++No configs were fetched from the backend, and the local configs were already activated',
+      //       );
+      //     }
+      //   });
+
+      // const parameters = remoteConfig().getAll();
+      // Object.entries(parameters).forEach($ => {
+      //   const [key, entry] = $;
+      //   console.log('--Key: ', key);
+      //   console.log('--Source: ', entry.getSource());
+      //   console.log('--Value: ', entry.asString());
+      //   console.log('--------------------------------');
+      // });
     })();
 
     const env = process.env.NODE_ENV;

@@ -1,5 +1,5 @@
 import { PulsingButton, Screen, Typography, useSoundContext } from '@components'
-import { getHighscore, trackEvent } from '@fb'
+import { getHighscore, getShouldShowAds, trackEvent } from '@fb'
 import { useAdContext } from '@layouts'
 import { useExtraLifeStore, useGameStateStore } from '@stores'
 import { useSound } from '@utils'
@@ -33,13 +33,15 @@ export const GameOverScreen = () => {
     const { interstitialAd: {
         isLoaded,
         show,
-        load
-    } } = useAdContext()
+        load,
+    },
+        shouldShowAds
+    } = useAdContext()
 
     const { score, startGame, oldHighscore: gameStoreOldHighscore, backToMenu, resumeWithExtraLife, extraLifeUsed } = useGameStateStore()
 
     useEffect(() => {
-        if (showAd) {
+        if (showAd && shouldShowAds) {
             show()
             trackEvent('ad_shown', {
                 type: 'interstitial'
