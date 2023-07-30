@@ -13,7 +13,8 @@
     "build:all": "eas build --platform all",
     "build:development": "eas build --profile development --platform ios",
     "build:local": "expo prebuild",
-    "tsc": "tsc"
+    "tsc": "tsc",
+    "publish:ios": "eas submit --platform ios "
   },
   "dependencies": {
     "@expo/html-elements": "^0.5.1",
