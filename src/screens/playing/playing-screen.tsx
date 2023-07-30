@@ -1,18 +1,19 @@
 import { Dot, Ring, Typography } from '@components'
 import { GameStates, useGameStateStore } from '@stores'
-import { cn, } from '@utils'
+import { cn, useSound, } from '@utils'
 import React, { useEffect } from 'react'
 import { View } from 'react-native'
 import { DragProvider } from './drag-provider'
-import { useSoundContext } from '@components'
 
 const PlayingScreen = () => {
     const { score, state, endGame, ringOrder, dotOrder, activeColor } = useGameStateStore()
 
-    const { playSound } = useSoundContext()
+    const { playSound } = useSound('game-start', {
+        isLooping: true
+    })
 
     useEffect(() => {
-        playSound('game-start')
+        playSound()
     }, [])
 
     const ringColumn = 'flex-1 space-y-[250px] flex-1 flex flex-col'
@@ -27,15 +28,15 @@ const PlayingScreen = () => {
         return 3000;                    // Default 3 seconds
     };
 
-    useEffect(() => {
-        if (state !== GameStates.PLAYING) {
-            return;
-        }
-        const interval = setInterval(() => {
-            endGame()
-        }, calculateInterval(score));
-        return () => clearInterval(interval);
-    }, [activeColor]); // Replaced activeColor with state and score
+    // useEffect(() => {
+    //     if (state !== GameStates.PLAYING) {
+    //         return;
+    //     }
+    //     const interval = setInterval(() => {
+    //         endGame()
+    //     }, calculateInterval(score));
+    //     return () => clearInterval(interval);
+    // }, [activeColor]); // Replaced activeColor with state and score
 
 
 

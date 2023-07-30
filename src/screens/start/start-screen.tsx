@@ -4,6 +4,8 @@ import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { useAdContext } from '../../layouts';
 import { Instructions } from './instructions';
+import Entypo from '@expo/vector-icons/Entypo';
+
 
 const StartScreen = () => {
 
@@ -43,8 +45,10 @@ const StartScreen = () => {
                         onPress={() => {
                             startGame(() => interstitialAd.load())
                         }}
+                        color='white'
                     >
-                        PLAY
+                        <Entypo name="controller-play" size={60} color='green' />
+
                     </PulsingButton>
                 </View>
             </View>

@@ -54,7 +54,9 @@ export const PulsingButton: FC<PropsWithChildren<PulsingButtonProps>> = ({
                     }}
                     className='flex flex-row justify-center items-center rounded-lg bg-green-600 p-4 max-w-fit'
                 >
-                    <Typography className={`text-${size / 8}xl font-bold`}>{children}</Typography>
+                    <Typography className={` font-bold`} style={{
+                        fontSize: size, // Use the size prop for font size
+                    }}>{children}</Typography>
                 </TouchableOpacity>
             </Animated.View>
         </View>

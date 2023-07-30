@@ -7,13 +7,12 @@ const match = require('../assets/match.wav')
 
 export type Sounds = "game-start" | "game-over" | "match"
 
-interface SoundOptions {
-    looping?: boolean
+export interface SoundOptions {
+    isLooping?: boolean
 }
 
 export const useSound = (soundToPlay: Sounds, options?: SoundOptions) => {
     const [sound, setSound] = React.useState<Audio.Sound>();
-    const [isMuted, setIsMuted] = React.useState(false);
 
     const soundMap: Record<Sounds, any> = {
         "game-start": gameStart,
@@ -23,26 +22,16 @@ export const useSound = (soundToPlay: Sounds, options?: SoundOptions) => {
 
     const pathToSoundToPlay = soundMap[soundToPlay]
 
-    const toggleMute = () => {
-        setIsMuted(!isMuted);
-    }
-
     async function playSound() {
-
-
-        const { sound } = await Audio.Sound.createAsync(pathToSoundToPlay, {
-            isLooping: options?.looping ?? false,
-            isMuted,
-        })
+        const { sound } = await Audio.Sound.createAsync(pathToSoundToPlay, options);
 
         setSound(sound);
 
         sound.playAsync();
-
     }
 
     async function stopSound() {
-        sound?.stopAsync()
+        sound?.stopAsync();
     }
 
     React.useEffect(() => {
@@ -53,11 +42,8 @@ export const useSound = (soundToPlay: Sounds, options?: SoundOptions) => {
             : undefined;
     }, [sound]);
 
-
     return {
         playSound,
-        toggleMute,
         stopSound,
-        isMuted
-    }
+    };
 }

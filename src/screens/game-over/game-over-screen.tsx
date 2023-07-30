@@ -2,8 +2,9 @@ import { PulsingButton, Screen, Typography, useSoundContext } from '@components'
 import { getHighscore, trackEvent } from '@fb'
 import { useAdContext } from '@layouts'
 import { useExtraLifeStore, useGameStateStore } from '@stores'
+import { useSound } from '@utils'
 import React, { useEffect } from 'react'
-import { Button, View } from 'react-native'
+import { Button, TouchableOpacity, View } from 'react-native'
 
 
 function shouldShowAd() {
@@ -19,6 +20,8 @@ function shouldShowAd() {
 
 export const GameOverScreen = () => {
 
+    const { playSound } = useSound('game-over')
+
 
     const [showAd] = React.useState(() => shouldShowAd())
     const [highscore, setHighscore] = React.useState(0)
@@ -27,7 +30,6 @@ export const GameOverScreen = () => {
     const { setExtraLives, extraLives } = useExtraLifeStore()
 
 
-    const { playSound } = useSoundContext()
     const { interstitialAd: {
         isLoaded,
         show,
@@ -43,7 +45,7 @@ export const GameOverScreen = () => {
                 type: 'interstitial'
             })
         }
-        playSound('game-over')
+        playSound()
     }, [])
 
     useEffect(() => {
@@ -103,17 +105,26 @@ export const GameOverScreen = () => {
             </PulsingButton>
             {extraLives > 0 && !extraLifeUsed && (
                 <View>
-                    <Typography className='text-[20px]'>
+                    <Typography className='text-[20px] mb-4'>
                         You have {extraLives} extra lives
                     </Typography>
-                    <Button
-                        title="Use an extra life"
+
+                    <TouchableOpacity
                         onPress={() => {
                             resumeWithExtraLife(async () => {
                                 load()
                             })
                         }}
-                    />
+                        className="bg-gray-900 w-auto p-4 rounded-lg flex flex-row space-x-3 items-center justify-center m-auto"
+                        style={{
+                            opacity: 1,
+                        }}
+                    >
+                        <Typography style={{
+                            fontSize: 16,
+                        }}>Use an extra life 🔄
+                        </Typography>
+                    </TouchableOpacity>
                 </View>
             )}
 

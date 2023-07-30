@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Button } from "react-native";
+import { View, Button, TouchableOpacity } from "react-native";
 import Popover from 'react-native-popover-view';
 import { PulsingButton } from "../pulsing-button";
 import { Typography } from "../typography";
@@ -9,6 +9,7 @@ import { TextInput } from "react-native-gesture-handler";
 import { getUserEmail, setUserEmail, trackEvent } from "@fb";
 import { A } from '@expo/html-elements';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Feather from '@expo/vector-icons/Feather';
 
 
 export const GetExtraLivesModal = () => {
@@ -149,10 +150,10 @@ export const GetExtraLivesModal = () => {
         <>
             <PulsingButton
                 onPress={onGetExtraLivesButtonClicked}
-                size={8}
+                size={16}
                 color="#1d4ed8"
             >
-                Get extra lives
+                Get extra lives ❣️
             </PulsingButton>
             <Popover
                 isVisible={showPopover}
@@ -181,10 +182,15 @@ export const GetExtraLivesModal = () => {
                     </Typography>
                 ) : rewardedInterstitialAd.isLoaded ? (
                     <View className="mt-6">
-                        <Button
+                        <PulsingButton
                             onPress={onWatchAdButtonClicked}
-                            title="Watch ad to get an extra life"
-                        />
+                            color="#1d4ed8"
+                        >
+                            <Typography style={{
+                                fontSize: 16,
+                            }}>Watch ad to get an extra life
+                            </Typography>
+                        </PulsingButton>
                     </View>
                 ) : (
                     <View className="mt-4">
@@ -261,14 +267,17 @@ export const GetExtraLivesModal = () => {
                     </View>
                 )}
 
-                <View className="mt-10">
-                    <PulsingButton
+                <View className="mt-4">
+                    <TouchableOpacity
                         onPress={() => setShowPopover(false)}
-                        size={8}
-                        color="#1d4ed8"
+
+                        className="bg-gray-800 w-auto p-4 rounded-lg flex flex-row space-x-3 items-center justify-center m-auto"
+                        style={{
+                            opacity: 1,
+                        }}
                     >
-                        Close
-                    </PulsingButton>
+                        <Feather name="x" size={30} color='white' />
+                    </TouchableOpacity>
                 </View>
             </Popover>
         </>

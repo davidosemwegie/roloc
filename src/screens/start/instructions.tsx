@@ -2,6 +2,8 @@ import { PulsingButton, Screen, Typography } from "@components"
 import { useState } from "react";
 import { View, TouchableOpacity, Dimensions } from "react-native"
 import Popover from 'react-native-popover-view';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
 
 
 export const Instructions = () => {
@@ -10,27 +12,27 @@ export const Instructions = () => {
     const [showPopover, setShowPopover] = useState(false);
 
 
-    // const windowWidth = Dimensions.get('window').width;
-    // const windowHeight = Dimensions.get('window').height;
 
     return (
         <>
             <TouchableOpacity
                 onPress={() => setShowPopover(true)}
-                className="bg-gray-900 w-auto p-4 rounded-lg flex items-center justify-center m-auto"
+                className="bg-gray-900 w-auto p-4 rounded-lg flex flex-row space-x-3 items-center justify-center m-auto"
                 style={{
                     opacity: 0.8,
                 }}
             >
-                <Typography className="text-md">Instructions</Typography>
+                <Typography style={{
+                    fontSize: 16,
+                }}>How to play
+                </Typography>
+                <MaterialIcons name="info-outline" size={18} color="white" />
             </TouchableOpacity>
             <Popover
                 isVisible={showPopover}
                 onRequestClose={() => setShowPopover(false)}
                 popoverStyle={{
                     backgroundColor: '#171717',
-                    // width: windowWidth * 0.9,
-                    // height: windowHeight * 0.9,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

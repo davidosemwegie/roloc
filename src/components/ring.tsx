@@ -27,7 +27,7 @@ export const Ring: FC<RingProps> = ({
     const [boundingBox, setBoundingBox] = React.useState<BoundingBox | null>(null);
     const { activeColor, addPoint, endGame } = useGameStateStore()
 
-    const { playSound } = useSoundContext()
+    const { playSound } = useSound('match')
 
 
 
@@ -82,7 +82,7 @@ export const Ring: FC<RingProps> = ({
             if (isWithin) {
                 setIsInRing(true)
                 addPoint()
-                playSound('match')
+                playSound()
             } else {
                 setIsInRing(false)
                 endGame()
