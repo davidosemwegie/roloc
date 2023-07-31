@@ -8,7 +8,7 @@ export interface TypographyProps {
 }
 export const Typography: FC<PropsWithChildren<TypographyProps>> = ({ children, className, style }) => {
     return (
-        <Text style={style} className={cn('text-white font-semibold text-[24px]', className)}>
+        <Text style={style} className={cn('text-white font-semibold text-[18px]', className)}>
             {children}
         </Text>
     )

@@ -125,7 +125,7 @@ export const GetExtraLivesModal = () => {
             >
                 Get extra lives ❣️
             </PulsingButton>
-            <Typography className="text-[18px] text-center mt-4">
+            <Typography className="text-center mt-4">
                 You have {extraLives} extra {extraLives === 1 ? 'life' : 'lives'}
             </Typography>
             <Popover
@@ -146,8 +146,8 @@ export const GetExtraLivesModal = () => {
                     <Feather name="x" size={24} color='white' />
                 </TouchableOpacity>
                 <View>
-                    <Typography className="">
-                        Get extra more lives
+                    <Typography className="text-2xl font-bold mb-4">
+                        Get extra more lives ❣️
                     </Typography>
                 </View>
                 <View className='flex flex-row justify-between'>
@@ -191,12 +191,12 @@ export const GetExtraLivesModal = () => {
                         dbEmail ? (
                             <>
                                 <View>
-                                    <Typography className="text-center text-[18px] mt-4">Email: {dbEmail}</Typography>
+                                    <Typography className="text-center  mt-4">Email: {dbEmail}</Typography>
                                 </View>
                             </>
                         ) : (
                             <>
-                                <Typography className="text-center mb-4 text-[18px]">
+                                <Typography className="text-center mb-4 ">
                                     Enter your email to get an extra life
                                 </Typography>
                                 <TextInput
@@ -234,10 +234,10 @@ export const GetExtraLivesModal = () => {
                 <View className="space-y-6 flex items-center">
                     <View className="space-y-2">
 
-                        <Typography className="text-[18px] text-center">
+                        <Typography className=" text-center">
                             Hi I'm David, the creator of this game 👋🏽
                         </Typography>
-                        <Typography className="text-[18px] text-center">
+                        <Typography className=" text-center">
                             View my social media pages to get more free extra lives!
                         </Typography>
                     </View>
@@ -254,7 +254,7 @@ export const GetExtraLivesModal = () => {
                         ) : (
                             <Typography className="text-sm text-center">
                                 Come back in {' '}
-                                <Typography className="text-green-700 text-[18px]">
+                                <Typography className="text-green-700 ">
                                     {formatTime(getRemainingTime(lastInstagramClickTime))}
                                 </Typography> {' '}
                                 to view my Instagram page and get more free extra lives!
@@ -273,7 +273,7 @@ export const GetExtraLivesModal = () => {
                         ) : (
                             <Typography className="text-sm text-center" >
                                 Come back in {' '}
-                                <Typography className="text-green-700 text-[18px]">
+                                <Typography className="text-green-700 ">
                                     {formatTime(getRemainingTime(lastTwitterClickTime))}
                                 </Typography>  {' '}
                                 to view my Twitter page and get more free extra lives!

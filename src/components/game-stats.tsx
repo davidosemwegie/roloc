@@ -21,8 +21,6 @@ export const GameStats = () => {
     const [loadingGamesPlayed, setLoadingGamesPlayed] = useState<boolean>(true);
     const [loadingHighScore, setLoadingHighScore] = useState<boolean>(true);
 
-    const { setExtraLives, extraLives } = useExtraLifeStore();
-
     useEffect(() => {
         async function getStats() {
             try {
@@ -55,6 +53,7 @@ export const GameStats = () => {
     }, []);
 
     const showStats = gamesPlayed >= 10;
+    const gamesLeftTillUnlock = showStats ? 0 : 10 - gamesPlayed; // Calculate how many more games are left to unlock stats
 
     return (
         <View>
@@ -81,9 +80,9 @@ export const GameStats = () => {
 
             {!showStats && !loadingHighScore && !loadingAverageScore && !loadingTotalScore && !loadingGamesPlayed && (
                 <View className="space-y-3">
-                    <Typography className="text-xl">Play 10 games to unlock more stats 🔓</Typography>
+                    <Typography>Play {gamesLeftTillUnlock} more {gamesLeftTillUnlock === 1 ? 'game' : 'games'} to unlock more stats 🔓</Typography>
                     <View className='flex flex-row justify-between'>
-                        <Typography className="text-xl ">Games Played: </Typography>
+                        <Typography>Games Played: </Typography>
                         {loadingGamesPlayed ? <LoadingBar /> : <Typography className="text-xl "> {gamesPlayed}</Typography>}
                     </View>
                 </View>

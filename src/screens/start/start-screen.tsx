@@ -57,7 +57,7 @@ const StartScreen = () => {
                             <Entypo name="controller-play" size={60} color='green' />
                         </PulsingButton>
                     </View>
-                    <View className='mt-10'>
+                    <View className='m-auto'>
                         <GetExtraLivesModal />
                     </View>
 
