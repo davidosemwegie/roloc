@@ -243,14 +243,13 @@ export const GetExtraLivesModal = () => {
                     </View>
                     <View className="flex space-y-4">
                         {isSocialLinkClickable(lastInstagramClickTime) ? (
-                            <SoftButton>
-                                <TouchableOpacity
+                            <SoftButton >
+                                <A
+                                    href="https://instagram.com/osazi"
                                     onPress={() => handleSocialLinkClick('instagram')}
                                 >
-                                    <A href="https://instagram.com/osazi">
-                                        <AntDesign name="instagram" size={24} color="white" />
-                                    </A>
-                                </TouchableOpacity>
+                                    <AntDesign name="instagram" size={24} color="white" />
+                                </A>
                             </SoftButton>
                         ) : (
                             <Typography className="text-sm text-center">
@@ -263,14 +262,13 @@ export const GetExtraLivesModal = () => {
                         )}
 
                         {isSocialLinkClickable(lastTwitterClickTime) ? (
-                            <SoftButton>
-                                <TouchableOpacity
+                            <SoftButton >
+                                <A
+                                    href="https://twitter.com/@davidosemwegie"
                                     onPress={() => handleSocialLinkClick('twitter')}
                                 >
-                                    <A href="https://twitter.com/@davidosemwegie">
-                                        <AntDesign name="twitter" size={24} color="white" />
-                                    </A>
-                                </TouchableOpacity>
+                                    <AntDesign name="twitter" size={24} color="white" />
+                                </A>
                             </SoftButton>
                         ) : (
                             <Typography className="text-sm text-center" >

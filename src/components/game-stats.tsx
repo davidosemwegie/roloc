@@ -86,10 +86,6 @@ export const GameStats = () => {
                         <Typography className="text-xl ">Games Played: </Typography>
                         {loadingGamesPlayed ? <LoadingBar /> : <Typography className="text-xl "> {gamesPlayed}</Typography>}
                     </View>
-                    <View className='flex flex-row justify-between'>
-                        <Typography className="text-xl ">Extra Lives: </Typography>
-                        {<Typography className="text-xl "> {extraLives}</Typography>}
-                    </View>
                 </View>
             )}
         </View>
