@@ -10,6 +10,7 @@ import { getUserEmail, mixpanel, setUserEmail, trackEvent } from "@fb";
 import { A } from '@expo/html-elements';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Feather from '@expo/vector-icons/Feather';
+import { SoftButton } from "../soft-button";
 
 
 export const GetExtraLivesModal = () => {
@@ -169,6 +170,11 @@ export const GetExtraLivesModal = () => {
                     borderRadius: 20,
                 }}
             >
+                <TouchableOpacity
+                    onPress={() => setShowPopover(false)}
+                    style={{ position: 'absolute', top: 16, right: 16 }}>
+                    <Feather name="x" size={24} color='white' />
+                </TouchableOpacity>
                 <View>
                     <Typography className="">
                         Get extra more lives
@@ -224,23 +230,25 @@ export const GetExtraLivesModal = () => {
                                     placeholder="Email"
                                     value={email} // Use the 'email' state as the value of the input
                                     onChangeText={(text) => setEmail(text)} // Update the 'email' state when the input changes
-                                    className="bg-white w-full p-4"
+                                    className="bg-white w-full p-4 mb-6"
                                 />
-                                <Button
-                                    title="Join our newsletter to get an extra life"
+                                <SoftButton
                                     disabled={!email}
                                     onPress={() => {
-                                        setUserEmail(email).then(() => {
-                                            alert('Email saved! and you got an extra life!');
-                                            setDbEmail(email);
-                                            setEmail('');
-                                            mixpanel.getPeople().set({
-                                                $email: email,
+                                        setUserEmail(email)
+                                            .then(() => {
+                                                alert('Email saved! and you got an extra life!');
+                                                setDbEmail(email);
+                                                setEmail('');
+                                                mixpanel.getPeople().set({
+                                                    $email: email,
+                                                })
                                             })
-                                        })
                                         trackEvent('email_saved')
                                     }}
-                                />
+                                >
+                                    Join our newsletter to get an extra life
+                                </SoftButton>
                             </>
                         )
                     )}
@@ -259,7 +267,7 @@ export const GetExtraLivesModal = () => {
                                     fontSize: 18,
                                 }}
                                 onPress={handleInstagramLinkClick} // Use the custom handler for the Instagram link
-                            >Follow me on instagram</A>
+                            >Visit instagram</A>
                         )}
 
                         {isTwitterLinkClickable && (
@@ -271,25 +279,12 @@ export const GetExtraLivesModal = () => {
                                 onPress={handleTwitterLinkClick} // Use the custom handler for the Twitter link
 
                             >
-                                Follow me on Twitter
+                                Visit twitter
                             </A>
                         )}
 
                     </View>
                 )}
-
-                <View className="mt-4">
-                    <TouchableOpacity
-                        onPress={() => setShowPopover(false)}
-
-                        className="bg-gray-800 w-auto p-4 rounded-lg flex flex-row space-x-3 items-center justify-center m-auto"
-                        style={{
-                            opacity: 1,
-                        }}
-                    >
-                        <Feather name="x" size={30} color='white' />
-                    </TouchableOpacity>
-                </View>
             </Popover>
         </>
     );

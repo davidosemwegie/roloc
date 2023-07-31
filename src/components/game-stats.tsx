@@ -1,4 +1,4 @@
-import { calculateAverageScore, calculateTotalScore, getTotalGamesPlayed, getHighscore, getExtraLives } from "@fb";
+import { calculateAverageScore, calculateTotalScore, getTotalGamesPlayed, getHighscore } from "@fb";
 import { useEffect, useState } from "react";
 import { View } from 'react-native';
 import { Typography } from "./typography";
@@ -55,24 +55,35 @@ export const GameStats = () => {
 
     return (
         <View>
-            <View className='flex flex-row justify-between'>
-                <Typography className="text-xl">High Score: </Typography>
-                {loadingHighScore ? <LoadingBar /> : <Typography className="text-xl "> {highScore}</Typography>}
-            </View>
-            <View className='flex flex-row justify-between'>
-                <Typography className="text-xl ">Average Score: </Typography>
-                {loadingAverageScore ? <LoadingBar /> : <Typography className="text-xl"> {averageScore}</Typography>}
-            </View>
-            <View className='flex flex-row justify-between'>
-                <Typography className="text-xl ">Total Score: </Typography>
-                {loadingTotalScore ? <LoadingBar /> : <Typography className="text-xl "> {totalScore}</Typography>}
-            </View>
-            <View className='flex flex-row justify-between'>
-                <Typography className="text-xl ">Games Played: </Typography>
-                {loadingGamesPlayed ? <LoadingBar /> : <Typography className="text-xl "> {gamesPlayed}</Typography>}
-            </View>
+            {showStats && (
+                <>
+                    <View className='flex flex-row justify-between'>
+                        <Typography className="text-xl">High Score: </Typography>
+                        {loadingHighScore ? <LoadingBar /> : <Typography className="text-xl "> {highScore}</Typography>}
+                    </View>
+                    <View className='flex flex-row justify-between'>
+                        <Typography className="text-xl ">Average Score: </Typography>
+                        {loadingAverageScore ? <LoadingBar /> : <Typography className="text-xl"> {averageScore}</Typography>}
+                    </View>
+                    <View className='flex flex-row justify-between'>
+                        <Typography className="text-xl ">Total Score: </Typography>
+                        {loadingTotalScore ? <LoadingBar /> : <Typography className="text-xl "> {totalScore}</Typography>}
+                    </View>
+                    <View className='flex flex-row justify-between'>
+                        <Typography className="text-xl ">Games Played: </Typography>
+                        {loadingGamesPlayed ? <LoadingBar /> : <Typography className="text-xl "> {gamesPlayed}</Typography>}
+                    </View>
+                </>
+            )}
+
             {!showStats && !loadingHighScore && !loadingAverageScore && !loadingTotalScore && !loadingGamesPlayed && (
-                <Typography className="text-xl">Play 10 games to unlock stats</Typography>
+                <View className="space-y-3">
+                    <Typography className="text-xl">Play 10 games to unlock stats 🔓</Typography>
+                    <View className='flex flex-row justify-between'>
+                        <Typography className="text-xl ">Games Played: </Typography>
+                        {loadingGamesPlayed ? <LoadingBar /> : <Typography className="text-xl "> {gamesPlayed}</Typography>}
+                    </View>
+                </View>
             )}
         </View>
     );

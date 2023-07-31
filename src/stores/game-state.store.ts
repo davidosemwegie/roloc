@@ -32,7 +32,12 @@ interface GameStateStore {
     ringOrder: RingColors[],
     extraLives: number,
     extraLifeUsed: boolean,
-
+    isBackgroundMuted: boolean,
+    isMatchSoundMuted: boolean,
+    isGameOverSoundMuted: boolean,
+    toggleBackgroundMute: () => void,
+    toggleMatchSoundMute: () => void,
+    toggleGameOverSoundMute: () => void,
 }
 
 function setHighScore(score: number) {
@@ -88,7 +93,23 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     dotOrder: [],
     extraLives: 0,
     extraLifeUsed: false,
+    isBackgroundMuted: false,
+    isMatchSoundMuted: false,
+    isGameOverSoundMuted: false,
+    toggleBackgroundMute: () =>
+        set((state) => ({
+            isBackgroundMuted: !state.isBackgroundMuted,
+        })),
 
+    toggleMatchSoundMute: () =>
+        set((state) => ({
+            isMatchSoundMuted: !state.isMatchSoundMuted,
+        })),
+
+    toggleGameOverSoundMute: () =>
+        set((state) => ({
+            isGameOverSoundMuted: !state.isGameOverSoundMuted,
+        })),
     // After initializing dotOrder...
     startGame: async (callback?: () => void) => {
 

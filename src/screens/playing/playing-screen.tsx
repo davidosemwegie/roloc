@@ -6,10 +6,11 @@ import { View } from 'react-native'
 import { DragProvider } from './drag-provider'
 
 const PlayingScreen = () => {
-    const { score, state, endGame, ringOrder, dotOrder, activeColor } = useGameStateStore()
+    const { score, state, endGame, ringOrder, dotOrder, activeColor, isBackgroundMuted } = useGameStateStore()
 
     const { playSound } = useSound('game-start', {
-        isLooping: true
+        isLooping: true,
+        isMuted: isBackgroundMuted
     })
 
     useEffect(() => {
@@ -28,15 +29,15 @@ const PlayingScreen = () => {
         return 2500;                    // Default 3 seconds
     };
 
-    useEffect(() => {
-        if (state !== GameStates.PLAYING) {
-            return;
-        }
-        const interval = setInterval(() => {
-            endGame()
-        }, calculateInterval(score));
-        return () => clearInterval(interval);
-    }, [activeColor]); // Replaced activeColor with state and score
+    // useEffect(() => {
+    //     if (state !== GameStates.PLAYING) {
+    //         return;
+    //     }
+    //     const interval = setInterval(() => {
+    //         endGame()
+    //     }, calculateInterval(score));
+    //     return () => clearInterval(interval);
+    // }, [activeColor]); // Replaced activeColor with state and score
 
 
 

@@ -20,7 +20,10 @@ function shouldShowAd() {
 
 export const GameOverScreen = () => {
 
-    const { playSound } = useSound('game-over')
+    const { score, startGame, oldHighscore: gameStoreOldHighscore, backToMenu, resumeWithExtraLife, extraLifeUsed, isGameOverSoundMuted } = useGameStateStore()
+    const { playSound } = useSound('game-over', {
+        isMuted: isGameOverSoundMuted
+    })
 
 
     const [showAd] = React.useState(() => shouldShowAd())
@@ -38,7 +41,6 @@ export const GameOverScreen = () => {
         shouldShowAds
     } = useAdContext()
 
-    const { score, startGame, oldHighscore: gameStoreOldHighscore, backToMenu, resumeWithExtraLife, extraLifeUsed } = useGameStateStore()
 
     useEffect(() => {
         if (showAd && shouldShowAds && isLoaded) {
@@ -61,7 +63,7 @@ export const GameOverScreen = () => {
     useEffect(() => {
         const getHS = async () => {
             const hs = await getHighscore()
-            setHighscore(hs)
+            setHighscore(hs ?? 0)
             setOldHighscore(gameStoreOldHighscore);
         }
         getHS()

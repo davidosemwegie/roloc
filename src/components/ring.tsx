@@ -25,9 +25,11 @@ export const Ring: FC<RingProps> = ({
     const elementRef = useRef<View>(null);
 
     const [boundingBox, setBoundingBox] = React.useState<BoundingBox | null>(null);
-    const { activeColor, addPoint, endGame } = useGameStateStore()
+    const { activeColor, addPoint, endGame, isMatchSoundMuted } = useGameStateStore()
 
-    const { playSound } = useSound('match')
+    const { playSound } = useSound('match', {
+        isMuted: isMatchSoundMuted
+    })
 
 
 

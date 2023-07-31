@@ -1,4 +1,4 @@
-import { PulsingButton, Screen, Typography } from "@components"
+import { PulsingButton, Screen, SoftButton, Typography } from "@components"
 import { useState } from "react";
 import { View, TouchableOpacity, Dimensions } from "react-native"
 import Popover from 'react-native-popover-view';
@@ -15,19 +15,11 @@ export const Instructions = () => {
 
     return (
         <>
-            <TouchableOpacity
+            <SoftButton
                 onPress={() => setShowPopover(true)}
-                className="bg-gray-900 w-auto p-4 rounded-lg flex flex-row space-x-3 items-center justify-center m-auto"
-                style={{
-                    opacity: 0.8,
-                }}
             >
-                <Typography style={{
-                    fontSize: 16,
-                }}>How to play
-                </Typography>
-                <MaterialIcons name="info-outline" size={18} color="white" />
-            </TouchableOpacity>
+                <MaterialIcons name="info-outline" size={19} color="white" />
+            </SoftButton>
             <Popover
                 isVisible={showPopover}
                 onRequestClose={() => setShowPopover(false)}
@@ -44,7 +36,7 @@ export const Instructions = () => {
                         How to play:
                     </Typography>
                     <Typography className='text-center text-[16px]'>
-                        Drag the highlighted dot to the matching color ring.
+                        Drag the highlighted dot to the matching color ring before the time runs out to score points.
                     </Typography>
                     <Typography className='text-center text-[16px]'>
                         There are some twists though along the way... so be careful! 😊

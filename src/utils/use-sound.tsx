@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Audio } from 'expo-av';
+import { useGameStateStore } from '@stores';
 
 const gameStart = require('../assets/playing.wav')
 const gameOver = require('../assets/game-over.wav')
@@ -8,11 +9,15 @@ const match = require('../assets/match.wav')
 export type Sounds = "game-start" | "game-over" | "match"
 
 export interface SoundOptions {
-    isLooping?: boolean
+    isLooping?: boolean,
+    isMuted?: boolean
 }
 
 export const useSound = (soundToPlay: Sounds, options?: SoundOptions) => {
     const [sound, setSound] = React.useState<Audio.Sound>();
+
+
+    const muted = options.isMuted
 
     const soundMap: Record<Sounds, any> = {
         "game-start": gameStart,
@@ -23,7 +28,9 @@ export const useSound = (soundToPlay: Sounds, options?: SoundOptions) => {
     const pathToSoundToPlay = soundMap[soundToPlay]
 
     async function playSound() {
-        const { sound } = await Audio.Sound.createAsync(pathToSoundToPlay, options);
+        const { sound } = await Audio.Sound.createAsync(pathToSoundToPlay, {
+            ...options,
+        });
 
         setSound(sound);
 
@@ -41,6 +48,16 @@ export const useSound = (soundToPlay: Sounds, options?: SoundOptions) => {
             }
             : undefined;
     }, [sound]);
+
+    // Handle changes in the muted state
+    React.useEffect(() => {
+        if (sound) {
+            sound.setIsMutedAsync(muted); // Set the new mute state for the currently loaded sound
+            if (!muted) {
+                sound.playAsync(); // If not muted, play the sound again
+            }
+        }
+    }, [muted]);
 
     return {
         playSound,
