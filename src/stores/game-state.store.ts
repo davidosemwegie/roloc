@@ -32,6 +32,7 @@ interface GameStateStore {
     ringOrder: RingColors[],
     extraLives: number,
     extraLifeUsed: boolean,
+    setExtraLifeUsed: (value: boolean) => void,
     isBackgroundMuted: boolean,
     isMatchSoundMuted: boolean,
     isGameOverSoundMuted: boolean,
@@ -93,9 +94,10 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     dotOrder: [],
     extraLives: 0,
     extraLifeUsed: false,
-    isBackgroundMuted: false,
+    isBackgroundMuted: true,
     isMatchSoundMuted: false,
     isGameOverSoundMuted: false,
+    setExtraLifeUsed: (value: boolean) => set(() => ({ extraLifeUsed: value })),
     toggleBackgroundMute: () =>
         set((state) => ({
             isBackgroundMuted: !state.isBackgroundMuted,

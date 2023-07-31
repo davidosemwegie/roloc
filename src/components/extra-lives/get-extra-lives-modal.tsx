@@ -91,21 +91,16 @@ export const GetExtraLivesModal = () => {
         });
         // Check if the current time is greater than the last clicked time plus 12 hours
         const currentTime = Date.now();
-        if (currentTime - lastInstagramClickTime >= 12 * 60 * 60 * 1000) {
+        if (currentTime - lastInstagramClickTime >= 3600000) {
             // User is allowed to click the link
             setLastInstagramClickTime(currentTime);
+            // Rest of the existing code for Instagram link click...
 
-            // Store the new last clicked time in local storage
-            await AsyncStorage.setItem('instagram_link_clicked', currentTime.toString());
-
-            // Perform other actions for the Instagram link click here (e.g., addExtraLife())
-            addExtraLife();
-
-            alert("You got an extra life!");
-
+            // Display a message indicating the user can visit your Instagram page for an extra life
+            alert("You can view my Instagram page to get an extra life!");
         } else {
-            // User cannot click the link yet, display a message or take other actions
-            alert("Get extra lives by clicking the link once every 12 hours");
+            // User cannot click the link yet, display a message to come back later
+            alert("Come back later to view my Instagram page and get more free extra lives!");
         }
     };
 
@@ -128,25 +123,33 @@ export const GetExtraLivesModal = () => {
             social: 'twitter'
         });        // Check if the current time is greater than the last clicked time plus 12 hours
         const currentTime = Date.now();
-        if (currentTime - lastTwitterClickTime >= 12 * 60 * 60 * 1000) {
+        if (currentTime - lastTwitterClickTime >= 3600000) {
             // User is allowed to click the link
             setLastTwitterClickTime(currentTime);
+            // Rest of the existing code for Twitter link click...
 
-            // Store the new last clicked time in local storage
-            await AsyncStorage.setItem('twitter_link_clicked', currentTime.toString());
-
-            // Perform other actions for the Twitter link click here (e.g., addExtraLife())
-            addExtraLife();
-
-            alert("You got an extra life!");
+            // Display a message indicating the user can visit your Twitter page for an extra life
+            alert("You can view my Twitter page to get an extra life!");
         } else {
-            // User cannot click the link yet, display a message or take other actions
-            alert("Get extra lives by clicking the Twitter link once every 12 hours");
+            // User cannot click the link yet, display a message to come back later
+            alert("Come back later to view my Twitter page and get more free extra lives!");
         }
     };
 
-    const isInstagramLinkClickable = Date.now() - lastInstagramClickTime >= 12 * 60 * 60 * 1000;
-    const isTwitterLinkClickable = Date.now() - lastTwitterClickTime >= 12 * 60 * 60 * 1000;
+    const isInstagramLinkClickable = Date.now() - lastInstagramClickTime >= 1 * 60 * 60 * 1000;
+    const isTwitterLinkClickable = Date.now() - lastTwitterClickTime >= 1 * 60 * 60 * 1000;
+
+    const getRemainingTime = (lastClickTime) => {
+        const currentTime = Date.now();
+        const timeDifference = currentTime - lastClickTime;
+        const remainingTime = 3600000 - timeDifference; // One hour in milliseconds
+        return remainingTime;
+    };
+
+    const formatTime = (timeInMillis) => {
+        const minutes = Math.floor(timeInMillis / (1000 * 60));
+        return minutes === 0 ? 'less than a minute' : `${minutes} minutes`;
+    };
 
 
     return (
@@ -254,37 +257,55 @@ export const GetExtraLivesModal = () => {
                     )}
                 </View>
 
-                {(isInstagramLinkClickable || isTwitterLinkClickable) && (
-                    <View className="space-y-6 flex items-center">
-                        <Typography className="text-[18px] text-center">
-                            Hi I'm David, the creator of this game 👋🏽
+                <View className="space-y-6 flex items-center">
+                    <Typography className="text-[18px] text-center">
+                        Hi I'm David, the creator of this game 👋🏽
+                    </Typography>
+                    {isInstagramLinkClickable && (
+                        <A
+                            href="https://instagram.com/osazi"
+                            style={{
+                                color: '#1d4ed8',
+                                fontSize: 18,
+                            }}
+                            onPress={handleInstagramLinkClick} // Use the custom handler for the Instagram link
+                        >Visit instagram</A>
+                    )}
+
+                    {isTwitterLinkClickable && (
+                        <A href="https://twitter.com/@davidosemwegie"
+                            style={{
+                                color: '#1d4ed8',
+                                fontSize: 18,
+                            }}
+                            onPress={handleTwitterLinkClick} // Use the custom handler for the Twitter link
+
+                        >
+                            Visit twitter
+                        </A>
+                    )}
+
+                    {!isInstagramLinkClickable && (
+                        <Typography className="text-sm text-center">
+                            Come back in {' '}
+                            <Typography className="text-green-700 text-[18px]">
+                                {formatTime(getRemainingTime(lastInstagramClickTime))}
+                            </Typography> {' '}
+                            to view my Instagram page and get more free extra lives!
                         </Typography>
-                        {isInstagramLinkClickable && (
-                            <A
-                                href="https://instagram.com/osazi"
-                                style={{
-                                    color: '#1d4ed8',
-                                    fontSize: 18,
-                                }}
-                                onPress={handleInstagramLinkClick} // Use the custom handler for the Instagram link
-                            >Visit instagram</A>
-                        )}
+                    )}
 
-                        {isTwitterLinkClickable && (
-                            <A href="https://twitter.com/@davidosemwegie"
-                                style={{
-                                    color: '#1d4ed8',
-                                    fontSize: 18,
-                                }}
-                                onPress={handleTwitterLinkClick} // Use the custom handler for the Twitter link
+                    {!isTwitterLinkClickable && (
+                        <Typography className="text-sm text-center" >
+                            Come back in {' '}
+                            <Typography className="text-green-700 text-[18px]">
+                                {formatTime(getRemainingTime(lastTwitterClickTime))}
+                            </Typography>  {' '}
+                            to view my Twtter (X) page and get more free extra lives!
+                        </Typography>
+                    )}
+                </View>
 
-                            >
-                                Visit twitter
-                            </A>
-                        )}
-
-                    </View>
-                )}
             </Popover>
         </>
     );

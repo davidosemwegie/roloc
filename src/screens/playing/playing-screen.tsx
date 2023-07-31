@@ -1,12 +1,15 @@
 import { Dot, Ring, Typography } from '@components'
-import { GameStates, useGameStateStore } from '@stores'
+import { GameStates, useExtraLifeStore, useGameStateStore } from '@stores'
 import { cn, useSound, } from '@utils'
 import React, { useEffect } from 'react'
 import { View } from 'react-native'
 import { DragProvider } from './drag-provider'
 
 const PlayingScreen = () => {
-    const { score, state, endGame, ringOrder, dotOrder, activeColor, isBackgroundMuted } = useGameStateStore()
+    const { score, state, endGame, ringOrder, dotOrder, activeColor, isBackgroundMuted, extraLifeUsed } = useGameStateStore()
+
+    const { extraLives, setExtraLives } = useExtraLifeStore();
+
 
     const { playSound } = useSound('game-start', {
         isLooping: true,
@@ -15,6 +18,7 @@ const PlayingScreen = () => {
 
     useEffect(() => {
         playSound()
+        setExtraLives()
     }, [])
 
     const ringColumn = 'flex-1 space-y-[250px] flex-1 flex flex-col'
@@ -40,10 +44,21 @@ const PlayingScreen = () => {
     // }, [activeColor]); // Replaced activeColor with state and score
 
 
+    const shouldShowExtraLifeIcon = !extraLifeUsed && extraLives > 0 && state === GameStates.PLAYING
 
     return (
         <DragProvider>
             <View className='flex-1 flex flex-col relative'>
+                {shouldShowExtraLifeIcon && (
+                    <View
+                        style={{ position: 'absolute', top: 16, right: 16 }}
+                    >
+                        <Typography>
+                            ❣️
+                        </Typography>
+                    </View>
+                )}
+
                 <View className='m-auto left-0 right-0  absolute top-[5%]'>
                     <Typography className='text-4xl m-auto'>
                         {score}

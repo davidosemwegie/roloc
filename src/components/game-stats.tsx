@@ -2,6 +2,7 @@ import { calculateAverageScore, calculateTotalScore, getTotalGamesPlayed, getHig
 import { useEffect, useState } from "react";
 import { View } from 'react-native';
 import { Typography } from "./typography";
+import { useExtraLifeStore } from "@stores";
 
 const LoadingBar = () => (
     <Typography className="text-sm">
@@ -19,6 +20,8 @@ export const GameStats = () => {
     const [loadingTotalScore, setLoadingTotalScore] = useState<boolean>(true);
     const [loadingGamesPlayed, setLoadingGamesPlayed] = useState<boolean>(true);
     const [loadingHighScore, setLoadingHighScore] = useState<boolean>(true);
+
+    const { setExtraLives, extraLives } = useExtraLifeStore();
 
     useEffect(() => {
         async function getStats() {
@@ -78,10 +81,14 @@ export const GameStats = () => {
 
             {!showStats && !loadingHighScore && !loadingAverageScore && !loadingTotalScore && !loadingGamesPlayed && (
                 <View className="space-y-3">
-                    <Typography className="text-xl">Play 10 games to unlock stats 🔓</Typography>
+                    <Typography className="text-xl">Play 10 games to unlock more stats 🔓</Typography>
                     <View className='flex flex-row justify-between'>
                         <Typography className="text-xl ">Games Played: </Typography>
                         {loadingGamesPlayed ? <LoadingBar /> : <Typography className="text-xl "> {gamesPlayed}</Typography>}
+                    </View>
+                    <View className='flex flex-row justify-between'>
+                        <Typography className="text-xl ">Extra Lives: </Typography>
+                        {<Typography className="text-xl "> {extraLives}</Typography>}
                     </View>
                 </View>
             )}

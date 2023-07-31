@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { addExtraLife, getExtraLives, trackEvent, useExtraLife } from "@fb";
+import { useGameStateStore } from "./game-state.store";
 
 interface ExtraLifeStore {
     extraLives: number;

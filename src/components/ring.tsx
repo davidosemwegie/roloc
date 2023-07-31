@@ -11,7 +11,7 @@ export interface RingProps {
 
 
 import { BoundingBox, useSound, } from '@utils'
-import { useGameStateStore } from '@stores'
+import { useExtraLifeStore, useGameStateStore } from '@stores'
 import { useSoundContext } from './sound-provider'
 
 
@@ -19,13 +19,16 @@ export const Ring: FC<RingProps> = ({
     color
 }) => {
 
-    const [isRing, setIsInRing] = React.useState(false)
+    const { extraLives, useExtraLife } = useExtraLifeStore();
+
+
+    const [isInRing, setIsInRing] = React.useState(true)
 
 
     const elementRef = useRef<View>(null);
 
     const [boundingBox, setBoundingBox] = React.useState<BoundingBox | null>(null);
-    const { activeColor, addPoint, endGame, isMatchSoundMuted } = useGameStateStore()
+    const { activeColor, addPoint, endGame, isMatchSoundMuted, setExtraLifeUsed, extraLifeUsed } = useGameStateStore()
 
     const { playSound } = useSound('match', {
         isMuted: isMatchSoundMuted
@@ -85,21 +88,29 @@ export const Ring: FC<RingProps> = ({
                 setIsInRing(true)
                 addPoint()
                 playSound()
+                console.log('isWithin')
             } else {
-                setIsInRing(false)
-                endGame()
+                if (extraLives > 0 && !extraLifeUsed) {
+                    useExtraLife()
+                    setExtraLifeUsed(true)
+                    console.log('extra life used')
+                } else {
+                    endGame()
+                    console.log('game ended')
+                }
             }
 
             setDraggableItem(null);
+            setIsInRing(false)
         }
     }
 
 
     useEffect(() => {
         checker()
-        setIsInRing(false)
-
     }, [dragging]);
+
+    const size = 140
 
     return (
         <View
@@ -110,9 +121,11 @@ export const Ring: FC<RingProps> = ({
             <View
                 ref={elementRef}
                 id={id}
-                className={`w-[140px] h-[140px] rounded-full  border-solid border-[20px] `}
+                className={`rounded-full  border-solid border-[20px] `}
                 style={{
-                    borderColor: `${COLOR}`
+                    borderColor: `${COLOR}`,
+                    height: size,
+                    width: size,
                 }}
             >
             </View>
