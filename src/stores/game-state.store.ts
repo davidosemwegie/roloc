@@ -94,7 +94,7 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
     dotOrder: [],
     extraLives: 0,
     extraLifeUsed: false,
-    isBackgroundMuted: true,
+    isBackgroundMuted: false,
     isMatchSoundMuted: false,
     isGameOverSoundMuted: false,
     setExtraLifeUsed: (value: boolean) => set(() => ({ extraLifeUsed: value })),
