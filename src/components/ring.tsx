@@ -88,15 +88,12 @@ export const Ring: FC<RingProps> = ({
                 setIsInRing(true)
                 addPoint()
                 playSound()
-                console.log('isWithin')
             } else {
                 if (extraLives > 0 && !extraLifeUsed) {
                     useExtraLife()
                     setExtraLifeUsed(true)
-                    console.log('extra life used')
                 } else {
                     endGame()
-                    console.log('game ended')
                 }
             }
 

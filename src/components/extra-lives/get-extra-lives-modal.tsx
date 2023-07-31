@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Button, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity } from "react-native";
 import Popover from 'react-native-popover-view';
 import { PulsingButton } from "../pulsing-button";
 import { Typography } from "../typography";
@@ -10,63 +10,60 @@ import { getUserEmail, mixpanel, setUserEmail, trackEvent } from "@fb";
 import { A } from '@expo/html-elements';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Feather from '@expo/vector-icons/Feather';
+import AntDesign from '@expo/vector-icons/Feather';
 import { SoftButton } from "../soft-button";
 
 
 export const GetExtraLivesModal = () => {
     const [showPopover, setShowPopover] = useState(false);
-    const [isLoadingAd, setIsLoadingAd] = useState(false); // New state for ad loading
-    const [email, setEmail] = useState(''); // New state for ad loading
-    const [dbEmail, setDbEmail] = useState(''); // New state for ad loa0ding
+    const [isLoadingAd, setIsLoadingAd] = useState(false);
+    const [email, setEmail] = useState('');
+    const [dbEmail, setDbEmail] = useState('');
 
     const [lastInstagramClickTime, setLastInstagramClickTime] = useState(0);
+    const [lastTwitterClickTime, setLastTwitterClickTime] = useState(0);
+
+    const { extraLives, setExtraLives, addExtraLife } = useExtraLifeStore();
+    const { rewardedInterstitialAd, shouldShowAds } = useAdContext();
+    const [isLoadingEmail, setIsLoadingEmail] = useState(true);
 
     useEffect(() => {
-        async function loadLastInstagramClickTime() {
-            // Load the last clicked time from local storage when the component mounts
-            const lastClickTime = await AsyncStorage.getItem('instagram_link_clicked');
-            if (lastClickTime) {
-                setLastInstagramClickTime(parseInt(lastClickTime, 10));
+        async function loadLastClickTimes() {
+            const instagramLastClickTime = await AsyncStorage.getItem('instagram_link_clicked');
+            const twitterLastClickTime = await AsyncStorage.getItem('twitter_link_clicked');
+            if (instagramLastClickTime) {
+                setLastInstagramClickTime(parseInt(instagramLastClickTime, 10));
+            }
+            if (twitterLastClickTime) {
+                setLastTwitterClickTime(parseInt(twitterLastClickTime, 10));
             }
         }
 
-        loadLastInstagramClickTime();
+        loadLastClickTimes();
     }, []);
 
-
-    const { extraLives, setExtraLives, addExtraLife } = useExtraLifeStore();
-
-    const { rewardedInterstitialAd, shouldShowAds } = useAdContext();
-
-    const [isLoadingEmail, setIsLoadingEmail] = useState(true);
-
-
     useEffect(() => {
-        setExtraLives()
+        setExtraLives();
         getUserEmail().then((email) => {
             setDbEmail(email);
-            setIsLoadingEmail(false); // Mark email loading as complete
+            setIsLoadingEmail(false);
         });
-    }, [])
+    }, []);
 
     useEffect(() => {
-
         const { isEarnedReward } = rewardedInterstitialAd;
 
         if (isEarnedReward) {
             addExtraLife();
         }
 
-    }, [
-        rewardedInterstitialAd.isEarnedReward,
-    ])
-
+    }, [rewardedInterstitialAd.isEarnedReward]);
 
     useEffect(() => {
         if (rewardedInterstitialAd.isLoaded) {
-            setIsLoadingAd(false); // Set isLoadingAd to false when the ad is loaded
+            setIsLoadingAd(false);
         }
-    }, [rewardedInterstitialAd.isLoaded])
+    }, [rewardedInterstitialAd.isLoaded]);
 
     const onWatchAdButtonClicked = () => {
         if (shouldShowAds) {
@@ -76,77 +73,44 @@ export const GetExtraLivesModal = () => {
 
     const onGetExtraLivesButtonClicked = async () => {
         setShowPopover(true);
-        setIsLoadingAd(true); // Set isLoadingAd to true before loading the ad
+        setIsLoadingAd(true);
         try {
-            await rewardedInterstitialAd.load()
+            await rewardedInterstitialAd.load();
         } catch (error) {
             console.error("Error loading ad:", error);
-            setIsLoadingAd(false); // Set isLoadingAd to false in case of an error
+            setIsLoadingAd(false);
         }
     };
 
-    const handleInstagramLinkClick = async () => {
+    const handleSocialLinkClick = async (social: 'instagram' | 'twitter') => {
         trackEvent('social_link_clicked', {
-            social: 'instagram'
+            social
         });
-        // Check if the current time is greater than the last clicked time plus 12 hours
         const currentTime = Date.now();
-        if (currentTime - lastInstagramClickTime >= 3600000) {
-            // User is allowed to click the link
-            setLastInstagramClickTime(currentTime);
-            // Rest of the existing code for Instagram link click...
+        const lastClickTime = social === 'instagram' ? lastInstagramClickTime : lastTwitterClickTime;
+        const setLastClickTime = social === 'instagram' ? setLastInstagramClickTime : setLastTwitterClickTime;
 
-            // Display a message indicating the user can visit your Instagram page for an extra life
-            alert("You can view my Instagram page to get an extra life!");
+        if (currentTime - lastClickTime >= 3600000) {
+            setLastClickTime(currentTime);
+            await AsyncStorage.setItem(`${social}_link_clicked`, currentTime.toString());
+            addExtraLife();
         } else {
-            // User cannot click the link yet, display a message to come back later
-            alert("Come back later to view my Instagram page and get more free extra lives!");
+            alert(`Come back later to view my ${social} page and get more free extra lives!`);
         }
     };
 
-    const [lastTwitterClickTime, setLastTwitterClickTime] = useState(0);
-
-    useEffect(() => {
-        async function loadLastTwitterClickTime() {
-            // Load the last clicked time from local storage when the component mounts
-            const lastClickTime = await AsyncStorage.getItem('twitter_link_clicked');
-            if (lastClickTime) {
-                setLastTwitterClickTime(parseInt(lastClickTime, 10));
-            }
-        }
-
-        loadLastTwitterClickTime();
-    }, []);
-
-    const handleTwitterLinkClick = async () => {
-        trackEvent('social_link_clicked', {
-            social: 'twitter'
-        });        // Check if the current time is greater than the last clicked time plus 12 hours
-        const currentTime = Date.now();
-        if (currentTime - lastTwitterClickTime >= 3600000) {
-            // User is allowed to click the link
-            setLastTwitterClickTime(currentTime);
-            // Rest of the existing code for Twitter link click...
-
-            // Display a message indicating the user can visit your Twitter page for an extra life
-            alert("You can view my Twitter page to get an extra life!");
-        } else {
-            // User cannot click the link yet, display a message to come back later
-            alert("Come back later to view my Twitter page and get more free extra lives!");
-        }
+    const isSocialLinkClickable = (lastClickTime: number) => {
+        return Date.now() - lastClickTime >= 1 * 60 * 60 * 1000;
     };
 
-    const isInstagramLinkClickable = Date.now() - lastInstagramClickTime >= 1 * 60 * 60 * 1000;
-    const isTwitterLinkClickable = Date.now() - lastTwitterClickTime >= 1 * 60 * 60 * 1000;
-
-    const getRemainingTime = (lastClickTime) => {
+    const getRemainingTime = (lastClickTime: number) => {
         const currentTime = Date.now();
         const timeDifference = currentTime - lastClickTime;
-        const remainingTime = 3600000 - timeDifference; // One hour in milliseconds
+        const remainingTime = 3600000 - timeDifference;
         return remainingTime;
     };
 
-    const formatTime = (timeInMillis) => {
+    const formatTime = (timeInMillis: number) => {
         const minutes = Math.floor(timeInMillis / (1000 * 60));
         return minutes === 0 ? 'less than a minute' : `${minutes} minutes`;
     };
@@ -161,6 +125,9 @@ export const GetExtraLivesModal = () => {
             >
                 Get extra lives ❣️
             </PulsingButton>
+            <Typography className="text-[18px] text-center mt-4">
+                You have {extraLives} extra {extraLives === 1 ? 'life' : 'lives'}
+            </Typography>
             <Popover
                 isVisible={showPopover}
                 onRequestClose={() => setShowPopover(false)}
@@ -229,6 +196,9 @@ export const GetExtraLivesModal = () => {
                             </>
                         ) : (
                             <>
+                                <Typography className="text-center mb-4 text-[18px]">
+                                    Enter your email to get an extra life
+                                </Typography>
                                 <TextInput
                                     placeholder="Email"
                                     value={email} // Use the 'email' state as the value of the input
@@ -240,6 +210,7 @@ export const GetExtraLivesModal = () => {
                                     onPress={() => {
                                         setUserEmail(email)
                                             .then(() => {
+                                                addExtraLife();
                                                 alert('Email saved! and you got an extra life!');
                                                 setDbEmail(email);
                                                 setEmail('');
@@ -249,8 +220,11 @@ export const GetExtraLivesModal = () => {
                                             })
                                         trackEvent('email_saved')
                                     }}
+                                    style={{
+                                        opacity: !email ? 0.5 : 1,
+                                    }}
                                 >
-                                    Join our newsletter to get an extra life
+                                    Submit
                                 </SoftButton>
                             </>
                         )
@@ -258,52 +232,56 @@ export const GetExtraLivesModal = () => {
                 </View>
 
                 <View className="space-y-6 flex items-center">
-                    <Typography className="text-[18px] text-center">
-                        Hi I'm David, the creator of this game 👋🏽
-                    </Typography>
-                    {isInstagramLinkClickable && (
-                        <A
-                            href="https://instagram.com/osazi"
-                            style={{
-                                color: '#1d4ed8',
-                                fontSize: 18,
-                            }}
-                            onPress={handleInstagramLinkClick} // Use the custom handler for the Instagram link
-                        >Visit instagram</A>
-                    )}
+                    <View className="space-y-2">
 
-                    {isTwitterLinkClickable && (
-                        <A href="https://twitter.com/@davidosemwegie"
-                            style={{
-                                color: '#1d4ed8',
-                                fontSize: 18,
-                            }}
-                            onPress={handleTwitterLinkClick} // Use the custom handler for the Twitter link
-
-                        >
-                            Visit twitter
-                        </A>
-                    )}
-
-                    {!isInstagramLinkClickable && (
-                        <Typography className="text-sm text-center">
-                            Come back in {' '}
-                            <Typography className="text-green-700 text-[18px]">
-                                {formatTime(getRemainingTime(lastInstagramClickTime))}
-                            </Typography> {' '}
-                            to view my Instagram page and get more free extra lives!
+                        <Typography className="text-[18px] text-center">
+                            Hi I'm David, the creator of this game 👋🏽
                         </Typography>
-                    )}
-
-                    {!isTwitterLinkClickable && (
-                        <Typography className="text-sm text-center" >
-                            Come back in {' '}
-                            <Typography className="text-green-700 text-[18px]">
-                                {formatTime(getRemainingTime(lastTwitterClickTime))}
-                            </Typography>  {' '}
-                            to view my Twtter (X) page and get more free extra lives!
+                        <Typography className="text-[18px] text-center">
+                            View my social media pages to get more free extra lives!
                         </Typography>
-                    )}
+                    </View>
+                    <View className="flex space-y-4">
+                        {isSocialLinkClickable(lastInstagramClickTime) ? (
+                            <SoftButton>
+                                <TouchableOpacity
+                                    onPress={() => handleSocialLinkClick('instagram')}
+                                >
+                                    <A href="https://instagram.com/osazi">
+                                        <AntDesign name="instagram" size={24} color="white" />
+                                    </A>
+                                </TouchableOpacity>
+                            </SoftButton>
+                        ) : (
+                            <Typography className="text-sm text-center">
+                                Come back in {' '}
+                                <Typography className="text-green-700 text-[18px]">
+                                    {formatTime(getRemainingTime(lastInstagramClickTime))}
+                                </Typography> {' '}
+                                to view my Instagram page and get more free extra lives!
+                            </Typography>
+                        )}
+
+                        {isSocialLinkClickable(lastTwitterClickTime) ? (
+                            <SoftButton>
+                                <TouchableOpacity
+                                    onPress={() => handleSocialLinkClick('twitter')}
+                                >
+                                    <A href="https://twitter.com/@davidosemwegie">
+                                        <AntDesign name="twitter" size={24} color="white" />
+                                    </A>
+                                </TouchableOpacity>
+                            </SoftButton>
+                        ) : (
+                            <Typography className="text-sm text-center" >
+                                Come back in {' '}
+                                <Typography className="text-green-700 text-[18px]">
+                                    {formatTime(getRemainingTime(lastTwitterClickTime))}
+                                </Typography>  {' '}
+                                to view my Twitter page and get more free extra lives!
+                            </Typography>
+                        )}
+                    </View>
                 </View>
 
             </Popover>

@@ -164,7 +164,6 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
             await setOldHighScore(parsedHighScore);
             setHighScore(newHighScore)
             updateUserHighscore(newHighScore)
-            console.log('new high score')
         }
 
 

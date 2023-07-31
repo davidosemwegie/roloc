@@ -21,7 +21,6 @@ export const AdProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
         });
         const shouldShow = await remoteConfig().getBoolean('show_ads');
         setShouldShowAds(shouldShow);
-        console.log('shouldShowAds', shouldShow);
     };
 
     useEffect(() => {

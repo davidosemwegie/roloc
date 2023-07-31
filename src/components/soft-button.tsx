@@ -4,17 +4,13 @@ import { Typography } from "./typography";
 
 export interface SoftButtonProps {
     onPress: () => void;
-    style: TouchableOpacityProps;
 }
 
-export const SoftButton: FC<TouchableOpacityProps> = ({ children, onPress, style, ...rest }) => {
+export const SoftButton: FC<TouchableOpacityProps> = ({ children, onPress, ...rest }) => {
     return (
         <TouchableOpacity
             onPress={onPress}
-            className="bg-gray-800 w-auto p-4 rounded-lg flex flex-row space-x-3 items-center justify-center m-auto"
-            style={{
-                opacity: 0.8,
-            }}
+            className="bg-gray-800 w-auto p-4 rounded-lg flex flex-row space-x-3 items-center justify-center m-auto opacity-80"
             {...rest}
         >
             <Typography
