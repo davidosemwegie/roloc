@@ -33,15 +33,15 @@ const PlayingScreen = () => {
         return 2500;                    // Default 3 seconds
     };
 
-    // useEffect(() => {
-    //     if (state !== GameStates.PLAYING) {
-    //         return;
-    //     }
-    //     const interval = setInterval(() => {
-    //         endGame()
-    //     }, calculateInterval(score));
-    //     return () => clearInterval(interval);
-    // }, [activeColor]); // Replaced activeColor with state and score
+    useEffect(() => {
+        if (state !== GameStates.PLAYING) {
+            return;
+        }
+        const interval = setInterval(() => {
+            endGame()
+        }, calculateInterval(score));
+        return () => clearInterval(interval);
+    }, [activeColor]); // Replaced activeColor with state and score
 
 
     const shouldShowExtraLifeIcon = !extraLifeUsed && extraLives > 0 && state === GameStates.PLAYING
