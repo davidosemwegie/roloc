@@ -5,7 +5,7 @@ import StartScreen from '@screens/start/start-screen'
 import { GameStates, useGameStateStore } from '@stores'
 import React from 'react'
 import { SafeAreaView } from 'react-native'
-import { AdProvider } from './ad-provider'
+import { AdProvider } from '../providers/ad-provider'
 
 
 

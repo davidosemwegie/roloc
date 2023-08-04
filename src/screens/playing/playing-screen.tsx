@@ -4,14 +4,15 @@ import { cn, useSound, } from '@utils'
 import React, { useEffect } from 'react'
 import { View } from 'react-native'
 import { DragProvider } from './drag-provider'
+import { useAdContext } from '@providers'
 
 const PlayingScreen = () => {
-    const { score, state, endGame, ringOrder, dotOrder, activeColor, isBackgroundMuted, extraLifeUsed } = useGameStateStore()
+
+    const { score, state, ringOrder, dotOrder, isBackgroundMuted, extraLifeUsed, endGame, activeColor } = useGameStateStore()
 
     const { extraLives, setExtraLives } = useExtraLifeStore();
 
-
-    const { playSound } = useSound('game-start', {
+    const { playSound, stopSound } = useSound('game-start', {
         isLooping: true,
         isMuted: isBackgroundMuted
     })
@@ -20,6 +21,13 @@ const PlayingScreen = () => {
         playSound()
         setExtraLives()
     }, [])
+
+    useEffect(() => {
+        if (state === GameStates.GAME_OVER) {
+            stopSound()
+        }
+    }, [state])
+
 
     const ringColumn = 'flex-1 space-y-[250px] flex-1 flex flex-col'
     const ringGridCell = ''
@@ -33,15 +41,15 @@ const PlayingScreen = () => {
         return 2500;                    // Default 3 seconds
     };
 
-    // useEffect(() => {
-    //     if (state !== GameStates.PLAYING) {
-    //         return;
-    //     }
-    //     const interval = setInterval(() => {
-    //         endGame()
-    //     }, calculateInterval(score));
-    //     return () => clearInterval(interval);
-    // }, [activeColor]); // Replaced activeColor with state and score
+    useEffect(() => {
+        if (state !== GameStates.PLAYING) {
+            return;
+        }
+        const interval = setInterval(() => {
+            endGame()
+        }, calculateInterval(score));
+        return () => clearInterval(interval);
+    }, [activeColor]); // Replaced activeColor with state and score
 
 
     const shouldShowExtraLifeIcon = !extraLifeUsed && extraLives > 0 && state === GameStates.PLAYING

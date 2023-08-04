@@ -32,7 +32,7 @@ export const Instructions = () => {
                     borderRadius: 20,
                 }}>
                 <View className='flex flex-col items-center mb-10'>
-                    <Typography className='text-center mb-2'>
+                    <Typography className='text-center mb-4'>
                         How to play:
                     </Typography>
                     <Typography className='text-center text-[16px]'>

@@ -1,32 +1,31 @@
-import { GameStats, GetExtraLivesModal, PulsingButton, Screen, SoftButton, Typography } from '@components';
+import { GameStats, GetExtraLivesModal, PulsingButton, Typography } from '@components';
 import { useGameStateStore } from '@stores';
 import React, { useEffect } from 'react';
-import { SafeAreaView, Settings, View } from 'react-native';
-import { useAdContext } from '../../layouts';
+import { SafeAreaView, View } from 'react-native';
 import { Instructions } from './instructions';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useSound } from '@utils';
 import { SettingsPopup } from './settings';
+import { useAdContext } from '@providers';
 
 
 const StartScreen = () => {
     const { startGame, isBackgroundMuted } = useGameStateStore();
 
-    const { playSound } = useSound('game-start', {
+    const { playSound, stopSound } = useSound('game-start', {
         isLooping: true,
         isMuted: isBackgroundMuted
     })
 
-    const { interstitialAd, rewardedInterstitialAd } = useAdContext();
+    const { rewardedInterstitialAd } = useAdContext();
 
 
     useEffect(() => {
         rewardedInterstitialAd.load();
-        playSound()
     }, [])
 
     return (
-        <SafeAreaView className='h-full bg-black mx-10'>
+        <SafeAreaView className='flex-1 bg-black flex flex-col mx-10'>
             <View className='flex flex-row justify-between items-center mt-6 w-full'>
                 <View>
                     <Instructions />
@@ -49,16 +48,14 @@ const StartScreen = () => {
                     </View>
                     <View className='m-auto mb-14'>
                         <PulsingButton
-                            onPress={() => {
-                                startGame(() => interstitialAd.load())
-                            }}
+                            onPress={startGame}
                             color='white'
                         >
                             <Entypo name="controller-play" size={60} color='green' />
                         </PulsingButton>
                     </View>
                     <View className='m-auto'>
-                        <GetExtraLivesModal />
+                        <GetExtraLivesModal stopSound={stopSound} />
                     </View>
 
                 </View>

@@ -1,10 +1,10 @@
-import { PulsingButton, Screen, Typography, useSoundContext } from '@components'
-import { getHighscore, getShouldShowAds, trackEvent } from '@fb'
-import { useAdContext } from '@layouts'
-import { useExtraLifeStore, useGameStateStore } from '@stores'
+import { PulsingButton, Screen, Typography } from '@components'
+import { getHighscore, trackEvent } from '@fb'
+import { useAdContext } from '@providers'
+import { useGameStateStore } from '@stores'
 import { useSound } from '@utils'
 import React, { useEffect } from 'react'
-import { Button, TouchableOpacity, View } from 'react-native'
+import { Button, View } from 'react-native'
 
 
 function shouldShowAd() {
@@ -20,52 +20,45 @@ function shouldShowAd() {
 
 export const GameOverScreen = () => {
 
-    const { score, startGame, oldHighscore: gameStoreOldHighscore, backToMenu, resumeWithExtraLife, extraLifeUsed, isGameOverSoundMuted } = useGameStateStore()
-    const { playSound } = useSound('game-over', {
+
+    const { score, startGame, oldHighscore: gameStoreOldHighscore, backToMenu, isGameOverSoundMuted } = useGameStateStore()
+    const { playSound, stopSound } = useSound('game-over', {
         isMuted: isGameOverSoundMuted
     })
-
 
     const [showAd] = React.useState(() => shouldShowAd())
     const [highscore, setHighscore] = React.useState(0)
     const [oldHighscore, setOldHighscore] = React.useState(0)
 
-    const { setExtraLives, extraLives } = useExtraLifeStore()
+    const getHS = async () => {
+        const hs = await getHighscore()
+        setHighscore(hs ?? 0)
+        setOldHighscore(gameStoreOldHighscore);
+    }
 
-
-    const { interstitialAd: {
-        isLoaded,
-        show,
-        load,
-    },
+    const {
+        interstitialAd: {
+            isLoaded,
+            show,
+            load
+        },
         shouldShowAds
     } = useAdContext()
 
-
     useEffect(() => {
         if (showAd && shouldShowAds && isLoaded) {
+            stopSound()
             show()
             trackEvent('ad_shown', {
                 type: 'interstitial'
             })
         }
-        playSound()
     }, [isLoaded])
 
 
     useEffect(() => {
-        setExtraLives()
-    }, [])
-
-
-
-
-    useEffect(() => {
-        const getHS = async () => {
-            const hs = await getHighscore()
-            setHighscore(hs ?? 0)
-            setOldHighscore(gameStoreOldHighscore);
-        }
+        load()
+        playSound()
         getHS()
     }, [])
 
@@ -87,6 +80,12 @@ export const GameOverScreen = () => {
             <Typography className='text-3xl font-bold text-red-500'>
                 Game Over {isLoaded && '🚀'}
             </Typography>
+            <Typography>
+                {JSON.stringify({
+                    showAd,
+                    isLoaded
+                })}
+            </Typography>
             <View className='flex items-center'>
                 <Typography >
                     Score: {score}
@@ -100,15 +99,15 @@ export const GameOverScreen = () => {
             </Typography>
             <PulsingButton
                 onPress={() => {
-                    startGame(async () => {
-                        load()
+                    startGame(() => {
+                        stopSound()
                     })
                 }}
                 size={40}
             >
                 Play Again
             </PulsingButton>
-            {extraLives > 0 && !extraLifeUsed && (
+            {/* {extraLives > 0 && !extraLifeUsed && (
                 <View>
                     <Typography className='text-[20px] mb-4'>
                         You have {extraLives} extra lives
@@ -131,7 +130,7 @@ export const GameOverScreen = () => {
                         </Typography>
                     </TouchableOpacity>
                 </View>
-            )}
+            )} */}
 
             <View>
                 <Button title="Back to main screen" color='grey' onPress={backToMenu} />

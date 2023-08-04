@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { Audio } from 'expo-av';
-import { useGameStateStore } from '@stores';
 
 const gameStart = require('../assets/playing.wav')
 const gameOver = require('../assets/game-over.wav')
