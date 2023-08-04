@@ -22,7 +22,7 @@ export const Ring: FC<RingProps> = ({
     const { extraLives, useExtraLife } = useExtraLifeStore();
 
 
-    const [isInRing, setIsInRing] = React.useState(true)
+    const [isInRing, setIsInRing] = React.useState(false)
 
 
     const elementRef = useRef<View>(null);
@@ -123,6 +123,7 @@ export const Ring: FC<RingProps> = ({
                     borderColor: `${COLOR}`,
                     height: size,
                     width: size,
+                    backgroundColor: (isInRing && dragging) ? `${COLOR}` : 'transparent'
                 }}
             >
             </View>
