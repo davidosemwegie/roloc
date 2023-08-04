@@ -381,15 +381,20 @@ export async function getUserEmail(): Promise<string | null> {
 
 export async function getShouldShowAds(): Promise<boolean> {
     try {
-        // Fetch and activate the config from Firebase
-        await remoteConfig().fetchAndActivate();
+        const configRef = firestore().collection('config').doc('ads');
+        const configDoc = await configRef.get();
 
-        // Get the remote config value
-        const showAds = remoteConfig().getValue('show_ads');
+        if (configDoc.exists) {
+            // Get the show_ads field from the config's document
+            const showAds = configDoc.get('show_ads') as boolean;
 
-        // If 'show_ads' is not available or set to 'false' in Firebase, it will return false.
-        // If 'show_ads' is set to 'true', it will return true.
-        return showAds.asBoolean();
+            // Return the value of show_ads
+            return showAds;
+        } else {
+            // Config document does not exist, return false as default
+            console.log('Config document does not exist in the collection');
+            return false;
+        }
     } catch (error) {
         crashlytics().recordError(error);
         console.log(error);
@@ -398,3 +403,4 @@ export async function getShouldShowAds(): Promise<boolean> {
     // In case of an error, don't show ads
     return false;
 }
+

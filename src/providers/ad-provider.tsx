@@ -2,6 +2,7 @@ import { PropsWithChildren, createContext, useContext, useEffect, useState } fro
 import { Platform } from "react-native";
 import { TestIds, useInterstitialAd, AdHookReturns, useRewardedInterstitialAd } from 'react-native-google-mobile-ads';
 import remoteConfig from '@react-native-firebase/remote-config';
+import { getShouldShowAds } from "@fb";
 
 export interface AdContext {
     interstitialAd: Omit<AdHookReturns, "reward" | "isEarnedReward">
@@ -19,8 +20,9 @@ export const AdProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
         await remoteConfig().setDefaults({
             show_ads: false,
         });
-        const shouldShow = await remoteConfig().getBoolean('show_ads');
+        const shouldShow = await getShouldShowAds()
         setShouldShowAds(shouldShow);
+        console.log("shouldShowAds: ", shouldShowAds);
     };
 
     useEffect(() => {
