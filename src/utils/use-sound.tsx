@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { Audio } from 'expo-av';
+import crashlytics from '@react-native-firebase/crashlytics'
+
 
 const gameStart = require('../assets/playing.wav')
 const gameOver = require('../assets/game-over.wav')
@@ -27,13 +29,20 @@ export const useSound = (soundToPlay: Sounds, options?: SoundOptions) => {
     const pathToSoundToPlay = soundMap[soundToPlay]
 
     async function playSound() {
-        const { sound } = await Audio.Sound.createAsync(pathToSoundToPlay, {
-            ...options,
-        });
 
-        setSound(sound);
+        try {
 
-        sound.playAsync();
+            const { sound } = await Audio.Sound.createAsync(pathToSoundToPlay, {
+                ...options,
+            });
+
+            setSound(sound);
+
+            sound.playAsync();
+        } catch (error) {
+            crashlytics().recordError(error);
+            console.log(error);
+        }
     }
 
     async function stopSound() {

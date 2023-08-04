@@ -155,8 +155,6 @@ export const useGameStateStore = create<GameStateStore>((set, get) => ({
 
         const parsedHighScore = await getHighscore() || 0
 
-
-
         let newHighScore = parsedHighScore;
         // If current score is higher than high score, update it
         if (state.score > parsedHighScore) {

@@ -80,12 +80,6 @@ export const GameOverScreen = () => {
             <Typography className='text-3xl font-bold text-red-500'>
                 Game Over {isLoaded && '🚀'}
             </Typography>
-            <Typography>
-                {JSON.stringify({
-                    showAd,
-                    isLoaded
-                })}
-            </Typography>
             <View className='flex items-center'>
                 <Typography >
                     Score: {score}

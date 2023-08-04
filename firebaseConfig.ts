@@ -2,7 +2,6 @@ import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firest
 import auth from '@react-native-firebase/auth';
 import crashlytics from '@react-native-firebase/crashlytics'
 import analytics from '@react-native-firebase/analytics';
-import remoteConfig from '@react-native-firebase/remote-config';
 
 import { Mixpanel } from 'mixpanel-react-native'
 
@@ -56,8 +55,6 @@ export async function updateGamesArrayWithScore(score: number) {
                 await userRef.update({
                     games: gamesArray,
                 });
-
-                console.log("Games array updated");
             } else {
                 // User document does not exist in the scores collection, create a new one
                 const newGame: Game = {
@@ -98,16 +95,20 @@ export async function updateUserHighscore(score: number) {
                     await userScoreRef.update({
                         'high-score': score,
                     });
-                    console.log('Highscore updated in the database');
-                } else {
-                    console.log('Score is not higher than the current highscore. No update needed.');
+                    trackEvent('highscore_updated', {
+                        oldHighscore: currentHighscore,
+                        newHighscore: score,
+                    })
                 }
             } else {
                 // User score record doesn't exist, create a new one
                 await userScoreRef.set({
                     'high-score': score,
                 });
-                console.log('New Highscore added to database');
+                trackEvent('highscore_updated', {
+                    oldHighscore: 0,
+                    newHighscore: score,
+                })
             }
         }
     } catch (error) {
@@ -402,5 +403,31 @@ export async function getShouldShowAds(): Promise<boolean> {
 
     // In case of an error, don't show ads
     return false;
+}
+
+
+export async function getAdRatio(): Promise<number> {
+    try {
+        const configRef = firestore().collection('config').doc('ads');
+        const configDoc = await configRef.get();
+
+        if (configDoc.exists) {
+            // Get the ad_ratio field from the config's document
+            const adRatio = configDoc.get('ad_ratio') as number;
+
+            // Return the value of ad_ratio
+            return adRatio;
+        } else {
+            // Config document does not exist, return 0 as default
+            console.log('Config document does not exist in the collection');
+            return 3;
+        }
+    } catch (error) {
+        crashlytics().recordError(error);
+        console.log(error);
+    }
+
+    // In case of an error, return 0 as default
+    return 3;
 }
 
