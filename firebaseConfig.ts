@@ -4,6 +4,7 @@ import crashlytics from '@react-native-firebase/crashlytics'
 import analytics from '@react-native-firebase/analytics';
 
 import { Mixpanel } from 'mixpanel-react-native'
+import { captureError } from '@utils';
 
 
 const mixPanelToken = __DEV__ ? 'd28e4c5d2cd75b5de542b6fc9fa052a4' : 'c45110ff303aad488299c3067a3ef433'
@@ -26,9 +27,9 @@ export async function trackEvent(eventName: string, eventParams?: any) {
         mixpanel.track(eventName, eventParams);
     } catch (error) {
         if (!__DEV__) {
-            crashlytics().recordError(error);
-            crashlytics().recordError(error);
-            console.log(error);
+            captureError(error);
+            captureError(error);
+
         }
     }
 }
@@ -72,8 +73,8 @@ export async function updateGamesArrayWithScore(score: number) {
             }
         }
     } catch (error) {
-        crashlytics().recordError(error);
-        console.log(error);
+        captureError(error);
+
     }
 }
 
@@ -112,8 +113,7 @@ export async function updateUserHighscore(score: number) {
             }
         }
     } catch (error) {
-        crashlytics().recordError(error);
-        console.log(error);
+        captureError(error);
     }
 }
 
@@ -148,8 +148,8 @@ export async function calculateAverageScore(): Promise<number> {
             }
         }
     } catch (error) {
-        crashlytics().recordError(error);
-        console.log(error);
+        captureError(error);
+
     }
 
     // In case of an error or no user, return 0 as average score
@@ -177,8 +177,8 @@ export async function calculateTotalScore(): Promise<number> {
             }
         }
     } catch (error) {
-        crashlytics().recordError(error);
-        console.log(error);
+        captureError(error);
+
     }
 
     // In case of an error or no user, return 0 as total score
@@ -206,8 +206,8 @@ export async function getTotalGamesPlayed(): Promise<number> {
             }
         }
     } catch (error) {
-        crashlytics().recordError(error);
-        console.log(error);
+        captureError(error);
+
     }
 
     // In case of an error or no user, return 0 as total games played
@@ -234,8 +234,8 @@ export async function getHighscore(): Promise<number> {
             }
         }
     } catch (error) {
-        crashlytics().recordError(error);
-        console.log(error);
+        captureError(error);
+
     }
 
     // In case of an error or no user, return 0 as highscore
@@ -267,8 +267,8 @@ export async function addExtraLife(): Promise<void> {
             }
         }
     } catch (error) {
-        crashlytics().recordError(error);
-        console.log(error);
+        captureError(error);
+
     }
 }
 
@@ -292,8 +292,8 @@ export async function getExtraLives(): Promise<number> {
             }
         }
     } catch (error) {
-        crashlytics().recordError(error);
-        console.log(error);
+        captureError(error);
+
     }
 
     // In case of an error or no user, return 0 as extra lives
@@ -328,8 +328,8 @@ export async function useExtraLife(): Promise<void> {
             }
         }
     } catch (error) {
-        crashlytics().recordError(error);
-        console.log(error);
+        captureError(error);
+
     }
 }
 
@@ -347,8 +347,8 @@ export async function setUserEmail(email: string): Promise<void> {
             console.log('User email updated in the database');
         }
     } catch (error) {
-        crashlytics().recordError(error);
-        console.log(error);
+        captureError(error);
+
     }
 }
 
@@ -371,8 +371,8 @@ export async function getUserEmail(): Promise<string | null> {
             }
         }
     } catch (error) {
-        crashlytics().recordError(error);
-        console.log(error);
+        captureError(error);
+
     }
 
     // In case of an error or no user, return null for email
@@ -397,8 +397,8 @@ export async function getShouldShowAds(): Promise<boolean> {
             return false;
         }
     } catch (error) {
-        crashlytics().recordError(error);
-        console.log(error);
+        captureError(error);
+
     }
 
     // In case of an error, don't show ads
@@ -423,8 +423,8 @@ export async function getAdRatio(): Promise<number> {
             return 3;
         }
     } catch (error) {
-        crashlytics().recordError(error);
-        console.log(error);
+        captureError(error);
+
     }
 
     // In case of an error, return 0 as default

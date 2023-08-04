@@ -22,7 +22,6 @@ export const AdProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
         });
         const shouldShow = await getShouldShowAds()
         setShouldShowAds(shouldShow);
-        console.log("shouldShowAds: ", shouldShowAds);
     };
 
     useEffect(() => {

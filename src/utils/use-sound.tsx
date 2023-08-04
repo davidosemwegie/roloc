@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Audio } from 'expo-av';
 import crashlytics from '@react-native-firebase/crashlytics'
+import { captureError } from './error';
 
 
 const gameStart = require('../assets/playing.wav')
@@ -40,8 +41,7 @@ export const useSound = (soundToPlay: Sounds, options?: SoundOptions) => {
 
             sound.playAsync();
         } catch (error) {
-            crashlytics().recordError(error);
-            console.log(error);
+            captureError(error)
         }
     }
 

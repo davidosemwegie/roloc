@@ -5,8 +5,16 @@ import { useEffect, useState } from 'react';
 import crashlytics from '@react-native-firebase/crashlytics';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import mobileAds from 'react-native-google-mobile-ads';
-import remoteConfig from '@react-native-firebase/remote-config';
 import { mixpanel } from '@fb';
+
+import * as Sentry from 'sentry-expo';
+
+Sentry.init({
+  dsn: 'https://3ad26c15d4f859f3e8fd859727599107@o4505616022241280.ingest.sentry.io/4505616032727040',
+  enableInExpoDevelopment: true,
+  debug: __DEV__, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
+  environment: __DEV__ ? 'development' : 'production',
+});
 
 
 mobileAds()
