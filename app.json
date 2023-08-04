@@ -19,7 +19,7 @@
       "bundleIdentifier": "com.osazi.roloc",
       "googleServicesFile": "./GoogleService-Info.plist",
       "icon": "./assets/icon.png",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you."
       }
