@@ -13,7 +13,7 @@ export interface AdContext {
 export const AdContext = createContext<AdContext>(undefined);
 
 export const AdProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
-    const [shouldShowAds, setShouldShowAds] = useState(true);
+    const [shouldShowAds, setShouldShowAds] = useState(false);
 
     const fetchShouldShowAds = async () => {
         await remoteConfig().fetchAndActivate();
