@@ -10,6 +10,8 @@ import { useAdContext } from '@providers';
 
 
 const StartScreen = () => {
+
+
     const { startGame, isBackgroundMuted } = useGameStateStore();
 
     const { playSound, stopSound } = useSound('game-start', {

@@ -3,9 +3,8 @@ import { MainLayout } from '@layouts';
 import auth from '@react-native-firebase/auth';
 import { useEffect, useState } from 'react';
 import crashlytics from '@react-native-firebase/crashlytics';
-import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
+import { PermissionResponse, requestTrackingPermissionsAsync, useTrackingPermissions, PermissionStatus } from 'expo-tracking-transparency';
 import mobileAds from 'react-native-google-mobile-ads';
-import remoteConfig from '@react-native-firebase/remote-config';
 import { mixpanel } from '@fb';
 
 
@@ -16,14 +15,31 @@ mixpanel.init()
 
 export default function App() {
 
-  useEffect(() => {
-    (async () => {
+  const [permission, requestPermission] = useTrackingPermissions({
+    request: true
+  })
 
-      const { status } = await requestTrackingPermissionsAsync();
-      if (status === 'granted') {
-        console.log('Yay! I have user permission to track data');
-      }
-    })();
+  // useEffect(() => {
+  //   if (permission?.status !== PermissionStatus.GRANTED) {
+  //     requestPermission()
+  //   }
+
+  //   console.log({
+  //     permission,
+  //   });
+
+  // }, [permission])
+
+
+  useEffect(() => {
+    // (async () => {
+
+    //   await requestPermission()
+    //   // const { status } = await requestTrackingPermissionsAsync();
+    //   // if (status === 'granted') {
+    //   //   console.log('Yay! I have user permission to track data');
+    //   // }
+    // })();
 
     const env = process.env.NODE_ENV;
 

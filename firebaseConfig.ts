@@ -4,6 +4,8 @@ import crashlytics from '@react-native-firebase/crashlytics'
 import analytics from '@react-native-firebase/analytics';
 
 import { Mixpanel } from 'mixpanel-react-native'
+import { requestTrackingPermissionsAsync, getTrackingPermissionsAsync } from 'expo-tracking-transparency';
+
 
 
 const mixPanelToken = __DEV__ ? 'd28e4c5d2cd75b5de542b6fc9fa052a4' : 'c45110ff303aad488299c3067a3ef433'
@@ -405,6 +407,29 @@ export async function getShouldShowAds(): Promise<boolean> {
     return false;
 }
 
+export async function getShouldGetFaster(): Promise<boolean> {
+    try {
+        const configRef = firestore().collection('config').doc('game');
+        const configDoc = await configRef.get();
+
+        if (configDoc.exists) {
+            const shouldGetFaster = configDoc.get('should_get_faster') as boolean;
+
+            console.log('shouldGetFaster', shouldGetFaster);
+
+            return shouldGetFaster;
+        } else {
+            console.log('Config document does not exist in the collection');
+            return false;
+        }
+    } catch (error) {
+        crashlytics().recordError(error);
+        console.log(error);
+    }
+
+    return false;
+}
+
 
 export async function getAdRatio(): Promise<number> {
     try {
@@ -429,5 +454,122 @@ export async function getAdRatio(): Promise<number> {
 
     // In case of an error, return 0 as default
     return 3;
+}
+
+// Get user permissions
+// Function to get array of user's permissions
+export async function getUserPermissions(): Promise<string[]> {
+
+    const user = auth().currentUser;
+
+    if (!user) {
+        return [];
+    }
+
+    const userId = user.uid;
+
+    try {
+        const userRef = firestore().collection('users').doc(userId);
+        const userDoc = await userRef.get();
+
+        if (userDoc.exists) {
+            const permissions = userDoc.get('permissions') as string[];
+            return permissions;
+        } else {
+            // create a new user document and return empty array
+            await userRef.set({
+                permissions: [],
+            });
+            return [];
+        }
+    } catch (error) {
+        console.log(error);
+        return [];
+    }
+}
+
+// Function to add to the user's permission array
+export async function addUserPermission(permission: Permission): Promise<void> {
+
+    try {
+
+        const user = auth().currentUser;
+
+        if (!user) {
+            return;
+        }
+
+        const userId = user.uid;
+
+        const userRef = firestore().collection('users').doc(userId);
+        const userDoc = await userRef.get();
+
+        if (userDoc.exists) {
+            const permissions = userDoc.get('permissions') as string[];
+            permissions.push(permission);
+            await userRef.update({ permissions });
+        } else {
+            console.log(`User with id ${userId} does not exist in the collection`);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Function to check for a specific permission
+export async function hasPermission(permission: Permission): Promise<boolean> {
+    try {
+        const permissions = await getUserPermissions();
+        return permissions.includes(permission);
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+}
+
+export enum Permission {
+    AD_TRACKING = 'ad_tracking',
+}
+
+export async function setAdTrackingPermission(): Promise<boolean> {
+
+    console.log('Setting ad tracking permission');
+
+    try {
+        const permissions = await getUserPermissions();
+        const hasPermission = permissions.includes(Permission.AD_TRACKING);
+
+        if (!hasPermission) {
+            const { granted, canAskAgain } = await getTrackingPermissionsAsync()
+            if (!granted || canAskAgain) {
+                const { granted, canAskAgain, expires } = await requestTrackingPermissionsAsync();
+                console.log({
+                    canAskAgain,
+                    granted
+                })
+                if (!granted) {
+                    console.log('User denied ad tracking permission', {
+                        expires
+                    });
+
+                } else {
+                    await addUserPermission(Permission.AD_TRACKING)
+                }
+
+                if (!canAskAgain) {
+                    console.log('User denied ad tracking permission and cannot ask again');
+                } else {
+                    requestTrackingPermissionsAsync();
+                }
+
+
+            }
+        } else {
+            console.log('User already has ad tracking permission');
+        }
+    } catch (error) {
+        console.log(error);
+        return;
+    }
 }
 

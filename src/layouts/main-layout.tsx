@@ -6,6 +6,7 @@ import { GameStates, useGameStateStore } from '@stores'
 import React from 'react'
 import { SafeAreaView } from 'react-native'
 import { AdProvider } from '../providers/ad-provider'
+import { RemoteConfigProvider } from '@providers'
 
 
 
@@ -32,11 +33,13 @@ export const MainLayout = () => {
     }
 
     return (
-        <AdProvider>
-            <SafeAreaView className='bg-black flex-1 w-full text-white'>
-                {ACTIVE_SCREEN}
-                {state !== GameStates.PLAYING && <BannerAds />}
-            </SafeAreaView>
-        </AdProvider>
+        <RemoteConfigProvider>
+            <AdProvider>
+                <SafeAreaView className='bg-black flex-1 w-full text-white'>
+                    {ACTIVE_SCREEN}
+                    {state !== GameStates.PLAYING && <BannerAds />}
+                </SafeAreaView>
+            </AdProvider>
+        </RemoteConfigProvider>
     )
 }

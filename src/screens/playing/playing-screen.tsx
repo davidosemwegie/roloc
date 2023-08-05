@@ -4,9 +4,11 @@ import { cn, useSound, } from '@utils'
 import React, { useEffect } from 'react'
 import { View } from 'react-native'
 import { DragProvider } from './drag-provider'
-import { useAdContext } from '@providers'
+import { useAdContext, useRemoteConfig } from '@providers'
 
 const PlayingScreen = () => {
+
+    const { shouldGetFaster } = useRemoteConfig()
 
     const { score, state, ringOrder, dotOrder, isBackgroundMuted, extraLifeUsed, endGame, activeColor } = useGameStateStore()
 
@@ -20,6 +22,9 @@ const PlayingScreen = () => {
     useEffect(() => {
         playSound()
         setExtraLives()
+        console.log({
+            shouldGetFaster
+        })
     }, [])
 
     useEffect(() => {
@@ -35,9 +40,13 @@ const PlayingScreen = () => {
 
     // Function to calculate interval time based on the score
     const calculateInterval = (score: number) => {
-        // if (score >= 30) return 1000;    // 1 second
-        // if (score >= 20) return 1500;    // 1.5 seconds
-        // if (score >= 5) return 3000;    // 3 seconds
+        if (shouldGetFaster) {
+            if (score >= 40) return 1750;    // 1 second
+            if (score >= 20) return 2000;    // 1.5 seconds
+            if (score >= 5) return 2500;
+
+            return 3000// 3 seconds
+        }
         return 2500;                    // Default 3 seconds
     };
 
