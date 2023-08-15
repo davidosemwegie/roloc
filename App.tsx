@@ -19,35 +19,13 @@ export default function App() {
     request: true
   })
 
-  // useEffect(() => {
-  //   if (permission?.status !== PermissionStatus.GRANTED) {
-  //     requestPermission()
-  //   }
-
-  //   console.log({
-  //     permission,
-  //   });
-
-  // }, [permission])
-
-
   useEffect(() => {
-    // (async () => {
-
-    //   await requestPermission()
-    //   // const { status } = await requestTrackingPermissionsAsync();
-    //   // if (status === 'granted') {
-    //   //   console.log('Yay! I have user permission to track data');
-    //   // }
-    // })();
-
     const env = process.env.NODE_ENV;
 
     console.log('env', env);
     console.log(__DEV__ ? 'Running in dev mode' : 'Running in production mode')
 
   }, []);
-
 
   function SignInAnonymously() {
     auth()
