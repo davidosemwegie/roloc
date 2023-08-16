@@ -52,7 +52,7 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
             setDbEmail(email);
             setIsLoadingEmail(false);
         });
-        // rewardedInterstitialAd.load();
+        rewardedInterstitialAd.load();
     }, []);
 
     useEffect(() => {
