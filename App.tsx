@@ -22,6 +22,26 @@ export default function App() {
   const [isConnected, setIsConnected] = useState(false);
 
 
+  // Function to check the network state
+  const checkConnection = async () => {
+    const networkState = await Network.getNetworkStateAsync();
+    setIsConnected(networkState.isConnected);
+  };
+
+  useEffect(() => {
+    // Check the connection initially
+    checkConnection();
+
+    // Set up the interval to check the connection every minute
+    const intervalId = setInterval(() => {
+      checkConnection();
+    }, 30 * 1000); // 60 * 1000 milliseconds = 1 minute
+
+    // Return a cleanup function to clear the interval when the component is unmounted
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
 
   useEffect(() => {
 
@@ -79,9 +99,16 @@ export default function App() {
 
   if (!isConnected) {
     return (
-      <View className="flex-1 items-center justify-center ">
+      <View className="flex-1 items-center justify-center bg-black px-6 space-y-4">
+        <View className="flex flex-row mx-auto" >
+          <Typography className="text-6xl mx-1 font-bold text-blue-500">R</Typography>
+          <Typography className="text-6xl mx-1 font-bold text-yellow-500">O</Typography>
+          <Typography className="text-6xl mx-1 font-bold text-red-500">L</Typography>
+          <Typography className="text-6xl mx-1 font-bold text-green-500">O</Typography>
+          <Typography className="text-6xl mx-1 font-bold text-white-500">C</Typography>
+        </View>
         <Typography className='text-center'>
-          Please check your internet connection
+          Please check your internet connection and reload the app 🙏🏾
         </Typography>
       </View>
     )
