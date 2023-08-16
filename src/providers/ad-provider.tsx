@@ -43,13 +43,6 @@ export const AdProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
         requestNonPersonalizedAdsOnly: true,
     });
 
-    // useEffect(() => {
-    //     if (shouldShowAds) {
-    //         interstitialAd.load();
-    //         rewardedInterstitialAd.load();
-    //     }
-    // }, [shouldShowAds])
-
     const value = {
         interstitialAd: shouldShowAds ? interstitialAd : {
             load: () => { },
@@ -75,12 +68,6 @@ export const AdProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
 export const useAdContext = () => {
     const context = useContext(AdContext);
 
-    // useEffect(() => {
-    //     if (context.shouldShowAds) {
-    //         context.interstitialAd.load();
-    //         context.rewardedInterstitialAd.load();
-    //     }
-    // }, [context.shouldShowAds])
 
     if (context === undefined) {
         throw new Error('useAdContext must be used within a AdProvider');

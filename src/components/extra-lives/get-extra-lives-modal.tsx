@@ -35,7 +35,7 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
             setDbEmail(email);
             setIsLoadingEmail(false);
         });
-        rewardedInterstitialAd.load();
+        // rewardedInterstitialAd.load();
     }, []);
 
     useEffect(() => {
@@ -47,6 +47,14 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
 
     }, [rewardedInterstitialAd.isEarnedReward]);
 
+    useEffect(() => {
+        const { isClosed } = rewardedInterstitialAd;
+
+        if (isClosed) {
+            setShowPopover(false);
+        }
+    }, [rewardedInterstitialAd.isClosed])
+
     const onWatchAdButtonClicked = () => {
         if (shouldShowAds) {
             stopSound()
@@ -57,6 +65,8 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
     const onGetExtraLivesButtonClicked = async () => {
         setShowPopover(true);
         rewardedInterstitialAd.load();
+        trackEvent('get_extra_lives_clicked')
+        console.log('get extra lives clicked')
     };
 
 
@@ -76,7 +86,7 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
                 isVisible={showPopover}
                 onRequestClose={() => {
                     setShowPopover(false)
-                    rewardedInterstitialAd.load();
+                    // rewardedInterstitialAd.load();
                 }}
                 popoverStyle={{
                     backgroundColor: '#171717',
