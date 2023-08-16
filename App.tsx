@@ -35,7 +35,7 @@ export default function App() {
     // Set up the interval to check the connection every minute
     const intervalId = setInterval(() => {
       checkConnection();
-    }, 30 * 1000); // 60 * 1000 milliseconds = 1 minute
+    }, 15 * 1000);
 
     // Return a cleanup function to clear the interval when the component is unmounted
     return () => {
