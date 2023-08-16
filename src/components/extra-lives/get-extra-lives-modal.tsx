@@ -34,7 +34,7 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
             setDbEmail(email);
             setIsLoadingEmail(false);
         });
-        rewardedInterstitialAd.load();
+        // rewardedInterstitialAd.load();
     }, []);
 
     useEffect(() => {
@@ -64,7 +64,7 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
 
     const onGetExtraLivesButtonClicked = async () => {
         setShowPopover(true);
-        // rewardedInterstitialAd.load();
+        rewardedInterstitialAd.load();
         trackEvent('get_extra_lives_clicked')
         console.log('get extra lives clicked')
     };

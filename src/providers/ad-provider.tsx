@@ -1,6 +1,6 @@
 import { PropsWithChildren, createContext, useContext, useEffect, useState } from "react";
 import { Platform } from "react-native";
-import { TestIds, useInterstitialAd, AdHookReturns, useRewardedInterstitialAd } from 'react-native-google-mobile-ads';
+import { TestIds, useInterstitialAd, AdHookReturns, useRewardedInterstitialAd, useRewardedAd } from 'react-native-google-mobile-ads';
 import remoteConfig from '@react-native-firebase/remote-config';
 import { getShouldShowAds } from "@fb";
 
@@ -33,15 +33,17 @@ export const AdProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
 
     const interstitialAdId = __DEV__ ? TestIds.INTERSTITIAL : Platform.OS === 'ios' ? 'ca-app-pub-6400654457067913/4850883993' : "ca-app-pub-6400654457067913/2711751913";
 
-    const rewardedAdId = __DEV__ ? TestIds.REWARDED_INTERSTITIAL : Platform.OS === 'ios' ? 'ca-app-pub-6400654457067913/6403584915' : "ca-app-pub-6400654457067913/9029748255";
+    const rewardedAdId = __DEV__ ? TestIds.REWARDED : Platform.OS === 'ios' ? 'ca-app-pub-6400654457067913/6403584915' : "ca-app-pub-6400654457067913/9029748255";
 
     const interstitialAd = useInterstitialAd(interstitialAdId, {
         requestNonPersonalizedAdsOnly: true,
     });
 
-    const rewardedInterstitialAd = useRewardedInterstitialAd(rewardedAdId, {
+    const rewardedInterstitialAd = useRewardedAd(rewardedAdId, {
         requestNonPersonalizedAdsOnly: true,
+
     });
+
 
     const value = {
         interstitialAd: shouldShowAds ? interstitialAd : {
