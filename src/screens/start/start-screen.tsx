@@ -1,16 +1,19 @@
 import { GameStats, GetExtraLivesModal, PulsingButton, Typography } from '@components';
 import { useGameStateStore } from '@stores';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView, View } from 'react-native';
 import { Instructions } from './instructions';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useSound } from '@utils';
 import { SettingsPopup } from './settings';
 import { useAdContext } from '@providers';
+import { getTotalGamesPlayed } from '@fb';
 
 
 const StartScreen = () => {
 
+
+    const [showInstructions, setShowInstructions] = React.useState(false);
 
     const { startGame, isBackgroundMuted } = useGameStateStore();
 
@@ -19,18 +22,25 @@ const StartScreen = () => {
         isMuted: isBackgroundMuted
     })
 
-    const { rewardedInterstitialAd } = useAdContext();
+    const onStartGameClick = async () => {
+        // If user has no games played then show instructions else start game
 
+        const gamesPlayed = await getTotalGamesPlayed();
 
-    useEffect(() => {
-        rewardedInterstitialAd.load();
-    }, [])
+        if (gamesPlayed <= 5) {
+            setShowInstructions(true);
+        } else {
+            startGame();
+        }
+    }
 
     return (
         <SafeAreaView className='flex-1 bg-black flex flex-col mx-10'>
             <View className='flex flex-row justify-between items-center mt-6 w-full'>
                 <View>
-                    <Instructions />
+                    <Instructions
+                        open={showInstructions}
+                    />
                 </View>
                 <View>
                     <SettingsPopup />
@@ -50,7 +60,7 @@ const StartScreen = () => {
                     </View>
                     <View className='m-auto mb-14'>
                         <PulsingButton
-                            onPress={startGame}
+                            onPress={onStartGameClick}
                             color='white'
                         >
                             <Entypo name="controller-play" size={60} color='green' />

@@ -1,16 +1,25 @@
 import { PulsingButton, Screen, SoftButton, Typography } from "@components"
-import { useState } from "react";
-import { View, TouchableOpacity, Dimensions } from "react-native"
+import { FC, useEffect, useState } from "react";
+import { View, TouchableOpacity, Dimensions, Image } from "react-native"
 import Popover from 'react-native-popover-view';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useGameStateStore } from "@stores";
+import Feather from "@expo/vector-icons/Feather";
 
+export interface InstructionsProps {
+    open?: boolean;
+}
 
+export const Instructions: FC<InstructionsProps> = ({ open = false }) => {
 
-export const Instructions = () => {
+    const [showPopover, setShowPopover] = useState(open);
+    const { startGame, isBackgroundMuted } = useGameStateStore();
 
-
-    const [showPopover, setShowPopover] = useState(false);
-
+    useEffect(() => {
+        if (open) {
+            setShowPopover(true);
+        }
+    }, [open])
 
 
     return (
@@ -42,13 +51,28 @@ export const Instructions = () => {
                         There are some twists though along the way... so be careful! 😊
                     </Typography>
                 </View>
+                <View className="mb-6">
+                    <Image
+                        source={require('../../assets/howto.gif')}
+                        style={{
+                            aspectRatio: 3 / 4,
+                            height: Dimensions.get('window').width * 0.9,
+                            resizeMode: 'contain',
+                        }}
+                    />
+                </View>
                 <PulsingButton
-                    onPress={() => setShowPopover(false)}
+                    onPress={startGame}
                     size={12}
                     color="#1d4ed8"
                 >
-                    Got it
+                    Play
                 </PulsingButton>
+                <TouchableOpacity
+                    onPress={() => setShowPopover(false)}
+                    style={{ position: 'absolute', top: 16, right: 16 }}>
+                    <Feather name="x" size={24} color='white' />
+                </TouchableOpacity>
             </Popover>
         </>
     )

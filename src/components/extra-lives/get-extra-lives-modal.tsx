@@ -20,31 +20,14 @@ interface Props {
 
 export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
     const [showPopover, setShowPopover] = useState(false);
-    // const [isLoadingAd, setIsLoadingAd] = useState(false);
     const [email, setEmail] = useState('');
     const [dbEmail, setDbEmail] = useState('');
-
-    // const [lastInstagramClickTime, setLastInstagramClickTime] = useState(0);
-    // const [lastTwitterClickTime, setLastTwitterClickTime] = useState(0);
 
     const { extraLives, setExtraLives, addExtraLife } = useExtraLifeStore();
     const { rewardedInterstitialAd, shouldShowAds } = useAdContext();
     const [isLoadingEmail, setIsLoadingEmail] = useState(true);
 
-    // useEffect(() => {
-    //     async function loadLastClickTimes() {
-    //         const instagramLastClickTime = await AsyncStorage.getItem('instagram_link_clicked');
-    //         const twitterLastClickTime = await AsyncStorage.getItem('twitter_link_clicked');
-    //         if (instagramLastClickTime) {
-    //             setLastInstagramClickTime(parseInt(instagramLastClickTime, 10));
-    //         }
-    //         if (twitterLastClickTime) {
-    //             setLastTwitterClickTime(parseInt(twitterLastClickTime, 10));
-    //         }
-    //     }
 
-    //     loadLastClickTimes();
-    // }, []);
 
     useEffect(() => {
         setExtraLives();
@@ -64,12 +47,6 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
 
     }, [rewardedInterstitialAd.isEarnedReward]);
 
-    // useEffect(() => {
-    //     if (rewardedInterstitialAd.isLoaded) {
-    //         setIsLoadingAd(false);
-    //     }
-    // }, [rewardedInterstitialAd.isLoaded]);
-
     const onWatchAdButtonClicked = () => {
         if (shouldShowAds) {
             stopSound()
@@ -79,51 +56,8 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
 
     const onGetExtraLivesButtonClicked = async () => {
         setShowPopover(true);
-        // // setIsLoadingAd(true);
-        // try {
-        //     await rewardedInterstitialAd.load();
-        // } catch (error) {
-        //     console.error("Error loading ad:", error);
-        //     // setIsLoadingAd(false);
-        // }
+        rewardedInterstitialAd.load();
     };
-
-    // const handleSocialLinkClick = async (social: 'instagram' | 'twitter') => {
-    //     trackEvent('social_link_clicked', {
-    //         social
-    //     });
-    //     const currentTime = Date.now();
-    //     const lastClickTime = social === 'instagram' ? lastInstagramClickTime : lastTwitterClickTime;
-    //     const setLastClickTime = social === 'instagram' ? setLastInstagramClickTime : setLastTwitterClickTime;
-
-    //     if (currentTime - lastClickTime >= 3600000) {
-    //         setLastClickTime(currentTime);
-    //         await AsyncStorage.setItem(`${social}_link_clicked`, currentTime.toString());
-    //         addExtraLife();
-    //     } else {
-    //         alert(`Come back later to view my ${social} page and get more free extra lives!`);
-    //     }
-    // };
-
-    // const isSocialLinkClickable = (lastClickTime: number) => {
-    //     return Date.now() - lastClickTime >= 1 * 60 * 60 * 1000;
-    // };
-
-    // const getRemainingTime = (lastClickTime: number) => {
-    //     const currentTime = Date.now();
-    //     const timeDifference = currentTime - lastClickTime;
-    //     const remainingTime = 3600000 - timeDifference;
-    //     return remainingTime;
-    // };
-
-    // const formatTime = (timeInMillis: number) => {
-    //     const minutes = Math.floor(timeInMillis / (1000 * 60));
-    //     return minutes === 0 ? 'less than a minute' : `${minutes} minutes`;
-    // };
-
-    if (!rewardedInterstitialAd.isLoaded) {
-        return null;
-    }
 
 
     return (
@@ -140,7 +74,10 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
             </Typography>
             <Popover
                 isVisible={showPopover}
-                onRequestClose={() => setShowPopover(false)}
+                onRequestClose={() => {
+                    setShowPopover(false)
+                    rewardedInterstitialAd.load();
+                }}
                 popoverStyle={{
                     backgroundColor: '#171717',
                     display: 'flex',
@@ -156,54 +93,31 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
                     <Feather name="x" size={24} color='white' />
                 </TouchableOpacity>
                 <View>
-                    <Typography className="text-2xl font-bold mb-4">
-                        Get extra more lives ❣️
+                    <Typography className="text-2xl font-bold mb-4 m-auto">
+                        ❣️
+                    </Typography>
+                    <Typography className="text-sm mb-4 text-center">
+                        Extra lives are used automatically if you mismatch a dot
                     </Typography>
                 </View>
                 <View className='flex flex-row justify-between'>
                     <Typography className="text-xl">Extra Lives: </Typography>
                     <Typography className="text-xl "> {extraLives}</Typography>
                 </View>
-                {/* {shouldShowAds && (
-
-                    isLoadingAd ? (
-                        <Typography className="text-center text-[16px] mt-4" >
-                            Loading ad...
-                        </Typography>
-                    ) : rewardedInterstitialAd.isLoaded ? (
-                        <View className="mt-6">
-                            <PulsingButton
-                                onPress={onWatchAdButtonClicked}
-                                color="#1d4ed8"
-                            >
-                                <Typography style={{
-                                    fontSize: 16,
-                                }}>Watch ad to get an extra life
-                                </Typography>
-                            </PulsingButton>
-                        </View>
-                    ) : (
-                        <View className="mt-4">
-                            <Typography className="text-center text-[16px]">
-                                Come back later to get more free extra lives
+                {rewardedInterstitialAd.isLoaded && (
+                    <View className="mt-6">
+                        <PulsingButton
+                            onPress={onWatchAdButtonClicked}
+                            color="#1d4ed8"
+                        >
+                            <Typography style={{
+                                fontSize: 16,
+                            }}>Watch ad to get an extra life
                             </Typography>
-                        </View>
-                    )
-                )
-                } */}
+                        </PulsingButton>
+                    </View>
 
-                <View className="mt-6">
-                    <PulsingButton
-                        onPress={onWatchAdButtonClicked}
-                        color="#1d4ed8"
-                    >
-                        <Typography style={{
-                            fontSize: 16,
-                        }}>Watch ad to get an extra life
-                        </Typography>
-                    </PulsingButton>
-                </View>
-
+                )}
 
                 <View className="mb-10 mt-10 w-full">
                     {/* Show the user's email if it's available */}
@@ -304,7 +218,7 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
                     </View>
                 </View> */}
 
-            </Popover>
+            </Popover >
         </>
     );
 };
