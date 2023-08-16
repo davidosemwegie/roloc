@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import crashlytics from '@react-native-firebase/crashlytics';
 import mobileAds from 'react-native-google-mobile-ads';
 import { mixpanel } from '@fb';
-import { useNetInfo } from "@react-native-community/netinfo";
 import { Typography } from '@components';
 import * as Network from 'expo-network';
 
@@ -25,7 +24,8 @@ export default function App() {
   // Function to check the network state
   const checkConnection = async () => {
     const networkState = await Network.getNetworkStateAsync();
-    setIsConnected(networkState.isConnected);
+    const isConnected = networkState.isConnected;
+    setIsConnected(isConnected);
   };
 
   useEffect(() => {
