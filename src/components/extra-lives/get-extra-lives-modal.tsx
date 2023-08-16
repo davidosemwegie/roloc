@@ -28,14 +28,13 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
     const [isLoadingEmail, setIsLoadingEmail] = useState(true);
 
 
-
     useEffect(() => {
         setExtraLives();
         getUserEmail().then((email) => {
             setDbEmail(email);
             setIsLoadingEmail(false);
         });
-        // rewardedInterstitialAd.load();
+        rewardedInterstitialAd.load();
     }, []);
 
     useEffect(() => {
@@ -52,6 +51,7 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
 
         if (isClosed) {
             setShowPopover(false);
+
         }
     }, [rewardedInterstitialAd.isClosed])
 
@@ -64,7 +64,7 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
 
     const onGetExtraLivesButtonClicked = async () => {
         setShowPopover(true);
-        rewardedInterstitialAd.load();
+        // rewardedInterstitialAd.load();
         trackEvent('get_extra_lives_clicked')
         console.log('get extra lives clicked')
     };
@@ -114,7 +114,7 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
                     <Typography className="text-xl">Extra Lives: </Typography>
                     <Typography className="text-xl "> {extraLives}</Typography>
                 </View>
-                {rewardedInterstitialAd.isLoaded && (
+                {rewardedInterstitialAd.isLoaded ? (
                     <View className="mt-6">
                         <PulsingButton
                             onPress={onWatchAdButtonClicked}
@@ -127,6 +127,12 @@ export const GetExtraLivesModal: FC<Props> = ({ stopSound }) => {
                         </PulsingButton>
                     </View>
 
+                ) : (
+                    <View className="mt-6">
+                        <Typography className="text-center text-sm">
+                            Come back later to watch an ad and get an extra life
+                        </Typography>
+                    </View>
                 )}
 
                 <View className="mb-10 mt-10 w-full">

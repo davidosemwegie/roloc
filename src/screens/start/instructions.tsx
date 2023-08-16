@@ -13,7 +13,7 @@ export interface InstructionsProps {
 export const Instructions: FC<InstructionsProps> = ({ open = false }) => {
 
     const [showPopover, setShowPopover] = useState(open);
-    const { startGame, isBackgroundMuted } = useGameStateStore();
+    const { startGame } = useGameStateStore();
 
     useEffect(() => {
         if (open) {
