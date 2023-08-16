@@ -3,9 +3,13 @@ import { MainLayout } from '@layouts';
 import auth from '@react-native-firebase/auth';
 import { useEffect, useState } from 'react';
 import crashlytics from '@react-native-firebase/crashlytics';
-import { PermissionResponse, requestTrackingPermissionsAsync, useTrackingPermissions, PermissionStatus } from 'expo-tracking-transparency';
 import mobileAds from 'react-native-google-mobile-ads';
 import { mixpanel } from '@fb';
+import { useNetInfo } from "@react-native-community/netinfo";
+import { Typography } from '@components';
+import * as Network from 'expo-network';
+
+
 
 
 mobileAds()
@@ -15,15 +19,22 @@ mixpanel.init()
 
 export default function App() {
 
-  const [permission, requestPermission] = useTrackingPermissions({
-    request: true
-  })
+  const [isConnected, setIsConnected] = useState(false);
+
+
 
   useEffect(() => {
+
+    (async () => {
+      const networkState = await Network.getNetworkStateAsync();
+      setIsConnected(networkState.isConnected);
+    })();
+
+
     const env = process.env.NODE_ENV;
 
     console.log('env', env);
-    console.log(__DEV__ ? 'Running in dev mode' : 'Running in production mode')
+    console.log(__DEV__ ? 'Running in dev mode' : 'Running in production mode');
 
   }, []);
 
@@ -66,6 +77,15 @@ export default function App() {
     SignInAnonymously()
   }, []);
 
+  if (!isConnected) {
+    return (
+      <View className="flex-1 items-center justify-center ">
+        <Typography className='text-center'>
+          Please check your internet connection
+        </Typography>
+      </View>
+    )
+  }
 
   return (
     <View className="flex-1 items-center justify-center ">
