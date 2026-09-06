@@ -1,0 +1,6 @@
+{
+  "name": "Roloc.Editor",
+  "rootNamespace": "Roloc.Editor",
+  "references": ["Roloc.Core", "Roloc.Services", "Roloc.Presentation", "Unity.ugui"],
+  "includePlatforms": ["Editor"]
+}

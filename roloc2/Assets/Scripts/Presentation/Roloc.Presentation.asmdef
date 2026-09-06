@@ -1,0 +1,5 @@
+{
+  "name": "Roloc.Presentation",
+  "rootNamespace": "Roloc.Presentation",
+  "references": ["Roloc.Core", "Roloc.Services", "Unity.ugui", "Unity.InputSystem"]
+}

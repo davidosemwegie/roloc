@@ -1,0 +1,7 @@
+{
+    "name": "Roloc.Core.Tests",
+    "rootNamespace": "Roloc.Tests",
+    "references": ["Roloc.Core"],
+    "includePlatforms": ["Editor"],
+    "optionalUnityReferences": ["TestAssemblies"]
+}

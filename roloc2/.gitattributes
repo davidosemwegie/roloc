@@ -1,0 +1,9 @@
+# Unity's serializer writes trailing spaces for empty YAML values.
+*.unity text eol=lf whitespace=-blank-at-eol
+*.prefab text eol=lf whitespace=-blank-at-eol
+*.asset text eol=lf whitespace=-blank-at-eol
+*.meta text eol=lf whitespace=-blank-at-eol
+*.cs text eol=lf
+*.json text eol=lf
+*.asmdef text eol=lf
+*.wav binary

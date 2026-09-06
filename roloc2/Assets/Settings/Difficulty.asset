@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a93f48f40b8947d582cf4270fa2d7d3, type: 3}
+  m_Name: Difficulty
+  m_EditorClassIdentifier: Roloc.Core::Roloc.Core.DifficultySettings
+  initialSeconds: 3
+  firstThreshold: 5
+  firstSeconds: 2.5
+  secondThreshold: 20
+  secondSeconds: 2
+  thirdThreshold: 40
+  thirdSeconds: 1.75
+  everyFiveAbove: 30
+  everyTwoAbove: 60
+  everyMatchAbove: 80
+  TransitionSeconds: 0.24

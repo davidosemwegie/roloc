@@ -1,0 +1,5 @@
+{
+  "name": "Roloc.PlayMode.Tests",
+  "references": ["Roloc.Core", "Roloc.Services", "Roloc.Presentation", "Unity.ugui", "Unity.InputSystem"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}
