@@ -54,7 +54,7 @@ namespace Roloc.Presentation
             if (!typeface) typeface = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (!difficulty) difficulty = ScriptableObject.CreateInstance<DifficultySettings>();
             Saves = new SaveService(SaveDirectoryOverride);
-            Session = new GameSession(null, difficulty.GetSeconds, difficulty.IsShuffleScore);
+            Session = new GameSession(null, difficulty.GetSeconds, difficulty.IsShuffleScore, difficulty.IsPuckShuffleScore);
             audioPlayer = gameObject.AddComponent<GameAudio>();
             audioPlayer.Initialize(backgroundMusic, matchSound, gameOverSound, Saves.Data);
             BuildUI();
@@ -241,7 +241,7 @@ namespace Roloc.Presentation
             {
                 rings[Session.RingOrder[slot]].anchoredPosition = RingSlots[slot];
                 var puck = pucks[Session.PuckOrder[slot]];
-                puck.Home = PuckSlots[slot]; puck.Rect.anchoredPosition = puck.Home;
+                puck.Home = PuckSlots[slot]; puck.MotionPaused = false; puck.SnapHome();
             }
             instruction.text = "Drag the bright puck to its ring";
             bestText.text = "BEST " + Saves.Data.HighScore;
@@ -258,8 +258,10 @@ namespace Roloc.Presentation
             {
                 audioPlayer.PlayMatch();
                 ripplePosition = rings[c].anchoredPosition; rippleColor = c; rippleTime = .4f;
+                for (int slot = 0; slot < 4; slot++)
+                    pucks[Session.PuckOrder[slot]].Home = PuckSlots[slot];
                 transitionLeft = difficulty.TransitionSeconds;
-                if (transitionLeft <= 0) Session.CompleteTransition();
+                if (transitionLeft <= 0) CompleteBoardTransition();
             }
             else if (result == MatchResult.Failed) FinishRun();
             else if (result == MatchResult.TutorialCompleted)
@@ -298,6 +300,7 @@ namespace Roloc.Presentation
         {
             if (Session.State != RoundState.Playing && Session.State != RoundState.Tutorial && Session.State != RoundState.Transition) return;
             Session.Pause(); CancelAllTouches(); audioPlayer.PauseMusic();
+            foreach (var puck in pucks) puck.MotionPaused = true;
             ShowPausePanel();
         }
 
@@ -313,6 +316,7 @@ namespace Roloc.Presentation
         {
             if (Session.State != RoundState.Paused) return;
             overlay.gameObject.SetActive(false); Session.Resume(); audioPlayer.ResumeMusic();
+            foreach (var puck in pucks) puck.MotionPaused = false;
         }
 
         void ShowSettings(bool fromPause)
@@ -369,9 +373,15 @@ namespace Roloc.Presentation
             if (Session.State == RoundState.Transition)
             {
                 transitionLeft -= Time.unscaledDeltaTime;
-                if (transitionLeft <= 0) Session.CompleteTransition();
+                if (transitionLeft <= 0) CompleteBoardTransition();
             }
             if (game.gameObject.activeSelf) RefreshBoard(Time.unscaledDeltaTime);
+        }
+
+        void CompleteBoardTransition()
+        {
+            foreach (var puck in pucks) puck.SnapHome();
+            Session.CompleteTransition();
         }
 
         void RefreshBoard(float dt)

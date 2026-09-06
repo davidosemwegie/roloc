@@ -19,6 +19,10 @@ namespace Roloc.Core
         [SerializeField, Min(0)] private int everyTwoAbove = 60;
         [SerializeField, Min(0)] private int everyMatchAbove = 80;
 
+        [Header("Shuffle middle pucks")]
+        [SerializeField, Min(0)] private int puckShuffleAbove = 40;
+        [SerializeField, Min(1)] private int puckShuffleInterval = 5;
+
         [Min(0)] public float TransitionSeconds = 0.24f;
 
         public static float SecondsForScore(int score) => DefaultRules.SecondsForScore(score);
@@ -37,5 +41,8 @@ namespace Roloc.Core
             return score > everyMatchAbove || (score > everyTwoAbove && score % 2 == 0)
                 || (score > everyFiveAbove && score % 5 == 0);
         }
+
+        public bool IsPuckShuffleScore(int score) => score > puckShuffleAbove
+            && score % Mathf.Max(1, puckShuffleInterval) == 0;
     }
 }

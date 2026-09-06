@@ -14,5 +14,7 @@ namespace Roloc.Core
         {
             return score > 80 || (score > 60 && score % 2 == 0) || (score > 30 && score % 5 == 0);
         }
+
+        public static bool ShouldShufflePucks(int score) => score > 40 && score % 5 == 0;
     }
 }

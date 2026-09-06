@@ -2,6 +2,8 @@
 
 An offline, portrait color-matching game for iPhone, rebuilt in Unity. Drag the highlighted puck into its matching ring before the timer expires. Matches increase the score and pace; later scores shuffle the rings.
 
+After 40 points, the middle pucks also shuffle every five matches (45, 50, 55, and onward). Each shuffle changes their arrangement. Dragging and the countdown pause during the movement; pausing the game freezes it until you resume. Adjust the threshold and interval in `Assets/Settings/Difficulty.asset`.
+
 ## Requirements
 
 - Unity **6000.6.0f1**, Apple Silicon Editor, with iOS Build Support.

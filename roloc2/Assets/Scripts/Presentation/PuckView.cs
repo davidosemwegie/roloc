@@ -10,6 +10,7 @@ namespace Roloc.Presentation
     {
         public int ColorIndex { get; private set; }
         public bool IsDragging { get; private set; }
+        public bool MotionPaused { get; set; }
         public Vector2 Home { get; set; }
         public RectTransform Rect => (RectTransform)transform;
         public Func<bool> CanDrag;
@@ -75,10 +76,17 @@ namespace Roloc.Presentation
 
         public void OnCancel(BaseEventData e) => CancelDrag();
         public void CancelDrag() { IsDragging = false; }
+        public void SnapHome()
+        {
+            CancelDrag();
+            Rect.anchoredPosition = Home;
+            returnVelocityX = returnVelocityY = 0;
+        }
         void OnDisable() { CancelDrag(); }
 
         void Update()
         {
+            if (MotionPaused) return;
             float dt = Mathf.Min(Time.unscaledDeltaTime, .05f);
             if (!IsDragging)
             {

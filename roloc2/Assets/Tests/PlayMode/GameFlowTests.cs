@@ -93,6 +93,41 @@ namespace Roloc.Tests
         }
 
         [UnityTest]
+        public IEnumerator PuckShuffleMovesHomesAndPausesUntilTransitionFinishes()
+        {
+            game.Saves.Data.TutorialCompleted = true;
+            game.difficulty.TransitionSeconds = 0;
+            game.BeginRun(); yield return null;
+            for (int i = 0; i < 44; i++) Drop(ActivePuck(), true);
+            var pucks = root.GetComponentsInChildren<PuckView>();
+            var previousHomes = pucks.Select(p => p.Home).ToArray();
+            game.difficulty.TransitionSeconds = .24f;
+
+            Drop(ActivePuck(), true);
+            Assert.That(game.Session.Score, Is.EqualTo(45));
+            Assert.That(game.Session.State, Is.EqualTo(RoundState.Transition));
+            Assert.That(pucks.Select(p => p.Home).SequenceEqual(previousHomes), Is.False);
+            Assert.That(pucks.Select(p => p.Home).Distinct().Count(), Is.EqualTo(4));
+            yield return null;
+            game.PauseRun();
+            var pausedPositions = pucks.Select(p => p.Rect.anchoredPosition).ToArray();
+            float remaining = game.Session.RemainingSeconds;
+            yield return new WaitForSecondsRealtime(.1f);
+            CollectionAssert.AreEqual(pausedPositions, pucks.Select(p => p.Rect.anchoredPosition).ToArray());
+            Assert.That(game.Session.RemainingSeconds, Is.EqualTo(remaining));
+
+            game.ResumeRun();
+            Assert.That(game.Session.State, Is.EqualTo(RoundState.Transition));
+            var e = new PointerEventData(EventSystem.current) { position = Vector2.zero };
+            ActivePuck().OnPointerDown(e);
+            Assert.That(ActivePuck().IsDragging, Is.False);
+            yield return new WaitForSecondsRealtime(.3f);
+            Assert.That(game.Session.State, Is.EqualTo(RoundState.Playing));
+            foreach (var puck in pucks)
+                Assert.That(Vector2.Distance(puck.Rect.anchoredPosition, puck.Home), Is.LessThan(.01f));
+        }
+
+        [UnityTest]
         public IEnumerator RestartsReuseExactlyOneMusicSource()
         {
             game.Saves.Data.TutorialCompleted = true;

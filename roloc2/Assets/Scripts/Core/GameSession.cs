@@ -11,6 +11,7 @@ namespace Roloc.Core
         private readonly Random random;
         private readonly Func<int, float> secondsForScore;
         private readonly Func<int, bool> shouldShuffle;
+        private readonly Func<int, bool> shouldShufflePucks;
         private RoundState pausedState;
 
         public RoundState State { get; private set; } = RoundState.Menu;
@@ -24,11 +25,12 @@ namespace Roloc.Core
         public bool WasTutorial { get; private set; }
 
         public GameSession(Random random = null, Func<int, float> secondsForScore = null,
-            Func<int, bool> shouldShuffle = null)
+            Func<int, bool> shouldShuffle = null, Func<int, bool> shouldShufflePucks = null)
         {
             this.random = random ?? new Random();
             this.secondsForScore = secondsForScore ?? DefaultRules.SecondsForScore;
             this.shouldShuffle = shouldShuffle ?? DefaultRules.ShouldShuffle;
+            this.shouldShufflePucks = shouldShufflePucks ?? DefaultRules.ShouldShufflePucks;
         }
 
         public void StartGame() => Start(false);
@@ -67,6 +69,7 @@ namespace Roloc.Core
             Score++;
             ActiveColor = random.Next(4);
             if (shouldShuffle(Score)) RingOrder = Permutation();
+            if (shouldShufflePucks(Score)) PuckOrder = DifferentPermutation(PuckOrder);
             DurationSeconds = secondsForScore(Score);
             RemainingSeconds = DurationSeconds;
             State = RoundState.Transition;
@@ -108,6 +111,22 @@ namespace Roloc.Core
             Score = 0;
             RemainingSeconds = 0f;
             DurationSeconds = 0f;
+        }
+
+        private int[] DifferentPermutation(int[] previous)
+        {
+            var order = Permutation();
+            for (int i = 0; i < order.Length; i++)
+            {
+                if (order[i] != previous[i]) return order;
+            }
+
+            // A random shuffle may reproduce the same board. One swap guarantees
+            // visible movement without retrying, even with a constant random source.
+            int swap = order[0];
+            order[0] = order[1];
+            order[1] = swap;
+            return order;
         }
 
         private int[] Permutation()

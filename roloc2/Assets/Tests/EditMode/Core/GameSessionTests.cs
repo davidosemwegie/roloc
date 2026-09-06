@@ -39,6 +39,18 @@ namespace Roloc.Tests
             Assert.That(DefaultRules.ShouldShuffle(score), Is.EqualTo(expected));
         }
 
+        [TestCase(39, false)]
+        [TestCase(40, false)]
+        [TestCase(41, false)]
+        [TestCase(44, false)]
+        [TestCase(45, true)]
+        [TestCase(46, false)]
+        [TestCase(50, true)]
+        public void PucksShuffleEveryFiveMatchesAboveForty(int score, bool expected)
+        {
+            Assert.That(DefaultRules.ShouldShufflePucks(score), Is.EqualTo(expected));
+        }
+
         [Test]
         public void SettingsDefaultsMatchStandaloneRules()
         {
@@ -49,6 +61,7 @@ namespace Roloc.Tests
                 {
                     Assert.That(settings.GetSeconds(score), Is.EqualTo(DefaultRules.SecondsForScore(score)));
                     Assert.That(settings.IsShuffleScore(score), Is.EqualTo(DefaultRules.ShouldShuffle(score)));
+                    Assert.That(settings.IsPuckShuffleScore(score), Is.EqualTo(DefaultRules.ShouldShufflePucks(score)));
                 }
                 Assert.That(settings.TransitionSeconds, Is.EqualTo(0.24f));
             }
@@ -108,20 +121,137 @@ namespace Roloc.Tests
         }
 
         [Test]
-        public void RingShuffleOccursOnAwardedScoreAndPreservesAllColors()
+        public void RingAndPuckShufflesFollowIndependentAwardedScoreRules()
         {
-            var session = NewGame();
-            var pucks = session.PuckOrder;
+            Func<int, bool> shufflePucks = score => score % 3 == 0;
+            var session = new GameSession(new System.Random(1234), shouldShufflePucks: shufflePucks);
+            session.StartGame();
             for (int score = 1; score <= 100; score++)
             {
                 var previousRings = session.RingOrder;
+                var previousPucks = session.PuckOrder;
                 Assert.That(session.Drop(session.ActiveColor, true), Is.EqualTo(MatchResult.Matched));
                 Assert.That(ReferenceEquals(previousRings, session.RingOrder), Is.EqualTo(!DefaultRules.ShouldShuffle(score)),
-                    "Shuffle at score " + score);
+                    "Ring shuffle at score " + score);
+                Assert.That(ReferenceEquals(previousPucks, session.PuckOrder), Is.EqualTo(!shufflePucks(score)),
+                    "Puck shuffle at score " + score);
+                if (shufflePucks(score)) CollectionAssert.AreNotEqual(previousPucks, session.PuckOrder);
                 CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3 }, session.RingOrder);
-                Assert.That(session.PuckOrder, Is.SameAs(pucks));
+                CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3 }, session.PuckOrder);
                 session.CompleteTransition();
             }
+        }
+
+        [Test]
+        public void DefaultPuckShuffleUsesDefaultRules()
+        {
+            var session = NewGame();
+            for (int score = 1; score <= 100; score++)
+            {
+                var previousPucks = session.PuckOrder;
+                session.Drop(session.ActiveColor, true);
+                Assert.That(ReferenceEquals(previousPucks, session.PuckOrder),
+                    Is.EqualTo(!DefaultRules.ShouldShufflePucks(score)), "Puck shuffle at score " + score);
+                session.CompleteTransition();
+            }
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void PuckShuffleAlwaysChangesOrderWithoutMutatingPreviousBoard(bool constantRandom)
+        {
+            System.Random random = constantRandom ? new ZeroRandom() : new System.Random(1234);
+            var session = new GameSession(random, shouldShuffle: _ => false, shouldShufflePucks: _ => true);
+            session.StartGame();
+            var rings = session.RingOrder;
+            for (int i = 0; i < 20; i++)
+            {
+                var previous = session.PuckOrder;
+                var snapshot = (int[])previous.Clone();
+                Assert.That(session.Drop(session.ActiveColor, true), Is.EqualTo(MatchResult.Matched));
+                CollectionAssert.AreEqual(snapshot, previous);
+                CollectionAssert.AreNotEqual(previous, session.PuckOrder);
+                CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3 }, session.PuckOrder);
+                Assert.That(session.RingOrder, Is.SameAs(rings));
+                session.CompleteTransition();
+            }
+        }
+
+        [Test]
+        public void InjectedPuckShuffleReceivesAwardedScoreOnlyForSuccessfulGameMatches()
+        {
+            var queries = new System.Collections.Generic.List<int>();
+            var session = new GameSession(new ZeroRandom(), shouldShufflePucks: score =>
+            {
+                queries.Add(score);
+                return score == 2;
+            });
+            session.StartGame();
+            var initialPucks = session.PuckOrder;
+            Award(session, 1);
+            Assert.That(session.PuckOrder, Is.SameAs(initialPucks));
+            Assert.That(session.Drop(session.ActiveColor, true), Is.EqualTo(MatchResult.Matched));
+            Assert.That(session.PuckOrder, Is.Not.SameAs(initialPucks));
+            Assert.That(session.Drop(session.ActiveColor, true), Is.EqualTo(MatchResult.Ignored));
+            CollectionAssert.AreEqual(new[] { 1, 2 }, queries);
+        }
+
+        [Test]
+        public void TutorialWrongDropAndTimeoutDoNotShufflePucks()
+        {
+            int queries = 0;
+            var session = new GameSession(new ZeroRandom(), shouldShufflePucks: _ =>
+            {
+                queries++;
+                return true;
+            });
+            session.StartTutorial();
+            var tutorialPucks = session.PuckOrder;
+            session.Drop(session.ActiveColor, false);
+            session.Tick(100f);
+            Assert.That(session.Drop(session.ActiveColor, true), Is.EqualTo(MatchResult.TutorialCompleted));
+            Assert.That(session.PuckOrder, Is.SameAs(tutorialPucks));
+
+            session.StartGame();
+            var gamePucks = session.PuckOrder;
+            session.Drop((session.ActiveColor + 1) % 4, true);
+            Assert.That(session.Drop(session.ActiveColor, false), Is.EqualTo(MatchResult.Failed));
+            Assert.That(session.PuckOrder, Is.SameAs(gamePucks));
+
+            session.StartGame();
+            var timeoutPucks = session.PuckOrder;
+            Assert.That(session.Tick(session.DurationSeconds), Is.True);
+            Assert.That(session.Drop(session.ActiveColor, true), Is.EqualTo(MatchResult.Ignored));
+            Assert.That(session.PuckOrder, Is.SameAs(timeoutPucks));
+            Assert.That(queries, Is.Zero);
+        }
+
+        [Test]
+        public void ShuffledPucksAndFreshTimerSurvivePausedTransition()
+        {
+            var session = new GameSession(new ZeroRandom(), shouldShufflePucks: _ => true);
+            session.StartGame();
+            int color = session.ActiveColor;
+            session.Tick(2f);
+            Assert.That(session.Drop(color, true), Is.EqualTo(MatchResult.Matched));
+            var pucks = session.PuckOrder;
+            var snapshot = (int[])pucks.Clone();
+            Assert.That(session.ActiveColor, Is.EqualTo(color));
+            Assert.That(session.RemainingSeconds, Is.EqualTo(session.DurationSeconds));
+            session.Pause();
+            Assert.That(session.Tick(100f), Is.False);
+            Assert.That(session.Drop(color, true), Is.EqualTo(MatchResult.Ignored));
+            session.CompleteTransition();
+            session.Resume();
+            Assert.That(session.State, Is.EqualTo(RoundState.Transition));
+            Assert.That(session.Tick(100f), Is.False);
+            Assert.That(session.PuckOrder, Is.SameAs(pucks));
+            CollectionAssert.AreEqual(snapshot, session.PuckOrder);
+            Assert.That(session.RemainingSeconds, Is.EqualTo(session.DurationSeconds));
+            session.CompleteTransition();
+            Assert.That(session.State, Is.EqualTo(RoundState.Playing));
+            Assert.That(session.Tick(1f), Is.False);
+            Assert.That(session.RemainingSeconds, Is.EqualTo(session.DurationSeconds - 1f));
         }
 
         [Test]
