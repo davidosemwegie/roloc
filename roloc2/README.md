@@ -54,7 +54,11 @@ For physical validation: finish the tutorial, match several pucks, miss a ring, 
 open Builds/iOS/Unity-iPhone.xcodeproj
 ```
 
-In Xcode, choose your development team and connected iPhone, then Run. The development bundle ID is `com.osazi.roloc.unitydev`. Generated builds, test results and Unity caches are ignored by Git.
+In Xcode, open **Signing & Capabilities**, enable **Automatically manage signing**, and select your development team. Choose your connected, unlocked iPhone as the run destination, then Run. Enable **Settings → Privacy & Security → Developer Mode** on the phone and complete its restart/confirmation prompts before installation.
+
+If Xcode reports “Operation not permitted” while copying headers, check its access to the project folder under macOS **System Settings → Privacy & Security → Files & Folders**. After granting access, quit and reopen Xcode before retrying.
+
+The development bundle ID is `com.osazi.roloc.unitydev`. Generated builds, test results and Unity caches are ignored by Git.
 
 For the Apple Silicon iPhone simulator:
 

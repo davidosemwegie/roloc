@@ -81,7 +81,8 @@ namespace Roloc.Presentation
             menu = Container(safe, "Menu"); Stretch(menu);
             game = Container(safe, "Game"); Stretch(game);
             results = Container(safe, "Results"); Stretch(results);
-            overlay = Container(safe, "Overlay"); Stretch(overlay);
+            // Modal backdrops extend behind the notch and home indicator.
+            overlay = Container(canvasRect, "Overlay"); Stretch(overlay);
             BuildMenu(); BuildBoard(); BuildResults();
             if (!FindAnyObjectByType<EventSystem>())
             {
@@ -350,7 +351,10 @@ namespace Roloc.Presentation
             overlay.gameObject.SetActive(true); overlay.SetAsLastSibling();
             var scrim = Box(overlay, "Scrim", new Color(.16f, .21f, .27f, .2f), Vector2.zero, Vector2.zero);
             Stretch(scrim.rectTransform); scrim.raycastTarget = true; scrim.shadow = false; scrim.cornerRadius = 0;
-            var panel = Box(overlay, "Panel", Paper, Vector2.zero, new Vector2(338, height));
+            var content = Container(overlay, "Safe area"); Stretch(content);
+            content.anchorMin = safe.anchorMin; content.anchorMax = safe.anchorMax;
+            content.gameObject.AddComponent<SafeArea>();
+            var panel = Box(content, "Panel", Paper, Vector2.zero, new Vector2(338, height));
             panel.raycastTarget = true; panel.cornerRadius = 28;
             var t = Label(panel.transform, title, 28, Ink, new Vector2(0, height / 2 - 56), new Vector2(306, 55));
             t.fontStyle = FontStyle.Bold;

@@ -5,6 +5,7 @@ namespace Roloc.Presentation
 {
     /// <summary>Resolution-independent UI artwork. No textures, shaders or post-processing required.</summary>
     [AddComponentMenu("ROLOC/Soft Shape")]
+    [RequireComponent(typeof(CanvasRenderer))]
     public sealed class SoftShape : MaskableGraphic
     {
         public enum Shape { Disc, Ring, Panel, Arc }
