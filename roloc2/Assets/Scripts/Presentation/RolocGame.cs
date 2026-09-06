@@ -21,25 +21,27 @@ namespace Roloc.Presentation
         public SaveService Saves { get; private set; }
 
         public static readonly Color[] Palette = {
-            new Color32(245, 112, 99, 255), new Color32(80, 157, 235, 255),
-            new Color32(76, 190, 150, 255), new Color32(166, 127, 226, 255)
+            new Color32(255, 120, 31, 255), new Color32(49, 93, 255, 255),
+            new Color32(197, 237, 50, 255), new Color32(255, 62, 135, 255)
         };
-        static readonly Color Ink = new Color32(42, 54, 69, 255);
-        static readonly Color Muted = new Color32(130, 138, 147, 255);
-        static readonly Color Paper = new Color32(246, 245, 241, 255);
+        static readonly Color Ink = new Color32(32, 35, 68, 255);
+        static readonly Color Muted = new Color32(101, 117, 146, 255);
+        static readonly Color Paper = new Color32(240, 246, 252, 255);
         static readonly Vector2[] RingSlots = { new Vector2(-103, 152), new Vector2(103, 152),
             new Vector2(-103, -152), new Vector2(103, -152) };
         static readonly Vector2[] PuckSlots = { new Vector2(-47, 53), new Vector2(47, 53),
             new Vector2(-47, -53), new Vector2(47, -53) };
 
-        RectTransform safe, menu, game, board, results, overlay;
+        RectTransform safe, menu, game, board, results, overlay, sculpture;
+        Sprite wordmark;
+        Font iconFont;
         readonly RectTransform[] rings = new RectTransform[4];
         readonly PuckView[] pucks = new PuckView[4];
         readonly SoftShape[] ringArt = new SoftShape[4];
         readonly SoftShape[] guide = new SoftShape[9];
         readonly Vector2[] ringFrom = new Vector2[4], ringTo = new Vector2[4];
         readonly Vector2[] puckFrom = new Vector2[4], puckBeforeHomes = new Vector2[4];
-        Text scoreText, bestText, instruction, tempoText, resultScore, resultTitle, resultBest, menuBest, menuGames, menuAverage;
+        Text scoreText, bestText, instruction, tempoText, resultScore, resultTitle, resultBest, menuBest, timeText;
         SoftShape timerFill, ripple;
         RectTransform timerRect;
         GameAudio audioPlayer;
@@ -57,7 +59,11 @@ namespace Roloc.Presentation
             Application.targetFrameRate = 60;
             QualitySettings.vSyncCount = 0;
             Screen.sleepTimeout = SleepTimeout.SystemSetting;
+            typeface = Resources.Load<Font>("Brand/Rounded-Bold") ?? typeface;
             if (!typeface) typeface = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            wordmark = Resources.Load<Sprite>("Brand/RingRushLogo");
+            iconFont = Resources.Load<Font>("Brand/MaterialIconsRound-Regular");
+            gameObject.name = "Ring Rush";
             if (!difficulty) difficulty = ScriptableObject.CreateInstance<DifficultySettings>();
             Saves = new SaveService(SaveDirectoryOverride);
             var random = RandomSeedOverride.HasValue ? new System.Random(RandomSeedOverride.Value) : new System.Random();
@@ -71,7 +77,7 @@ namespace Roloc.Presentation
 
         void BuildUI()
         {
-            var canvasObject = new GameObject("ROLOC Canvas", typeof(RectTransform), typeof(Canvas),
+            var canvasObject = new GameObject("Ring Rush Canvas", typeof(RectTransform), typeof(Canvas),
                 typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvasObject.transform.SetParent(transform, false);
             canvasObject.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
@@ -102,57 +108,66 @@ namespace Roloc.Presentation
 
         void BuildMenu()
         {
-            Label(menu, "A LITTLE GAME OF FOCUS", 10, Muted, new Vector2(0, -45), new Vector2(300, 20), new Vector2(.5f, 1));
-            var title = Label(menu, "roloc", 78, Ink, new Vector2(0, -121), new Vector2(310, 105), new Vector2(.5f, 1));
-            title.fontStyle = FontStyle.Bold;
-            Label(menu, "Find your color. Find your flow.", 15, Muted, new Vector2(0, -188), new Vector2(350, 30), new Vector2(.5f, 1));
+            var best = Button(menu, "", new Vector2(40, -30), new Vector2(62, 60), new Vector2(0, 1),
+                Color.clear, Ink, ShowStats);
+            Label(best.transform, "BEST", 12, Ink, new Vector2(0, 15), new Vector2(62, 20));
+            menuBest = Label(best.transform, "0", 25, Ink, new Vector2(0, -9), new Vector2(62, 35));
+            IconButton(menu, "Sound settings", "\uE050", new Vector2(-36, -28), new Vector2(1, 1), () => ShowSettings(false));
+            Logo(menu, new Vector2(0, -135), new Vector2(266, 177), new Vector2(.5f, 1));
+            Label(menu, "Match the color.\nBeat the clock.", 16, Ink,
+                new Vector2(0, -245), new Vector2(320, 49), new Vector2(.5f, 1));
 
-            var sculpture = Container(menu, "Color sculpture");
-            Place(sculpture, new Vector2(.5f, .51f), Vector2.zero, new Vector2(280, 230));
-            int[] sculptureColors = { 1, 0, 2, 3 };
-            for (int i = 0; i < 4; i++)
+            sculpture = Container(menu, "Color sculpture");
+            Place(sculpture, new Vector2(.5f, .5f), new Vector2(0, -57), new Vector2(350, 350));
+            int[] colors = { 1, 0, 2, 3 };
+            Vector2[] ringPositions = { new Vector2(-88, 116), new Vector2(102, 28),
+                new Vector2(-52, -30), new Vector2(108, -122) };
+            Vector2[] puckPositions = { new Vector2(0, 68), new Vector2(36, -42),
+                new Vector2(-141, 8), new Vector2(-15, -117) };
+            for (int i = 0; i < colors.Length; i++)
             {
-                float x = (i % 2 == 0 ? -1 : 1) * 63;
-                float y = (i < 2 ? 1 : -1) * 56;
-                var shape = Circle(sculpture, "Sculpture ring " + i, Palette[sculptureColors[i]], new Vector2(x, y), 124, true);
-                shape.rectTransform.localRotation = Quaternion.Euler(0, 0, i % 2 == 0 ? -8 : 8);
-                if (i == 1 || i == 2) Circle(sculpture, "Sculpture puck " + i, Palette[sculptureColors[i]], new Vector2(x, y + 5), 47, false);
+                Circle(sculpture, "Sculpture ring " + i, Palette[colors[i]], ringPositions[i], 112, true);
+                Circle(sculpture, "Sculpture puck " + i, Palette[colors[i]], puckPositions[i], 54, false);
             }
-
-            var stats = Box(menu, "Stats card", Color.white, new Vector2(0, 184), new Vector2(336, 79));
-            Place(stats.rectTransform, new Vector2(.5f, 0), new Vector2(0, 184), new Vector2(336, 79));
-            menuBest = Stat(stats.transform, "BEST", -110);
-            menuGames = Stat(stats.transform, "PLAYED", 0);
-            menuAverage = Stat(stats.transform, "AVERAGE", 110);
-            Button(menu, "Let's play", new Vector2(0, 100), new Vector2(336, 60), new Vector2(.5f, 0), Ink, Color.white, BeginRun);
-            Button(menu, "How to play", new Vector2(-90, 38), new Vector2(155, 40), new Vector2(.5f, 0), Color.clear, Muted, BeginTutorial);
-            Button(menu, "Sound settings", new Vector2(90, 38), new Vector2(155, 40), new Vector2(.5f, 0), Color.clear, Muted, () => ShowSettings(false));
+            for (int i = 0; i < 2; i++)
+            {
+                var dash = Box(sculpture, "Motion line", Palette[1], new Vector2(-26 - i * 6, 92 + i * 5), new Vector2(2, 13));
+                dash.shadow = dash.shaded = false; dash.cornerRadius = 1;
+                dash.transform.localRotation = Quaternion.Euler(0, 0, 40);
+            }
+            PrimaryButton(menu, "PLAY", new Vector2(0, 103), new Vector2(266, 66), new Vector2(.5f, 0), BeginRun);
+            Button(menu, "How to play", new Vector2(0, 46), new Vector2(180, 40), new Vector2(.5f, 0), Color.clear, Ink, BeginTutorial);
+            ColorMarks(menu);
         }
 
-        Text Stat(Transform parent, string title, float x)
+        void ShowStats()
         {
-            Label(parent, title, 9, Muted, new Vector2(x, -19), new Vector2(100, 18));
-            var value = Label(parent, "0", 23, Ink, new Vector2(x, 7), new Vector2(100, 32));
-            value.fontStyle = FontStyle.Bold;
-            return value;
+            var data = Saves.Data;
+            string average = data.GamesPlayed == 0 ? "—" : (data.TotalScore / (double)data.GamesPlayed).ToString("0.0");
+            var panel = NewOverlay("Your best: " + data.HighScore, "Every match counts.", 370);
+            Label(panel, "Rounds played     " + data.GamesPlayed + "\nAverage score     " + average,
+                17, Ink, Vector2.zero, new Vector2(285, 85));
+            Button(panel, "Done", new Vector2(0, -112), new Vector2(270, 50), new Vector2(.5f, .5f),
+                Palette[0], Color.white, () => overlay.gameObject.SetActive(false));
         }
 
         void BuildBoard()
         {
-            Label(game, "ROLOC", 13, Ink, new Vector2(49, -37), new Vector2(85, 25), new Vector2(0, 1));
-            bestText = Label(game, "BEST 0", 11, Muted, new Vector2(0, -37), new Vector2(180, 25), new Vector2(.5f, 1));
-            Button(game, "Ⅱ", new Vector2(-40, -37), new Vector2(46, 44), new Vector2(1, 1), Color.white, Ink, PauseRun);
-            scoreText = Label(game, "0", 66, Ink, new Vector2(0, -107), new Vector2(220, 84), new Vector2(.5f, 1));
+            Logo(game, new Vector2(53, -28), new Vector2(86, 57), new Vector2(0, 1));
+            bestText = Label(game, "BEST 0", 13, Ink, new Vector2(0, -139), new Vector2(180, 25), new Vector2(.5f, 1));
+            IconButton(game, "Pause", "\uE034", new Vector2(-36, -28), new Vector2(1, 1), PauseRun);
+            scoreText = Label(game, "0", 74, Ink, new Vector2(0, -89), new Vector2(220, 95), new Vector2(.5f, 1));
             scoreText.fontStyle = FontStyle.Bold;
-            tempoText = Label(game, "TAKE A BREATH. FIND YOUR COLOR.", 9, Muted, new Vector2(0, -158), new Vector2(350, 22), new Vector2(.5f, 1));
-            var timerBack = Box(game, "Timer track", new Color32(224, 227, 226, 255), new Vector2(0, -186), new Vector2(240, 6));
-            Place(timerBack.rectTransform, new Vector2(.5f, 1), new Vector2(0, -186), new Vector2(240, 6));
-            timerBack.shadow = false; timerBack.cornerRadius = 3;
-            timerFill = Box(timerBack.transform, "Time remaining", Palette[0], Vector2.zero, new Vector2(240, 6));
-            timerFill.shadow = false; timerFill.cornerRadius = 3;
+            tempoText = Label(game, "", 10, Muted, new Vector2(0, -211), new Vector2(350, 22), new Vector2(.5f, 1));
+            var timerBack = Box(game, "Timer track", new Color32(220, 228, 239, 255), new Vector2(0, -186), new Vector2(316, 8));
+            Place(timerBack.rectTransform, new Vector2(.5f, 1), new Vector2(0, -186), new Vector2(316, 8));
+            timerBack.shadow = false; timerBack.cornerRadius = 4;
+            timerFill = Box(timerBack.transform, "Time remaining", Palette[0], Vector2.zero, new Vector2(316, 8));
+            timerFill.shadow = false; timerFill.cornerRadius = 4;
             timerRect = timerFill.rectTransform; timerRect.pivot = new Vector2(0, .5f);
             timerRect.anchorMin = timerRect.anchorMax = new Vector2(0, .5f);
             timerRect.anchoredPosition = Vector2.zero;
+            timeText = Label(game, "3.0s", 13, Ink, new Vector2(140, -206), new Vector2(70, 24), new Vector2(.5f, 1));
 
             board = Container(game, "Board");
             Place(board, new Vector2(.5f, .43f), Vector2.zero, new Vector2(350, 440));
@@ -184,14 +199,15 @@ namespace Roloc.Presentation
                 puck.Released = ReleasePuck;
                 pucks[c] = puck;
             }
-            instruction = Label(game, "Drag the bright puck to its ring", 15, Muted, new Vector2(0, 58), new Vector2(365, 50), new Vector2(.5f, 0));
-            Label(game, "MATCH THE COLOR · KEEP THE FLOW", 9, new Color32(165, 170, 176, 255), new Vector2(0, 25), new Vector2(360, 20), new Vector2(.5f, 0));
+            instruction = Label(game, "Drag the bright puck to its ring", 14, Ink, new Vector2(0, 68), new Vector2(365, 50), new Vector2(.5f, 0));
+            Label(game, "Match the color. Beat the clock.", 12, Muted, new Vector2(0, 40), new Vector2(370, 25), new Vector2(.5f, 0));
+            ColorMarks(game);
         }
 
         void BuildResults()
         {
-            Label(results, "A MOMENT TO RESET", 10, Muted, new Vector2(0, -60), new Vector2(320, 24), new Vector2(.5f, 1));
-            resultTitle = Label(results, "Nice flow.", 39, Ink, new Vector2(0, -131), new Vector2(365, 63), new Vector2(.5f, 1));
+            Label(results, "RING RUSH", 12, Ink, new Vector2(0, -60), new Vector2(320, 24), new Vector2(.5f, 1));
+            resultTitle = Label(results, "Nice rush!", 39, Ink, new Vector2(0, -131), new Vector2(365, 63), new Vector2(.5f, 1));
             resultTitle.fontStyle = FontStyle.Bold;
             var medal = Circle(results, "Result ring", Palette[1], new Vector2(0, 28), 226, true);
             Place(medal.rectTransform, new Vector2(.5f, .53f), new Vector2(0, 28), new Vector2(226, 226));
@@ -199,7 +215,7 @@ namespace Roloc.Presentation
             resultScore.fontStyle = FontStyle.Bold;
             Label(medal.transform, "MATCHES", 10, Muted, new Vector2(0, -43), new Vector2(130, 22));
             resultBest = Label(results, "Your best: 0", 16, Muted, new Vector2(0, -114), new Vector2(320, 36));
-            Button(results, "One more round", new Vector2(0, 133), new Vector2(336, 60), new Vector2(.5f, 0), Ink, Color.white, BeginRun);
+            Button(results, "PLAY AGAIN", new Vector2(0, 133), new Vector2(286, 60), new Vector2(.5f, 0), Palette[0], Color.white, BeginRun);
             Button(results, "Back to menu", new Vector2(0, 70), new Vector2(230, 45), new Vector2(.5f, 0), Color.clear, Muted, ShowMenu);
         }
 
@@ -229,9 +245,6 @@ namespace Roloc.Presentation
             audioPlayer.StopMusic();
             SetScreen(menu);
             menuBest.text = Saves.Data.HighScore.ToString();
-            menuGames.text = Saves.Data.GamesPlayed.ToString();
-            menuAverage.text = Saves.Data.GamesPlayed == 0 ? "—" :
-                (Saves.Data.TotalScore / (double)Saves.Data.GamesPlayed).ToString("0.0");
             Screen.sleepTimeout = SleepTimeout.SystemSetting;
         }
 
@@ -291,7 +304,7 @@ namespace Roloc.Presentation
         {
             CancelAllTouches();
             var panel = NewOverlay("You've got it.", "Match before the bar runs out.\nThe pace picks up as you go.", 330);
-            Button(panel, "Find my flow", new Vector2(0, -75), new Vector2(270, 55), new Vector2(.5f, .5f), Ink, Color.white, BeginRun);
+            Button(panel, "LET’S PLAY", new Vector2(0, -75), new Vector2(270, 55), new Vector2(.5f, .5f), Palette[0], Color.white, BeginRun);
         }
 
         void FinishRun()
@@ -303,7 +316,7 @@ namespace Roloc.Presentation
             audioPlayer.StopMusic(); audioPlayer.PlayGameOver();
             CancelAllTouches(); SetScreen(results);
             resultScore.text = Session.Score.ToString();
-            resultTitle.text = record ? "A new personal best." : Session.Score > 0 ? "Nice flow." : "Find your rhythm.";
+            resultTitle.text = record ? "A new personal best." : Session.Score > 0 ? "Nice rush!" : "Ready to rush?";
             resultTitle.fontSize = record ? 30 : 39;
             resultBest.text = record ? "A little better, one color at a time." : "Your best: " + Saves.Data.HighScore;
             Screen.sleepTimeout = SleepTimeout.SystemSetting;
@@ -319,8 +332,8 @@ namespace Roloc.Presentation
 
         void ShowPausePanel()
         {
-            var panel = NewOverlay("Take a breath.", "Your round is right here.", 390);
-            Button(panel, "Keep going", new Vector2(0, -15), new Vector2(270, 55), new Vector2(.5f, .5f), Ink, Color.white, ResumeRun);
+            var panel = NewOverlay("Quick breather?", "Your round is right here.", 390);
+            Button(panel, "Keep going", new Vector2(0, -15), new Vector2(270, 55), new Vector2(.5f, .5f), Palette[0], Color.white, ResumeRun);
             Button(panel, "Sound settings", new Vector2(0, -80), new Vector2(270, 44), new Vector2(.5f, .5f), Color.clear, Muted, () => ShowSettings(true));
             Button(panel, "End round", new Vector2(0, -133), new Vector2(270, 44), new Vector2(.5f, .5f), Color.clear, Muted, ShowMenu);
         }
@@ -335,14 +348,14 @@ namespace Roloc.Presentation
         void ShowSettings(bool fromPause)
         {
             settingsFromPause = fromPause;
-            var panel = NewOverlay("Make it yours.", "The original ROLOC sounds.", 440);
+            var panel = NewOverlay("Sound settings", "Make it your kind of rush.", 440);
             SoundToggle(panel, "Background music", 30, () => Saves.Data.MusicEnabled,
                 () => Saves.Data.MusicEnabled = !Saves.Data.MusicEnabled);
             SoundToggle(panel, "Match sound", -30, () => Saves.Data.MatchEnabled,
                 () => Saves.Data.MatchEnabled = !Saves.Data.MatchEnabled);
             SoundToggle(panel, "Game-over sound", -90, () => Saves.Data.GameOverEnabled,
                 () => Saves.Data.GameOverEnabled = !Saves.Data.GameOverEnabled);
-            Button(panel, "Done", new Vector2(0, -164), new Vector2(270, 49), new Vector2(.5f, .5f), Ink, Color.white,
+            Button(panel, "Done", new Vector2(0, -164), new Vector2(270, 49), new Vector2(.5f, .5f), Palette[0], Color.white,
                 () => { if (settingsFromPause) ShowPausePanel(); else overlay.gameObject.SetActive(false); });
         }
 
@@ -352,10 +365,10 @@ namespace Roloc.Presentation
             text.alignment = TextAnchor.MiddleLeft;
             Button button = null;
             button = Button(panel, read() ? "ON" : "OFF", new Vector2(111, y), new Vector2(58, 36), new Vector2(.5f, .5f),
-                read() ? Palette[2] : new Color32(223, 226, 226, 255), read() ? Color.white : Muted, () =>
+                read() ? Palette[1] : new Color32(223, 226, 226, 255), read() ? Color.white : Muted, () =>
                 {
                     toggle(); Saves.Save(); audioPlayer.ApplyPreferences(Saves.Data);
-                    button.GetComponent<SoftShape>().color = read() ? Palette[2] : new Color32(223, 226, 226, 255);
+                    button.GetComponent<SoftShape>().color = read() ? Palette[1] : new Color32(223, 226, 226, 255);
                     var caption = button.GetComponentInChildren<Text>(); caption.text = read() ? "ON" : "OFF";
                     caption.color = read() ? Color.white : Muted;
                 });
@@ -382,6 +395,8 @@ namespace Roloc.Presentation
         void Update()
         {
             if (Session == null) return;
+            if (menu.gameObject.activeSelf)
+                sculpture.localScale = Vector3.one * Mathf.Clamp(Mathf.Min((safe.rect.width - 22) / 350, (safe.rect.height - 415) / 350), .35f, 1);
             if (Session.Tick(Time.unscaledDeltaTime)) FinishRun();
             if (Session.State == RoundState.Transition)
             {
@@ -484,16 +499,16 @@ namespace Roloc.Presentation
                 motionTime += dt;
                 motionBlend = Mathf.MoveTowards(motionBlend, 1, dt * 2);
             }
-            scoreText.text = tutorial ? "Ready?" : Session.Score.ToString(); scoreText.fontSize = tutorial ? 47 : 66;
-            tempoText.text = tutorial ? "ONE MATCH. THAT'S ALL IT TAKES." : Session.Score < 5 ? "TAKE A BREATH. FIND YOUR COLOR." :
-                Session.Score < 20 ? "YOU'RE FINDING YOUR FLOW." : Session.Score < 40 ? "A LITTLE FASTER NOW." : "STAY IN THE FLOW.";
+            scoreText.text = tutorial ? "Ready?" : Session.Score.ToString(); scoreText.fontSize = tutorial ? 44 : 74;
+            tempoText.text = tutorial ? "No timer. Try a match." : "";
             if (!tutorial && Session.FlowMode != FlowMode.Steady)
                 tempoText.text = Session.FlowMode == FlowMode.Floating ? "LET IT FLOAT." :
                     Session.FlowMode == FlowMode.Drifting ? "FOLLOW THE DRIFT." :
                     Session.FlowMode == FlowMode.Breather ? "TAKE A BREATH." : "A FRESH PERSPECTIVE.";
             timerFill.gameObject.SetActive(!tutorial);
-            timerRect.sizeDelta = new Vector2(240 * Mathf.Clamp01(Session.RemainingSeconds / Mathf.Max(.001f, Session.DurationSeconds)), 6);
+            timerRect.sizeDelta = new Vector2(316 * Mathf.Clamp01(Session.RemainingSeconds / Mathf.Max(.001f, Session.DurationSeconds)), 8);
             timerFill.color = Palette[Session.ActiveColor];
+            timeText.text = tutorial ? "" : Session.RemainingSeconds.ToString("0.0") + "s";
             for (int slot = 0; slot < 4; slot++)
             {
                 int c = Session.RingOrder[slot];
@@ -541,6 +556,49 @@ namespace Roloc.Presentation
         static void Place(RectTransform r, Vector2 anchor, Vector2 position, Vector2 size)
         { r.anchorMin = r.anchorMax = anchor; r.pivot = new Vector2(.5f, .5f); r.anchoredPosition = position; r.sizeDelta = size; }
 
+        void Logo(Transform parent, Vector2 position, Vector2 size, Vector2 anchor)
+        {
+            var rect = Container(parent, "Ring Rush logo"); Place(rect, anchor, position, size);
+            if (wordmark)
+            {
+                var image = rect.gameObject.AddComponent<Image>();
+                image.sprite = wordmark; image.preserveAspect = true; image.raycastTarget = false;
+            }
+            else Label(rect, "ring\nrush", Mathf.RoundToInt(size.y * .38f), Ink, Vector2.zero, size);
+        }
+
+        void ColorMarks(Transform parent)
+        {
+            int[] order = { 1, 0, 2, 3 };
+            for (int i = 0; i < 4; i++)
+            {
+                var mark = Box(parent, "Color mark " + i, Palette[order[i]], Vector2.zero, new Vector2(19, 4));
+                Place(mark.rectTransform, new Vector2(.5f, 0), new Vector2((i - 1.5f) * 31, 13), new Vector2(19, 4));
+                mark.shadow = mark.shaded = false; mark.cornerRadius = 2;
+            }
+        }
+
+        void IconButton(Transform parent, string name, string glyph, Vector2 position, Vector2 anchor, Action action)
+        {
+            var button = Button(parent, "", position, new Vector2(44, 44), anchor, Color.white, Ink, action);
+            button.name = name;
+            Icon(button.transform, glyph, Ink, Vector2.zero, 25);
+        }
+
+        void Icon(Transform parent, string glyph, Color tint, Vector2 position, int size)
+        {
+            var icon = Label(parent, glyph, size, tint, position, Vector2.one * (size + 4));
+            if (iconFont) icon.font = iconFont;
+        }
+
+        void PrimaryButton(Transform parent, string title, Vector2 position, Vector2 size, Vector2 anchor, Action action)
+        {
+            var button = Button(parent, title, position, size, anchor, Palette[0], Color.white, action);
+            var label = button.GetComponentInChildren<Text>(); label.fontSize = 34;
+            label.rectTransform.anchoredPosition = new Vector2(-17, 2);
+            Icon(button.transform, "\uE037", Color.white, new Vector2(77, 1), 37);
+        }
+
         SoftShape Box(Transform parent, string name, Color color, Vector2 position, Vector2 size)
         {
             var rect = Container(parent, name); Place(rect, new Vector2(.5f, .5f), position, size);
@@ -565,7 +623,7 @@ namespace Roloc.Presentation
         {
             var shape = Box(parent, text + " button", fill, position, size);
             Place(shape.rectTransform, anchor, position, size);
-            shape.raycastTarget = true; shape.cornerRadius = size.y * .5f; shape.shadow = fill.a > 0;
+            shape.raycastTarget = true; shape.cornerRadius = size.x <= 62 ? size.y * .5f : 17; shape.shadow = fill.a > 0;
             var button = shape.gameObject.AddComponent<Button>(); button.targetGraphic = shape;
             var colors = button.colors; colors.highlightedColor = Color.white; colors.pressedColor = new Color(.85f, .87f, .9f); button.colors = colors;
             button.navigation = new Navigation { mode = Navigation.Mode.None };

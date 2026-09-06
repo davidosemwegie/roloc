@@ -34,7 +34,7 @@ namespace Roloc.Presentation
         public void SetHighlighted(bool active)
         {
             highlighted = active;
-            if (group) group.alpha = active ? 1 : .3f;
+            if (group) group.alpha = active ? 1 : .48f;
         }
 
         public void OnPointerDown(PointerEventData e)

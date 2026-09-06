@@ -1,4 +1,6 @@
-# ROLOC 2
+# Ring Rush
+
+**Match the color. Beat the clock.**
 
 An offline, portrait color-matching game for iPhone, rebuilt in Unity. Drag the highlighted puck into its matching ring before the timer expires. Matches increase the score and pace; later scores shuffle the rings.
 
@@ -26,7 +28,7 @@ From this directory, run:
 ~/.unity/bin/unity open .
 ```
 
-Open `Assets/Scenes/Roloc.unity` and press Play. If the scene has not been generated yet, choose **ROLOC → Set up game**, or run:
+Open `Assets/Scenes/Roloc.unity` and press Play. If the scene has not been generated yet, choose **Ring Rush → Set up game**, or run:
 
 ```sh
 ~/.unity/bin/unity run . -- -executeMethod Roloc.Editor.ProjectBuilder.Setup
@@ -75,6 +77,14 @@ For the Apple Silicon iPhone simulator:
 ```sh
 ~/.unity/bin/unity build . --target iOS --execute-method Roloc.Editor.ProjectBuilder.BuildSimulator --output-path Builds/iOSSimulator --allow-dirty-build
 ```
+
+## Visual identity
+
+The selected light theme uses an icy background, indigo lettering, royal blue, tangerine, lime, and raspberry pieces. The menu uses the custom Ring Rush wordmark, offset flat-topped pieces and an orange Play button. The high-score area opens saved game statistics.
+
+`Assets/Resources/Brand/RingRushLogo.png` and `Assets/Art/RingRushIcon.png` are generated artwork. The M PLUS Rounded 1c Bold typeface and Material Icons Round come from the official Google Fonts and Material Design repositories; their licenses are included alongside the font assets. Configure imports and the icon with **Ring Rush → Configure mobile build**.
+
+The display name is **Ring Rush**. The existing bundle identifier and save filename remain stable so iPhone updates retain progress.
 
 ## Audio provenance
 

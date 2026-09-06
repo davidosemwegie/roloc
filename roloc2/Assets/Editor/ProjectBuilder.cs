@@ -14,7 +14,7 @@ namespace Roloc.Editor
     {
         public const string ScenePath = "Assets/Scenes/Roloc.unity";
 
-        [MenuItem("ROLOC/Set up game")]
+        [MenuItem("Ring Rush/Set up game")]
         public static void Setup()
         {
             if (EditorApplication.isPlaying) throw new InvalidOperationException("Exit Play mode before setting up the scene.");
@@ -30,8 +30,8 @@ namespace Roloc.Editor
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var camera = new GameObject("Camera", typeof(Camera), typeof(AudioListener)).GetComponent<Camera>();
             camera.orthographic = true; camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = new Color32(246, 245, 241, 255); camera.transform.position = new Vector3(0, 0, -10);
-            var root = new GameObject("ROLOC 2");
+            camera.backgroundColor = new Color32(240, 246, 252, 255); camera.transform.position = new Vector3(0, 0, -10);
+            var root = new GameObject("Ring Rush");
             var game = root.AddComponent<RolocGame>();
             game.difficulty = difficulty;
             game.backgroundMusic = Audio("playing.wav", true);
@@ -80,10 +80,10 @@ namespace Roloc.Editor
             return AssetDatabase.LoadAssetAtPath<AudioClip>(path);
         }
 
-        [MenuItem("ROLOC/Configure mobile build")]
+        [MenuItem("Ring Rush/Configure mobile build")]
         public static void Configure()
         {
-            PlayerSettings.companyName = "Osazi"; PlayerSettings.productName = "ROLOC 2";
+            PlayerSettings.companyName = "Osazi"; PlayerSettings.productName = "Ring Rush";
             PlayerSettings.bundleVersion = "0.1.0";
             PlayerSettings.defaultScreenWidth = 400; PlayerSettings.defaultScreenHeight = 860;
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
@@ -102,13 +102,29 @@ namespace Roloc.Editor
             PlayerSettings.iOS.requiresFullScreen = true;
             QualitySettings.vSyncCount = 0; QualitySettings.antiAliasing = 0;
             EditorSettings.serializationMode = SerializationMode.ForceText;
+            ConfigureBrandAssets();
             ConfigureAppIcon();
         }
 
-        [MenuItem("ROLOC/Configure app icon")]
+        static void ConfigureBrandAssets()
+        {
+            const string logoPath = "Assets/Resources/Brand/RingRushLogo.png";
+            AssetDatabase.ImportAsset(logoPath, ImportAssetOptions.ForceSynchronousImport);
+            var importer = AssetImporter.GetAtPath(logoPath) as TextureImporter;
+            if (!importer) throw new FileNotFoundException("Ring Rush logo is missing", logoPath);
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.npotScale = TextureImporterNPOTScale.None;
+            importer.maxTextureSize = 2048;
+            importer.mipmapEnabled = false;
+            importer.SaveAndReimport();
+        }
+
+        [MenuItem("Ring Rush/Configure app icon")]
         public static void ConfigureAppIcon()
         {
-            const string path = "Assets/Art/AppIcon.png";
+            const string path = "Assets/Art/RingRushIcon.png";
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
             var importer = AssetImporter.GetAtPath(path) as TextureImporter;
             if (!importer) throw new FileNotFoundException("ROLOC app icon is missing", path);
@@ -133,7 +149,7 @@ namespace Roloc.Editor
             Debug.Log("ROLOC app icon configured: default icon and " + assigned + " iOS slots.");
         }
 
-        [MenuItem("ROLOC/Build iPhone development project")]
+        [MenuItem("Ring Rush/Build iPhone development project")]
         public static void BuildIOS()
         {
             Configure();
@@ -152,7 +168,7 @@ namespace Roloc.Editor
         public static void BuildMac()
         {
             Configure();
-            Build(BuildTarget.StandaloneOSX, Argument("-buildOutput") ?? "Builds/Mac/ROLOC 2.app", BuildOptions.Development);
+            Build(BuildTarget.StandaloneOSX, Argument("-buildOutput") ?? "Builds/Mac/Ring Rush.app", BuildOptions.Development);
         }
 
         static void Build(BuildTarget target, string output, BuildOptions options)
