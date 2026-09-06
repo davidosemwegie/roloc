@@ -4,6 +4,14 @@ An offline, portrait color-matching game for iPhone, rebuilt in Unity. Drag the 
 
 After 40 points, the middle pucks also shuffle every five matches (45, 50, 55, and onward). Each shuffle changes their arrangement. Dragging and the countdown pause during the movement; pausing the game freezes it until you resume. Adjust the threshold and interval in `Assets/Settings/Difficulty.asset`.
 
+## Random flow
+
+After the opening matches, successful drops can introduce one randomly selected variation: floating inactive pucks, slow drifting rings, extra-time breather stretches, or a coordinated clockwise/counterclockwise puck rotation. Floating and breathers become eligible from score 5, drift from 20, and rotation from 40. These are eligibility thresholds, not fixed event schedules.
+
+Floating, drift, and breathers last 3–5 matches; rotations happen once between rounds. Random calm gaps separate variations, the same variation cannot repeat immediately, and breathers have a cooldown. Rotation replaces any simultaneous ring/puck scramble. When rings and middle pucks both shuffle, the rings move first and the pucks follow; play resumes after both settle. Motion is bounded, the active puck stays steady until grabbed, pauses freeze all movement, and the timer waits for each transition. Breathers add 0.65 seconds to the normal timer without reducing time elsewhere.
+
+The difficulty asset exposes **Random Flow**, eligibility thresholds, episode lengths, cooldown, movement amplitudes, and transition durations. Disable **Random Flow Enabled** to retain the standard timed/shuffling rules.
+
 ## Requirements
 
 - Unity **6000.6.0f1**, Apple Silicon Editor, with iOS Build Support.

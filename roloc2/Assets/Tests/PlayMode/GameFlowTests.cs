@@ -24,6 +24,10 @@ namespace Roloc.Tests
             root = new GameObject("Test game"); root.SetActive(false);
             root.AddComponent<AudioListener>();
             game = root.AddComponent<RolocGame>(); game.SaveDirectoryOverride = directory;
+            game.difficulty = ScriptableObject.CreateInstance<DifficultySettings>();
+            game.difficulty.RandomFlowEnabled = false;
+            game.difficulty.FlowTransitionSeconds = 0;
+            game.difficulty.RotationSeconds = 0;
             root.SetActive(true);
             yield return null;
         }
@@ -31,6 +35,7 @@ namespace Roloc.Tests
         [UnityTearDown]
         public IEnumerator TearDown()
         {
+            UnityEngine.Object.Destroy(game.difficulty);
             UnityEngine.Object.Destroy(root); yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory, true);
         }

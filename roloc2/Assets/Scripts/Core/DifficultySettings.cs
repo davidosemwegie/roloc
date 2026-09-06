@@ -25,6 +25,14 @@ namespace Roloc.Core
 
         [Min(0)] public float TransitionSeconds = 0.24f;
 
+        [Header("Random flow")]
+        public bool RandomFlowEnabled = true;
+        public FlowSettings Flow = new FlowSettings();
+        [Range(0, 1)] public float FlowTransitionSeconds = .45f;
+        [Range(0, 1.5f)] public float RotationSeconds = .75f;
+        [Range(0, 5)] public float PuckFloatAmplitude = 3f;
+        [Range(0, 10)] public float RingDriftRadius = 8f;
+
         public static float SecondsForScore(int score) => DefaultRules.SecondsForScore(score);
         public static bool ShouldShuffle(int score) => DefaultRules.ShouldShuffle(score);
 

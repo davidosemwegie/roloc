@@ -16,6 +16,7 @@ namespace Roloc.Presentation
         public Font typeface;
         public GameObject puckPrefab, ringPrefab;
         [NonSerialized] public string SaveDirectoryOverride;
+        [NonSerialized] public int? RandomSeedOverride;
         public GameSession Session { get; private set; }
         public SaveService Saves { get; private set; }
 
@@ -36,11 +37,16 @@ namespace Roloc.Presentation
         readonly PuckView[] pucks = new PuckView[4];
         readonly SoftShape[] ringArt = new SoftShape[4];
         readonly SoftShape[] guide = new SoftShape[9];
+        readonly Vector2[] ringFrom = new Vector2[4], ringTo = new Vector2[4];
+        readonly Vector2[] puckFrom = new Vector2[4], puckBeforeHomes = new Vector2[4];
         Text scoreText, bestText, instruction, tempoText, resultScore, resultTitle, resultBest, menuBest, menuGames, menuAverage;
         SoftShape timerFill, ripple;
         RectTransform timerRect;
         GameAudio audioPlayer;
         float transitionLeft, rippleTime;
+        float transitionDuration, motionTime, motionBlend;
+        int transitionRotation;
+        bool transitionBothBoards;
         int rippleColor;
         Vector2 ripplePosition;
         bool gameRecorded;
@@ -54,7 +60,9 @@ namespace Roloc.Presentation
             if (!typeface) typeface = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (!difficulty) difficulty = ScriptableObject.CreateInstance<DifficultySettings>();
             Saves = new SaveService(SaveDirectoryOverride);
-            Session = new GameSession(null, difficulty.GetSeconds, difficulty.IsShuffleScore, difficulty.IsPuckShuffleScore);
+            var random = RandomSeedOverride.HasValue ? new System.Random(RandomSeedOverride.Value) : new System.Random();
+            var flow = difficulty.RandomFlowEnabled ? new FlowDirector(random, difficulty.Flow) : null;
+            Session = new GameSession(random, difficulty.GetSeconds, difficulty.IsShuffleScore, difficulty.IsPuckShuffleScore, flow);
             audioPlayer = gameObject.AddComponent<GameAudio>();
             audioPlayer.Initialize(backgroundMusic, matchSound, gameOverSound, Saves.Data);
             BuildUI();
@@ -237,11 +245,14 @@ namespace Roloc.Presentation
         {
             CancelAllTouches();
             transitionLeft = 0; rippleTime = 0; ripple.gameObject.SetActive(false);
+            motionTime = motionBlend = 0;
+            transitionRotation = 0;
             for (int slot = 0; slot < 4; slot++)
             {
                 rings[Session.RingOrder[slot]].anchoredPosition = RingSlots[slot];
                 var puck = pucks[Session.PuckOrder[slot]];
-                puck.Home = PuckSlots[slot]; puck.MotionPaused = false; puck.SnapHome();
+                puck.Home = PuckSlots[slot]; puck.MotionPaused = false;
+                puck.BoardTransitioning = false; puck.IdleOffset = Vector2.zero; puck.SnapHome();
             }
             instruction.text = "Drag the bright puck to its ring";
             bestText.text = "BEST " + Saves.Data.HighScore;
@@ -253,15 +264,17 @@ namespace Roloc.Presentation
             int c = puck.ColorIndex;
             float outerRadius = (rings[c].rect.width * .5f - 5) * rings[c].localScale.x;
             bool inside = Vector2.Distance(puck.Rect.anchoredPosition, rings[c].anchoredPosition) <= outerRadius;
+            FlowMode previousMode = Session.FlowMode;
+            var previousRings = Session.RingOrder;
+            var previousPucks = Session.PuckOrder;
             MatchResult result = Session.Drop(c, inside);
             if (result == MatchResult.Matched)
             {
                 audioPlayer.PlayMatch();
                 ripplePosition = rings[c].anchoredPosition; rippleColor = c; rippleTime = .4f;
-                for (int slot = 0; slot < 4; slot++)
-                    pucks[Session.PuckOrder[slot]].Home = PuckSlots[slot];
-                transitionLeft = difficulty.TransitionSeconds;
-                if (transitionLeft <= 0) CompleteBoardTransition();
+                bool changed = previousMode != Session.FlowMode || previousRings != Session.RingOrder || previousPucks != Session.PuckOrder;
+                BeginBoardTransition(changed, previousMode != Session.FlowMode,
+                    previousRings != Session.RingOrder && previousPucks != Session.PuckOrder);
             }
             else if (result == MatchResult.Failed) FinishRun();
             else if (result == MatchResult.TutorialCompleted)
@@ -373,15 +386,90 @@ namespace Roloc.Presentation
             if (Session.State == RoundState.Transition)
             {
                 transitionLeft -= Time.unscaledDeltaTime;
+                AnimateBoard(1 - Mathf.Clamp01(transitionLeft / Mathf.Max(.001f, transitionDuration)));
                 if (transitionLeft <= 0) CompleteBoardTransition();
             }
             if (game.gameObject.activeSelf) RefreshBoard(Time.unscaledDeltaTime);
         }
 
+        void BeginBoardTransition(bool changed, bool modeChanged, bool bothBoards)
+        {
+            if (modeChanged) motionBlend = 0;
+            transitionRotation = Session.RotationSteps;
+            transitionBothBoards = bothBoards && transitionRotation == 0;
+            transitionDuration = Mathf.Max(0, difficulty.TransitionSeconds);
+            if (changed) transitionDuration = Mathf.Max(transitionDuration, Mathf.Clamp(difficulty.FlowTransitionSeconds, 0, 1));
+            if (transitionBothBoards) transitionDuration = Mathf.Max(transitionDuration, Mathf.Clamp(difficulty.FlowTransitionSeconds * 1.5f, 0, 1.5f));
+            if (transitionRotation != 0) transitionDuration = Mathf.Max(transitionDuration, Mathf.Clamp(difficulty.RotationSeconds, 0, 1.5f));
+            for (int c = 0; c < 4; c++)
+            {
+                ringFrom[c] = rings[c].anchoredPosition;
+                puckFrom[c] = pucks[c].Rect.anchoredPosition;
+                puckBeforeHomes[c] = pucks[c].Home;
+                pucks[c].BoardTransitioning = true;
+                pucks[c].SetHighlighted(c == Session.ActiveColor);
+                pucks[c].IdleOffset = FloatOffset(c);
+            }
+            for (int slot = 0; slot < 4; slot++)
+            {
+                int c = Session.RingOrder[slot];
+                ringTo[c] = RingSlots[slot] + DriftOffset(c);
+                pucks[Session.PuckOrder[slot]].Home = PuckSlots[slot];
+            }
+            transitionLeft = transitionDuration;
+            if (transitionDuration <= 0) CompleteBoardTransition();
+        }
+
+        void AnimateBoard(float progress)
+        {
+            float ease = Mathf.SmoothStep(0, 1, progress);
+            for (int c = 0; c < 4; c++)
+            {
+                float ringEase = transitionBothBoards ? Mathf.SmoothStep(0, 1, Mathf.Clamp01(progress * 2)) : ease;
+                rings[c].anchoredPosition = Vector2.LerpUnclamped(ringFrom[c], ringTo[c], ringEase);
+                if (transitionBothBoards)
+                {
+                    pucks[c].Rect.anchoredPosition = progress < .5f
+                        ? Vector2.LerpUnclamped(puckFrom[c], puckBeforeHomes[c], ringEase)
+                        : Vector2.LerpUnclamped(puckBeforeHomes[c], pucks[c].Home + pucks[c].IdleOffset,
+                            Mathf.SmoothStep(0, 1, (progress - .5f) * 2));
+                }
+                else if (transitionRotation == 0)
+                    pucks[c].Rect.anchoredPosition = Vector2.LerpUnclamped(puckFrom[c], pucks[c].Home + pucks[c].IdleOffset, ease);
+                else if (progress < .3f)
+                    pucks[c].Rect.anchoredPosition = Vector2.LerpUnclamped(puckFrom[c], puckBeforeHomes[c], Mathf.SmoothStep(0, 1, progress / .3f));
+                else
+                {
+                    float angle = -transitionRotation * Mathf.PI * .5f * Mathf.SmoothStep(0, 1, (progress - .3f) / .7f);
+                    Vector2 start = new Vector2(puckBeforeHomes[c].x / 47, puckBeforeHomes[c].y / 53);
+                    pucks[c].Rect.anchoredPosition = new Vector2(
+                        (start.x * Mathf.Cos(angle) - start.y * Mathf.Sin(angle)) * 47,
+                        (start.x * Mathf.Sin(angle) + start.y * Mathf.Cos(angle)) * 53);
+                }
+            }
+        }
+
         void CompleteBoardTransition()
         {
-            foreach (var puck in pucks) puck.SnapHome();
+            AnimateBoard(1);
+            foreach (var puck in pucks) { puck.BoardTransitioning = false; puck.SnapHome(); }
             Session.CompleteTransition();
+        }
+
+        Vector2 FloatOffset(int color)
+        {
+            if (Session.FlowMode != FlowMode.Floating || color == Session.ActiveColor || Session.WasTutorial) return Vector2.zero;
+            float phase = motionTime * 1.7f + color * 1.8f;
+            return new Vector2(Mathf.Sin(phase * .7f) * .45f, Mathf.Sin(phase))
+                * Mathf.Clamp(difficulty.PuckFloatAmplitude, 0, 5) * motionBlend;
+        }
+
+        Vector2 DriftOffset(int color)
+        {
+            if (Session.FlowMode != FlowMode.Drifting || Session.WasTutorial) return Vector2.zero;
+            float phase = motionTime * .8f + color * 1.6f;
+            return new Vector2(Mathf.Sin(phase), Mathf.Cos(phase) * .65f)
+                * Mathf.Clamp(difficulty.RingDriftRadius, 0, 10) * motionBlend;
         }
 
         void RefreshBoard(float dt)
@@ -391,19 +479,31 @@ namespace Roloc.Presentation
             float boardScale = Mathf.Min(1, Mathf.Min((safe.rect.width - 16) / 350, (available - 275) / 440));
             board.localScale = Vector3.one * Mathf.Max(.4f, boardScale);
             bool tutorial = Session.State == RoundState.Tutorial || Session.State == RoundState.Paused && Session.WasTutorial;
+            if (Session.State == RoundState.Playing)
+            {
+                motionTime += dt;
+                motionBlend = Mathf.MoveTowards(motionBlend, 1, dt * 2);
+            }
             scoreText.text = tutorial ? "Ready?" : Session.Score.ToString(); scoreText.fontSize = tutorial ? 47 : 66;
             tempoText.text = tutorial ? "ONE MATCH. THAT'S ALL IT TAKES." : Session.Score < 5 ? "TAKE A BREATH. FIND YOUR COLOR." :
                 Session.Score < 20 ? "YOU'RE FINDING YOUR FLOW." : Session.Score < 40 ? "A LITTLE FASTER NOW." : "STAY IN THE FLOW.";
+            if (!tutorial && Session.FlowMode != FlowMode.Steady)
+                tempoText.text = Session.FlowMode == FlowMode.Floating ? "LET IT FLOAT." :
+                    Session.FlowMode == FlowMode.Drifting ? "FOLLOW THE DRIFT." :
+                    Session.FlowMode == FlowMode.Breather ? "TAKE A BREATH." : "A FRESH PERSPECTIVE.";
             timerFill.gameObject.SetActive(!tutorial);
             timerRect.sizeDelta = new Vector2(240 * Mathf.Clamp01(Session.RemainingSeconds / Mathf.Max(.001f, Session.DurationSeconds)), 6);
             timerFill.color = Palette[Session.ActiveColor];
             for (int slot = 0; slot < 4; slot++)
             {
                 int c = Session.RingOrder[slot];
-                if (Session.State != RoundState.Paused)
-                    rings[c].anchoredPosition = Vector2.Lerp(rings[c].anchoredPosition, RingSlots[slot], dt <= 0 ? 1 : 1 - Mathf.Exp(-25 * dt));
+                if (Session.State == RoundState.Playing || Session.State == RoundState.Tutorial)
+                {
+                    rings[c].anchoredPosition = RingSlots[slot] + DriftOffset(c);
+                    pucks[c].IdleOffset = FloatOffset(c);
+                }
                 float bounce = rippleTime > 0 && c == rippleColor ? Mathf.Sin((.4f - rippleTime) / .4f * Mathf.PI) * .1f : 0;
-                rings[c].localScale = Vector3.one * (1 + bounce);
+                if (Session.State != RoundState.Paused) rings[c].localScale = Vector3.one * (1 + bounce);
                 pucks[c].SetHighlighted(c == Session.ActiveColor);
             }
             if (rippleTime > 0 && Session.State != RoundState.Paused)

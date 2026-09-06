@@ -12,6 +12,7 @@ namespace Roloc.Core
         private readonly Func<int, float> secondsForScore;
         private readonly Func<int, bool> shouldShuffle;
         private readonly Func<int, bool> shouldShufflePucks;
+        private readonly FlowDirector flowDirector;
         private RoundState pausedState;
 
         public RoundState State { get; private set; } = RoundState.Menu;
@@ -23,14 +24,18 @@ namespace Roloc.Core
         public float RemainingSeconds { get; private set; }
         public float DurationSeconds { get; private set; }
         public bool WasTutorial { get; private set; }
+        public FlowMode FlowMode => flowDirector?.Mode ?? Roloc.Core.FlowMode.Steady;
+        public int RotationSteps => flowDirector?.RotationSteps ?? 0;
 
         public GameSession(Random random = null, Func<int, float> secondsForScore = null,
-            Func<int, bool> shouldShuffle = null, Func<int, bool> shouldShufflePucks = null)
+            Func<int, bool> shouldShuffle = null, Func<int, bool> shouldShufflePucks = null,
+            FlowDirector flowDirector = null)
         {
             this.random = random ?? new Random();
             this.secondsForScore = secondsForScore ?? DefaultRules.SecondsForScore;
             this.shouldShuffle = shouldShuffle ?? DefaultRules.ShouldShuffle;
             this.shouldShufflePucks = shouldShufflePucks ?? DefaultRules.ShouldShufflePucks;
+            this.flowDirector = flowDirector;
         }
 
         public void StartGame() => Start(false);
@@ -39,6 +44,7 @@ namespace Roloc.Core
         private void Start(bool tutorial)
         {
             Score = 0;
+            flowDirector?.Reset();
             WasTutorial = tutorial;
             RingOrder = Permutation();
             PuckOrder = Permutation();
@@ -68,9 +74,15 @@ namespace Roloc.Core
 
             Score++;
             ActiveColor = random.Next(4);
-            if (shouldShuffle(Score)) RingOrder = Permutation();
-            if (shouldShufflePucks(Score)) PuckOrder = DifferentPermutation(PuckOrder);
-            DurationSeconds = secondsForScore(Score);
+            flowDirector?.Advance(Score);
+            // A coordinated turn owns this transition; do not also scramble either board.
+            if (RotationSteps != 0) PuckOrder = RotatedPucks(RotationSteps);
+            else
+            {
+                if (shouldShuffle(Score)) RingOrder = Permutation();
+                if (shouldShufflePucks(Score)) PuckOrder = DifferentPermutation(PuckOrder);
+            }
+            DurationSeconds = secondsForScore(Score) + (flowDirector?.ExtraSeconds ?? 0);
             RemainingSeconds = DurationSeconds;
             State = RoundState.Transition;
             return MatchResult.Matched;
@@ -107,6 +119,7 @@ namespace Roloc.Core
 
         public void ReturnToMenu()
         {
+            flowDirector?.Reset();
             State = RoundState.Menu;
             Score = 0;
             RemainingSeconds = 0f;
@@ -126,6 +139,16 @@ namespace Roloc.Core
             int swap = order[0];
             order[0] = order[1];
             order[1] = swap;
+            return order;
+        }
+
+        private int[] RotatedPucks(int steps)
+        {
+            // Grid order is TL, TR, BL, BR; this cycle follows the perimeter clockwise.
+            int[] cycle = { 0, 1, 3, 2 };
+            var order = new int[4];
+            for (int i = 0; i < 4; i++)
+                order[cycle[(i + steps + 4) % 4]] = PuckOrder[cycle[i]];
             return order;
         }
 

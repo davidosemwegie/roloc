@@ -11,6 +11,8 @@ namespace Roloc.Presentation
         public int ColorIndex { get; private set; }
         public bool IsDragging { get; private set; }
         public bool MotionPaused { get; set; }
+        public bool BoardTransitioning { get; set; }
+        public Vector2 IdleOffset { get; set; }
         public Vector2 Home { get; set; }
         public RectTransform Rect => (RectTransform)transform;
         public Func<bool> CanDrag;
@@ -79,7 +81,7 @@ namespace Roloc.Presentation
         public void SnapHome()
         {
             CancelDrag();
-            Rect.anchoredPosition = Home;
+            Rect.anchoredPosition = Home + IdleOffset;
             returnVelocityX = returnVelocityY = 0;
         }
         void OnDisable() { CancelDrag(); }
@@ -88,12 +90,13 @@ namespace Roloc.Presentation
         {
             if (MotionPaused) return;
             float dt = Mathf.Min(Time.unscaledDeltaTime, .05f);
-            if (!IsDragging)
+            if (!IsDragging && !BoardTransitioning)
             {
                 Vector2 p = Rect.anchoredPosition;
+                Vector2 target = Home + IdleOffset;
                 Rect.anchoredPosition = new Vector2(
-                    Mathf.SmoothDamp(p.x, Home.x, ref returnVelocityX, .075f, Mathf.Infinity, dt),
-                    Mathf.SmoothDamp(p.y, Home.y, ref returnVelocityY, .075f, Mathf.Infinity, dt));
+                    Mathf.SmoothDamp(p.x, target.x, ref returnVelocityX, .075f, Mathf.Infinity, dt),
+                    Mathf.SmoothDamp(p.y, target.y, ref returnVelocityY, .075f, Mathf.Infinity, dt));
             }
             float targetScale = IsDragging ? 1.12f : highlighted ? 1.02f + Mathf.Sin(Time.unscaledTime * 3.5f) * .025f : .88f;
             transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one * targetScale, dt * 18);
