@@ -42,6 +42,10 @@ namespace Roloc.Editor
             game.ringPrefab = Piece("Ring", true);
             EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
+            EditorBuildSettings.RemoveConfigObject("com.unity.input.settings.actions");
+            AssetDatabase.DeleteAsset("Assets/Scenes/SampleScene.unity");
+            AssetDatabase.DeleteAsset("Assets/InputSystem_Actions.inputactions");
+            if (File.Exists("Assets/.empty")) File.Delete("Assets/.empty");
             AssetDatabase.SaveAssets();
             Debug.Log("ROLOC ready. Open Assets/Scenes/Roloc.unity and press Play.");
         }
@@ -91,6 +95,7 @@ namespace Roloc.Editor
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Standalone, "com.osazi.roloc.unitydev");
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.iOS, ScriptingImplementation.IL2CPP);
             PlayerSettings.iOS.targetOSVersionString = "15.0";
+            PlayerSettings.iOS.simulatorSdkArchitecture = AppleMobileArchitectureSimulator.ARM64;
             PlayerSettings.iOS.targetDevice = iOSTargetDevice.iPhoneOnly;
             PlayerSettings.iOS.appleEnableAutomaticSigning = true;
             PlayerSettings.iOS.buildNumber = "1";
