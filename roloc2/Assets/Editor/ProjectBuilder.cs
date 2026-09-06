@@ -102,6 +102,35 @@ namespace Roloc.Editor
             PlayerSettings.iOS.requiresFullScreen = true;
             QualitySettings.vSyncCount = 0; QualitySettings.antiAliasing = 0;
             EditorSettings.serializationMode = SerializationMode.ForceText;
+            ConfigureAppIcon();
+        }
+
+        [MenuItem("ROLOC/Configure app icon")]
+        public static void ConfigureAppIcon()
+        {
+            const string path = "Assets/Art/AppIcon.png";
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (!importer) throw new FileNotFoundException("ROLOC app icon is missing", path);
+            importer.textureType = TextureImporterType.Default;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.npotScale = TextureImporterNPOTScale.None;
+            importer.maxTextureSize = 2048;
+            importer.mipmapEnabled = false;
+            importer.alphaSource = TextureImporterAlphaSource.None;
+            importer.SaveAndReimport();
+            var icon = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            PlayerSettings.SetIcons(NamedBuildTarget.Unknown, new[] { icon }, IconKind.Any);
+            int assigned = 0;
+            foreach (var kind in PlayerSettings.GetSupportedIconKinds(NamedBuildTarget.iOS))
+            {
+                var slots = PlayerSettings.GetPlatformIcons(NamedBuildTarget.iOS, kind);
+                foreach (var slot in slots) { slot.SetTexture(icon); assigned++; }
+                PlayerSettings.SetPlatformIcons(NamedBuildTarget.iOS, kind, slots);
+            }
+            if (assigned == 0) throw new InvalidOperationException("No iOS app icon slots are available.");
+            AssetDatabase.SaveAssets();
+            Debug.Log("ROLOC app icon configured: default icon and " + assigned + " iOS slots.");
         }
 
         [MenuItem("ROLOC/Build iPhone development project")]

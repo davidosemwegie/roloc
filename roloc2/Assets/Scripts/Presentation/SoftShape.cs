@@ -15,6 +15,7 @@ namespace Roloc.Presentation
         public float cornerRadius = 18;
         public bool shaded = true;
         public bool shadow = true;
+        [Range(0, 12)] public float depth = 6;
         const int Segments = 96;
 
         protected override void OnPopulateMesh(VertexHelper mesh)
@@ -35,13 +36,14 @@ namespace Roloc.Presentation
                 Band(mesh, center + Vector2.down * 4, radius + 1, ring ? inner : 0,
                     new Color(0.14f, 0.17f, 0.22f, color.a * 0.08f), false, sweep);
             }
+            if (shaded && depth > 0)
+                Band(mesh, center + Vector2.down * depth, radius, inner,
+                    new Color(color.r * .65f, color.g * .65f, color.b * .72f, color.a), false, sweep);
             Band(mesh, center, radius, inner, color, shaded, sweep);
             if (shaded)
             {
-                Color rim = Color.Lerp(color, Color.white, 0.3f); rim.a = color.a;
-                Band(mesh, center + Vector2.up, radius - 2, Mathf.Max(inner + 1, radius - 3), rim, true, sweep);
-                if (ring) Band(mesh, center + Vector2.down, inner + 2, inner,
-                    new Color(color.r * .72f, color.g * .72f, color.b * .72f, color.a * .5f), false, sweep);
+                Color rim = Color.Lerp(color, Color.white, .12f); rim.a = color.a;
+                Band(mesh, center, radius, radius - .8f, rim, false, sweep);
             }
         }
 
@@ -53,10 +55,10 @@ namespace Roloc.Presentation
             {
                 float angle = Mathf.PI / 2 - i / (float)count * Mathf.PI * 2 * sweep;
                 Vector2 normal = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
-                Color shade = gradient ? Color.Lerp(tint * new Color(.77f, .77f, .77f, 1),
-                    Color.Lerp(tint, Color.white, .24f), normal.y * .5f + .5f) : tint;
-                mesh.AddVert(center + normal * outer, shade, Vector2.zero);
-                mesh.AddVert(center + normal * inner, shade, Vector2.zero);
+                // Evaluate lighting at each vertex's actual height. Every center vertex
+                // gets the same color, so solid pucks have a flat face, not a cone.
+                mesh.AddVert(center + normal * outer, Shade(tint, gradient, normal.y), Vector2.zero);
+                mesh.AddVert(center + normal * inner, Shade(tint, gradient, normal.y * inner / outer), Vector2.zero);
                 if (i == count) continue;
                 int a = start + i * 2;
                 mesh.AddTriangle(a, a + 2, a + 1);
@@ -64,11 +66,23 @@ namespace Roloc.Presentation
             }
         }
 
+        static Color Shade(Color tint, bool gradient, float height)
+        {
+            if (!gradient) return tint;
+            return Color.Lerp(tint * new Color(.95f, .95f, .98f, 1),
+                Color.Lerp(tint, new Color(1, 1, 1, tint.a), .035f), height * .5f + .5f);
+        }
+
         void Panel(VertexHelper mesh, Rect r)
         {
             float radius = Mathf.Min(cornerRadius, Mathf.Min(r.width, r.height) / 2);
-            if (shadow) Rounded(mesh, new Rect(r.x, r.y - 4, r.width, r.height), radius,
-                new Color(.1f, .15f, .2f, .07f * color.a));
+            if (shadow)
+            {
+                Rounded(mesh, new Rect(r.x, r.y - depth - 3, r.width, r.height), radius,
+                    new Color(.16f, .21f, .34f, .06f * color.a));
+                Rounded(mesh, new Rect(r.x, r.y - depth, r.width, r.height), radius,
+                    Color.Lerp(color, new Color(.15f, .18f, .28f, color.a), .22f));
+            }
             Rounded(mesh, r, radius, color);
         }
 
