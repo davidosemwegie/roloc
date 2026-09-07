@@ -23,6 +23,11 @@ namespace Roloc.Editor
             var info = new PlistDocument(); info.ReadFromFile(infoPath);
             info.root.SetBoolean("ITSAppUsesNonExemptEncryption", false);
             info.root.SetString("NSUserTrackingUsageDescription", "Your permission helps us show relevant ads and measure their performance.");
+            var ads = UnityEngine.Resources.Load<Roloc.Services.AdsConfiguration>("AdsConfiguration");
+            if (ads && ads.HasConsentAppId)
+                info.root.SetString("GADApplicationIdentifier", ads.IosConsentAppId);
+            else
+                info.root.values.Remove("GADApplicationIdentifier");
             info.WriteToFile(infoPath);
         }
     }

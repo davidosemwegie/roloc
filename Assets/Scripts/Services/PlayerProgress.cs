@@ -25,11 +25,6 @@ namespace Roloc.Services
         public bool PerfectHintShown;
         public bool RecoveryHintShown;
         public bool RushSuggestionShown;
-        public bool AdPrivacyChoiceMade;
-        // Old personalization choices are not affirmative permission for SDK device-data access.
-        public bool AdDeviceDataChoiceMade;
-        public bool AdDeviceDataAllowed;
-        public bool PersonalizedAdsAllowed;
         public long ProgressPoints;
         public long TotalPerfects;
         public bool BadgesInitialized;

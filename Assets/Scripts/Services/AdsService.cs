@@ -75,8 +75,7 @@ namespace Roloc.Services
             if (allowed) return;
             // LevelPlay has no SDK shutdown API. Stop our inventory and future requests, and
             // restrict the already initialized SDK; do not claim this erases prior processing.
-            LevelPlayPrivacySettings.SetGDPRConsent(false);
-            LevelPlayPrivacySettings.SetCCPA(true);
+            GoogleUmpConsentService.ApplyTrackingRestriction(false);
             personalized = false;
             initializationAttempt++;
             initializing = false;
@@ -90,10 +89,9 @@ namespace Roloc.Services
         public void Initialize(bool allowPersonalized, Action<bool> completed)
         {
             if (!IsConfigured || !deviceDataAllowed) { completed?.Invoke(false); return; }
-            // 9.5 replaces per-network maps with a shared consent signal propagated by adapters.
-            // False is conservative for both declined personalization and unavailable ATT permission.
-            LevelPlayPrivacySettings.SetGDPRConsent(allowPersonalized);
-            LevelPlayPrivacySettings.SetCCPA(!allowPersonalized);
+            // LevelPlay imports actual UMP regulatory choices. ATT is an additional tracking
+            // restriction, never a substitute GDPR consent or US sale/sharing decision.
+            GoogleUmpConsentService.ApplyTrackingRestriction(allowPersonalized);
             bool changed = personalized != allowPersonalized;
             personalized = allowPersonalized;
             if (sdkInitialized)

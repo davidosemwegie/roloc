@@ -10,8 +10,11 @@ namespace Roloc.Presentation
     public sealed partial class RolocGame
     {
         [NonSerialized] public IAdService AdServiceOverride;
+        [NonSerialized] public IAdConsentService AdConsentOverride;
         [NonSerialized] public Func<double> AdRandomOverride;
         IAdService ads;
+        IAdConsentService adConsent;
+        bool consentResolved;
         AdsConfiguration adsConfiguration;
         readonly System.Random adRandom = new System.Random();
         bool interstitialPending, fullScreenAdShowing, startingAfterAd, privacyBusy;
@@ -34,14 +37,13 @@ namespace Roloc.Presentation
         {
             adsConfiguration = Resources.Load<AdsConfiguration>("AdsConfiguration");
             ads = AdServiceOverride ?? new LevelPlayAdService(adsConfiguration);
+            adConsent = AdConsentOverride ?? new GoogleUmpConsentService(adsConfiguration);
             reviveBankLabel = Label(game, "", 10, Muted, new Vector2(-120, -206), new Vector2(115, 24), new Vector2(.5f, 1));
             reviveBankLabel.name = "Revive bank";
             reviveCountdownLabel = Label(game, "", 64, Ink, new Vector2(0, 24), new Vector2(240, 100));
             reviveCountdownLabel.name = "Revive countdown";
             reviveCountdownLabel.fontStyle = FontStyle.Bold;
             reviveCountdownLabel.gameObject.SetActive(false);
-            if (ads.IsConfigured && Saves.Data.AdDeviceDataChoiceMade && Saves.Data.AdDeviceDataAllowed)
-                StartCoroutine(ApplyAdPrivacy(null));
         }
 
         void ReserveBannerSpace()
@@ -67,7 +69,7 @@ namespace Roloc.Presentation
         {
             CompletePendingGameStart();
             if (ads != null && ads.IsInitialized && !privacyBusy && !fullScreenAdShowing
-                && applicationFocused && !applicationPaused && Saves.Data.AdDeviceDataAllowed
+                && applicationFocused && !applicationPaused && consentResolved && adConsent.CanRequestAds
                 && NativeServices.TrackingAuthorizationStatus != appliedTrackingStatus)
                 StartCoroutine(ApplyAdPrivacy(null));
             if (rewardPlayback != null && rewardPlayback.Rewarded && rewardPlayback.Closed
@@ -169,10 +171,10 @@ namespace Roloc.Presentation
         void RequestGameStart(Action start)
         {
             if (startingAfterAd || fullScreenAdShowing || privacyBusy || dailyBusy) return;
-            if (ads != null && ads.IsConfigured && !Saves.Data.AdDeviceDataChoiceMade
+            if (ads != null && ads.IsConfigured && !consentResolved
                 && Saves.Data.TutorialCompleted && HasPrivacyPolicy())
             {
-                ShowAdPrivacy(() => RequestGameStart(start));
+                StartCoroutine(ResolveAdConsent(false, () => RequestGameStart(start)));
                 return;
             }
             bool considerAd = interstitialPending && Saves.Data.TutorialCompleted;
@@ -210,79 +212,67 @@ namespace Roloc.Presentation
         void ShowAdPrivacy(Action done)
         {
             if (privacyBusy) return;
-            if (!HasPrivacyPolicy())
+            if (adConsent == null || !adConsent.IsConfigured || !adConsent.PrivacyOptionsRequired)
             {
-                var unavailable = NewOverlay("Ad privacy", "Advertising is not configured in this build.\nYour game is still ready to play.", 330);
-                Button(unavailable, "Done", new Vector2(0, -90), new Vector2(270, 49), new Vector2(.5f, .5f),
-                    Palette[0], Color.white, () => { overlay.gameObject.SetActive(false); done?.Invoke(); });
+                done?.Invoke();
                 return;
             }
-            var panel = NewOverlay("Advertising choices", "Unity Ads helps support Ring Rush.\nYou decide whether to enable ads.", 520);
-            Label(panel, "Allow Unity's ad services to access and use device identifiers, network information, ad activity and diagnostics for ad delivery, measurement and fraud prevention. You can decline and keep playing without ads.",
-                14, Ink, new Vector2(0, 32), new Vector2(294, 132));
-            Button(panel, "Privacy policy", new Vector2(0, -55), new Vector2(270, 40), new Vector2(.5f, .5f), Color.clear, Palette[1],
-                () => Application.OpenURL(adsConfiguration.PrivacyPolicyUrl));
-            Button(panel, "Allow ad data use", new Vector2(0, -113), new Vector2(290, 50), new Vector2(.5f, .5f), Color.white, Ink,
-                () => ShowAdPersonalization(done));
-            Button(panel, Saves.Data.AdDeviceDataAllowed ? "Turn off ads" : "Play without ads", new Vector2(0, -177), new Vector2(290, 50), new Vector2(.5f, .5f), Color.white, Ink,
-                () => SaveAdPrivacy(false, false, done));
-            Label(panel, "You can change this in Ad privacy settings.", 11, Muted, new Vector2(0, -225), new Vector2(300, 24));
+            StartCoroutine(ResolveAdConsent(true, done));
         }
 
-        void ShowAdPersonalization(Action done)
+        IEnumerator ResolveAdConsent(bool privacyOptions, Action done)
         {
-            var panel = NewOverlay("Ad personalization", "Personalized advertising is optional.\nLimited ads also support revives.", 520);
-            Label(panel, "Allow Unity to use and share device identifiers and ad activity for personalized ads and measurement, or use limited ads. iOS will separately ask for tracking permission when needed.",
-                14, Ink, new Vector2(0, 32), new Vector2(294, 132));
-            Button(panel, "Privacy policy", new Vector2(0, -55), new Vector2(270, 40), new Vector2(.5f, .5f), Color.clear, Palette[1],
-                () => Application.OpenURL(adsConfiguration.PrivacyPolicyUrl));
-            Button(panel, "Allow personalized ads", new Vector2(0, -113), new Vector2(290, 50), new Vector2(.5f, .5f), Color.white, Ink,
-                () => SaveAdPrivacy(true, true, done));
-            Button(panel, "Use limited ads", new Vector2(0, -177), new Vector2(290, 50), new Vector2(.5f, .5f), Color.white, Ink,
-                () => SaveAdPrivacy(true, false, done));
-            Button(panel, "Back", new Vector2(0, -229), new Vector2(270, 32), new Vector2(.5f, .5f), Color.clear, Palette[1],
-                () => ShowAdPrivacy(done));
-        }
-
-        void SaveAdPrivacy(bool deviceDataAllowed, bool personalized, Action done)
-        {
-            if (privacyBusy) return;
-            Saves.Data.AdDeviceDataChoiceMade = true;
-            Saves.Data.AdDeviceDataAllowed = deviceDataAllowed;
-            Saves.Data.AdPrivacyChoiceMade = true;
-            Saves.Data.PersonalizedAdsAllowed = deviceDataAllowed && personalized;
-            Saves.Save();
-            overlay.gameObject.SetActive(false);
-            StartCoroutine(ApplyAdPrivacy(done));
+            privacyBusy = true;
+            while (applicationPaused || !applicationFocused) yield return null;
+            if (overlay) overlay.gameObject.SetActive(false);
+            ads.SetBannerVisible(false);
+            // Native consent forms are presented only when the provider requires them.
+            yield return null;
+            bool answered = false;
+            if (adConsent != null && adConsent.IsConfigured)
+            {
+                if (privacyOptions) adConsent.ShowPrivacyOptions(() => answered = true);
+                else adConsent.GatherConsent(() => answered = true);
+                while (!answered) yield return null;
+            }
+            consentResolved = true;
+            // Replace previous inventory after a provider privacy change, even if ATT is unchanged.
+            if (privacyOptions)
+            {
+                reviveGeneration++;
+                rewardPlayback = null;
+                ads.SetDeviceDataConsent(false);
+            }
+            yield return ApplyAdPrivacy(done);
         }
 
         IEnumerator ApplyAdPrivacy(Action done)
         {
             privacyBusy = true;
-            bool deviceDataAllowed = Saves.Data.AdDeviceDataChoiceMade && Saves.Data.AdDeviceDataAllowed;
-            ads.SetDeviceDataConsent(deviceDataAllowed);
-            if (!deviceDataAllowed)
+            bool canRequestAds = adConsent != null && adConsent.IsConfigured && adConsent.CanRequestAds;
+            ads.SetDeviceDataConsent(canRequestAds);
+            if (!canRequestAds)
             {
-                // Invalidate callbacks retained by an ad that closed before its reward arrived.
                 reviveGeneration++;
                 rewardPlayback = null;
                 if (Session != null && Session.State == RoundState.AwaitingRevive) FinishRun();
                 privacyBusy = false;
+                while (applicationPaused || !applicationFocused) yield return null;
                 done?.Invoke();
                 yield break;
             }
-            if (Saves.Data.PersonalizedAdsAllowed && NativeServices.TrackingAuthorizationStatus == 0)
+            if (adConsent.TrackingAllowedByConsent && NativeServices.TrackingAuthorizationStatus == 0)
             {
                 while (applicationPaused || !applicationFocused) yield return null;
-                // Let our consent panel disappear before iOS presents its own permission sheet.
                 yield return null;
                 bool answered = false;
                 NativeServices.RequestTrackingAuthorization(_ => answered = true);
                 while (!answered) yield return null;
             }
             appliedTrackingStatus = NativeServices.TrackingAuthorizationStatus;
-            bool personalized = Saves.Data.PersonalizedAdsAllowed && appliedTrackingStatus == 3;
-            ads.Initialize(personalized, _ => { });
+            bool trackingAllowed = adConsent.TrackingAllowedByConsent && appliedTrackingStatus == 3;
+            ads.Initialize(trackingAllowed, _ => { });
+            while (applicationPaused || !applicationFocused) yield return null;
             privacyBusy = false;
             done?.Invoke();
         }

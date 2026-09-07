@@ -13,6 +13,14 @@ namespace Roloc.Services
         public string IosBannerAdUnitId = "";
         public string IosRewardedAdUnitId = "";
         public string IosInterstitialAdUnitId = "";
+        [Header("Google UMP consent messages (no Google ad network)")]
+        [Tooltip("Real iOS AdMob app ID with published regional privacy messages and Unity/ironSource partners.")]
+        public string IosConsentAppId = "";
+        [Tooltip("Enable only after regional consent messages and their vendor list are published and verified in AdMob.")]
+        public bool ConsentMessagesPublished;
+
+        public bool HasConsentAppId => System.Text.RegularExpressions.Regex.IsMatch(
+            IosConsentAppId ?? "", @"^ca-app-pub-[0-9]{16}~[0-9]{10}$");
 
         public bool HasIosIdentifiers => !string.IsNullOrWhiteSpace(IosAppKey)
             && !string.IsNullOrWhiteSpace(IosBannerAdUnitId)

@@ -17,3 +17,5 @@ MonoBehaviour:
   IosBannerAdUnitId: sc23sll38nkxeete
   IosRewardedAdUnitId: k62ws729b3wloc8c
   IosInterstitialAdUnitId: 7ehidbf3tz1elcyf
+  IosConsentAppId: ca-app-pub-6400654457067913~9383583266
+  ConsentMessagesPublished: 0

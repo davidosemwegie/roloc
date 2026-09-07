@@ -393,8 +393,12 @@ namespace Roloc.Presentation
             SoundToggle(panel, "Gentle haptics", -54, () => Saves.Data.HapticsEnabled, () => Saves.Data.HapticsEnabled = !Saves.Data.HapticsEnabled);
             SoundToggle(panel, "Matching symbols", -112, () => Saves.Data.SymbolsEnabled, () => Saves.Data.SymbolsEnabled = !Saves.Data.SymbolsEnabled);
             SoundToggle(panel, "Reduce effects", -170, () => Saves.Data.ReduceEffects, () => Saves.Data.ReduceEffects = !Saves.Data.ReduceEffects);
-            Button(panel, "Ad privacy", new Vector2(0, -225), new Vector2(270, 44), new Vector2(.5f, .5f), Color.clear, Ink,
-                () => ShowAdPrivacy(() => ShowSettings(fromPause)));
+            if (HasPrivacyPolicy())
+                Button(panel, "Privacy policy", new Vector2(-72, -225), new Vector2(140, 44), new Vector2(.5f, .5f), Color.clear, Ink,
+                    () => Application.OpenURL(adsConfiguration.PrivacyPolicyUrl));
+            if (adConsent != null && adConsent.PrivacyOptionsRequired)
+                Button(panel, "Privacy choices", new Vector2(72, -225), new Vector2(140, 44), new Vector2(.5f, .5f), Color.clear, Ink,
+                    () => ShowAdPrivacy(() => ShowSettings(fromPause)));
             Button(panel, "Done", new Vector2(0, -288), new Vector2(270, 49), new Vector2(.5f, .5f), Palette[0], Color.white,
                 () => { if (settingsFromPause) ShowPausePanel(); else overlay.gameObject.SetActive(false); });
         }
