@@ -25,8 +25,6 @@ namespace Roloc.Tests
         RenderTexture target;
         Texture2D readback;
         string output;
-        int warmupScore = 20;
-        readonly List<string> events = new List<string>();
         const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
         void Call(string method, params object[] args) => typeof(RolocGame).GetMethod(method, Private).Invoke(game, args);
         T Field<T>(string name) => (T)typeof(RolocGame).GetField(name, Private).GetValue(game);
@@ -72,30 +70,12 @@ namespace Roloc.Tests
             game.ShowMenu(); game.Saves.Data.SelectedMode = mode; game.Saves.Data.SelectedBoard = style;
             game.RandomSeedOverride = seed; game.BeginRun(); Call("RefreshBoard", 0f);
         }
-        int ChooseSeed()
-        {
-            for (int seed = 0; seed < 100; seed++)
-            {
-                var s = new GameSession(GameMode.Flow, BoardStyle.Lively, new System.Random(seed)); s.StartGame();
-                var modes = new List<FlowMode> { s.FlowMode };
-                for (int n = 0; n < 100; n++)
-                {
-                    s.Drop(s.ActiveColor, true, true); s.CompleteTransition();
-                    modes.Add(s.FlowMode);
-                }
-                for (int start = 20; start < 90; start++)
-                    if (Enumerable.Range(start, 5).All(i => modes[i] == FlowMode.Steady)
-                        && modes[start + 5] == FlowMode.Drifting)
-                    { warmupScore = start; return seed; }
-            }
-            return 17;
-        }
         [UnityTest]
         public IEnumerator CaptureStoreAssets()
         {
             output = Environment.GetEnvironmentVariable("RING_RUSH_CAPTURE_OUTPUT");
             Assert.That(output, Is.Not.Null.And.Not.Empty);
-            Directory.CreateDirectory(output); Directory.CreateDirectory(Path.Combine(output, "frames"));
+            Directory.CreateDirectory(output);
             root = new GameObject("Store capture"); root.SetActive(false); root.AddComponent<AudioListener>();
             game = root.AddComponent<RolocGame>();
             game.SaveDirectoryOverride = Path.Combine(Application.temporaryCachePath, "store-capture-" + Guid.NewGuid().ToString("N"));
@@ -116,57 +96,25 @@ namespace Roloc.Tests
             heroPuck.OnDrag(heroPointer); Capture("hero.png"); heroPuck.CancelDrag();
             Begin("Rush", "Lively", 17); for(int n=0;n<8;n++) ImmediateMatch();
             yield return null; Capture("rush.png");
-            int seed = ChooseSeed(); Begin("Flow", "Lively", seed);
-            for(int n=0;n<warmupScore;n++) ImmediateMatch();
-            SetTarget(886,1920); yield return null;
-            Time.captureFramerate = 30;
-            float elapsed=0, wait=.35f, dragElapsed=0; int frame=0; bool movingCaptured=false, perfectCaptured=false;
-            PuckView dragging=null; PointerEventData pointer=null; Vector2 start=Vector2.zero;
-            var timeline = new System.Text.StringBuilder("frame,time,delta,score,mode,state\n");
-            while(elapsed < 16)
+            Begin("Flow", "Lively", 17);
+            int motionScore = 0;
+            while (game.Session.Score < 500)
             {
-                float dt=Time.unscaledDeltaTime;
-                if(game.Session.State==RoundState.Playing)
-                {
-                    if(dragging==null)
-                    {
-                        wait-=dt;
-                        if(wait<=0) { dragging=Active(); pointer=Pointer(dragging); start=pointer.position; dragging.OnPointerDown(pointer); dragElapsed=0; }
-                    }
-                    else
-                    {
-                        dragElapsed+=dt; float a=Mathf.Clamp01(dragElapsed/.48f);
-                        pointer.position=Vector2.Lerp(start,RingPoint(dragging.ColorIndex),Mathf.SmoothStep(0,1,a));
-                        dragging.OnDrag(pointer);
-                        if(a>=1)
-                        {
-                            dragging.OnPointerUp(pointer); dragging=null; wait=.33f;
-                            Assert.That(game.Session.LastResult,Is.EqualTo(MatchResult.Matched));
-                            events.Add(elapsed.ToString("F6",System.Globalization.CultureInfo.InvariantCulture));
-                        }
-                    }
-                }
-                Assert.That(game.Session.State,Is.Not.EqualTo(RoundState.GameOver));
-                Call("RefreshBoard",0f);
-                Capture("frames/"+frame.ToString("D5")+".png");
-                timeline.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,"{0},{1:F6},{2:F6},{3},{4},{5}",frame,elapsed,dt,game.Session.Score,game.Session.FlowMode,game.Session.State));
-                if(!movingCaptured && game.Session.FlowMode==FlowMode.Drifting && game.Session.State==RoundState.Playing)
-                {
-                    SetTarget(1320,2868); Capture("moving.png"); SetTarget(886,1920); movingCaptured=true;
-                }
-                if(!perfectCaptured && game.Session.Score>=24 && game.Session.State==RoundState.Transition)
-                {
-                    SetTarget(1320,2868); Capture("perfect.png"); SetTarget(886,1920); perfectCaptured=true;
-                }
-                frame++; yield return null; elapsed+=Time.unscaledDeltaTime;
+                ImmediateMatch();
+                if (VariationMotion.DriftsRings(game.Session.FlowMode)
+                    && (VariationMotion.FloatsPucks(game.Session.FlowMode) || VariationMotion.OrbitsPucks(game.Session.FlowMode))
+                    && game.Session.PaletteIndex >= 0) break;
             }
-            Time.captureFramerate=0;
-            if(dragging!=null) dragging.CancelDrag();
-            File.WriteAllText(Path.Combine(output,"timeline.csv"),timeline.ToString());
-            File.WriteAllText(Path.Combine(output,"match-times.json"),"["+string.Join(",",events)+"]");
-            File.WriteAllText(Path.Combine(output,"capture-info.txt"),"Unity "+Application.unityVersion+"\nSeed "+seed+"\nFrames "+frame+"\nDuration "+elapsed+"\nMoving capture "+movingCaptured+"\n");
-            Assert.That(movingCaptured,Is.True,"Chosen run should show real drifting rings.");
-            SetTarget(1320,2868);
+            Assert.That(game.Session.Score, Is.LessThan(500), "Capture a real combined movement episode with shifted colors.");
+            motionScore = game.Session.Score;
+            yield return new WaitForSecondsRealtime(.45f);
+            Capture("moving.png");
+            string motionMode = game.Session.FlowMode.ToString();
+            int motionPalette = game.Session.PaletteIndex;
+            Begin("Flow", "Lively", 17);
+            for(int n=0;n<30;n++) ImmediateMatch();
+            yield return new WaitForSecondsRealtime(.09f);
+            Capture("perfect.png");
             while(game.Session.Score<145) ImmediateMatch();
             for(int n=0;n<3;n++) { game.Session.Drop(game.Session.ActiveColor,false); if(game.Session.State==RoundState.Transition) Call("CompleteBoardTransition"); }
             Call("FinishRun"); Capture("results.png");
@@ -174,10 +122,15 @@ namespace Roloc.Tests
             game.Saves.Equip(CosmeticCategory.Puck,"glass"); game.Saves.Equip(CosmeticCategory.Trail,"ribbon");
             game.Saves.Equip(CosmeticCategory.Ring,"porcelain"); Call("ApplyAppearance"); Call("ShowCollection");
             yield return null; Capture("collection.png");
-            Begin("Flow","Still",17); for(int n=0;n<8;n++) ImmediateMatch();
-            yield return null; Capture("still.png");
+            Begin("Flow","Lively",17); for(int n=0;n<8;n++) ImmediateMatch();
+            yield return null; Capture("cosmetics.png");
             game.Saves.Data.SymbolsEnabled=true; Call("ApplyAppearance"); Capture("symbols.png");
             game.ShowMenu(); Call("ShowSettings",false); yield return null; Capture("settings.png");
+            File.WriteAllText(Path.Combine(output,"capture-info.txt"),
+                "Screenshot-only refresh\nUnity " + Application.unityVersion + "\nVersion " + Application.version
+                + "\nSeed 17\nMotion score " + motionScore + "\nMotion mode " + motionMode
+                + "\nMotion palette " + motionPalette + "\nResolution 1320x2868\n"
+                + "Real pointer handlers and gameplay rules; fresh temporary save; no video files modified.\n");
             UnityEngine.Object.Destroy(root); UnityEngine.Object.Destroy(camera.gameObject);
             target.Release(); UnityEngine.Object.Destroy(target); UnityEngine.Object.Destroy(readback);
             yield return null;

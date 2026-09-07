@@ -1,8 +1,10 @@
 # Ring Rush — App Store launch assets
 
-English (US), prepared September 6, 2026 for **ClearJar Financial Inc.**
+English (US), refreshed September 7, 2026 for **ClearJar Financial Inc.**
 
-**Status: local draft.** App Store Connect reports an expired membership and blocks the New App form. No Ring Rush record, metadata, or media has been created/uploaded in this task. The Account Holder must renew before the portal work can continue. Name availability and bundle-ID ownership still need confirmation in the creation form.
+**Status: local draft; App Store Connect setup in progress.** On September 7, 2026, the New App form opened under ClearJar Financial Inc. (`BK7TPQ53FF`). Apple rejected registration of the existing development bundle ID `com.osazi.roloc.unitydev` as unavailable on this team. A store identifier choice is pending; no Ring Rush record or media upload has been completed yet. The portal also displays an expired Paid Apps agreement, which is separate from app identity registration.
+
+The listing copy has been updated for build 8, including movement combinations, color shifts and badges, and no longer offers Still boards. The confirmed support email is `osahon@clearjar.co`; public support/privacy URLs, review telephone, and copyright ownership remain unconfirmed.
 
 ## Review and deliverables
 
@@ -28,11 +30,11 @@ The editable preview is available at [HyperFrames Studio](http://localhost:3047/
 
 `video/preview/index.html` is the editable HyperFrames composition. It includes a full-screen real gameplay video, thirteen original match-effect clips at recorded event times, the original music bed and a closing caption. Dependencies and CLI versions are pinned. Rendering instructions are in `source/render-preview.sh`.
 
-`captures/*.png` are fresh Unity renders at 1320 × 2868. `captures/frames/` contains the real 886 × 1920 video frames; `timeline.csv` preserves their original unscaled timestamps. `source/prepare-preview.py` conforms those timestamps to 30 FPS by selecting the nearest real frame, without speeding up gameplay or synthesizing intermediate frames. The compact conformed source video is also retained in `video/preview/assets/gameplay.mp4`. The PNG frame sequence is preserved locally but excluded from Git by this folder's ignore file.
+`captures/*.png` were refreshed from build 8 at 1320 × 2868 on September 7. `captures/cosmetics.png` replaces the retired Still-board inset. `captures/frames/` contains the real 886 × 1920 video frames; `timeline.csv` preserves their original unscaled timestamps. `source/prepare-preview.py` conforms those timestamps to 30 FPS by selecting the nearest real frame, without speeding up gameplay or synthesizing intermediate frames. The compact conformed source video is also retained in `video/preview/assets/gameplay.mp4`. The PNG frame sequence is preserved locally but excluded from Git by this folder's ignore file.
 
 ## Capture integrity
 
-The capture harness (`source/StoreCaptureTests.cs`) ran in an isolated copy of the Unity 6000.6.0f1 project. It invokes the real touch/drag handlers and rules, and earns the displayed scores and cosmetics through matches. It uses a fresh temporary save, not the player's save. Tutorial hints are marked seen for marketing capture. Off-camera preparation skips board-transition waits; the visible video uses normal game timing and transitions. The camera and safe area are configured for the requested portrait capture dimensions. These are Unity-rendered gameplay captures, not recordings from a physical iPhone.
+The screenshot-only capture harness (`source/StoreCaptureTests.cs`) passed in an isolated copy of source `ea9f01e718e5b31cc9b46f95f2323512f0983737`, build 8, with Unity 6000.6.0f1. All six upload screenshots were recomposed from those current renders. The motion image shows a blue palette with puck orbit and ring drift at score 90. The original video and its timeline/audio provenance remain from September 6; they were not regenerated or verified as an exact build-8 preview. It invokes the real touch/drag handlers and rules, and earns the displayed scores and cosmetics through matches. It uses a fresh temporary save, not the player's save. Tutorial hints are marked seen for marketing capture. Off-camera screenshot preparation skips board-transition waits. The retained September 6 video uses normal game timing and transitions. The camera and safe area are configured for the requested portrait capture dimensions. These are Unity-rendered gameplay captures, not recordings from a physical iPhone.
 
 The preview starts from an earned score of 29. A seeded normal run changes from Steady to Drifting at 5.036 seconds, then takes a Breather at 8.619 and returns to Steady at 10.920. There are successful matches throughout. The last two seconds add “Find your flow.” in the lower margin. This is a loop-like preview with a closing beat, not a claim of pixel-perfect seamless looping. Original audio files are copied unchanged; volume fades make the music boundary clean. The final mix measures −22.1 dB mean and −1.0 dB peak, with the last 20 ms below −37 dB peak.
 
@@ -46,4 +48,4 @@ Specifications checked September 6, 2026:
 - [App preview specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/app-preview-specifications/): accepted portrait resolution, duration, H.264 and AAC delivery settings.
 - [App Store search](https://developer.apple.com/app-store/search/): accurate naming, subtitle, keyword and visual positioning guidance.
 
-App Store Connect acceptance and video processing remain unverified until membership renewal and actual upload. The marketing captures reflect the project snapshot used for this session; check them against the final release build if gameplay or UI changes before launch.
+App Store Connect acceptance and video processing remain unverified until app registration and actual upload. The current blocker is store bundle-ID ownership; the New App form is accessible. The marketing captures reflect the project snapshot used for this session; check them against the final release build if gameplay or UI changes before launch.

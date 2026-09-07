@@ -2,9 +2,9 @@
 
 ## Account and app record
 
-- [ ] Account Holder renews the expired Apple Developer Program membership for ClearJar Financial Inc.
+- [x] Recheck access: New App form opens for ClearJar Financial Inc. on September 7, 2026. Paid Apps agreement warning remains visible.
 - [ ] Recheck for an existing Ring Rush record before creating another.
-- [ ] Confirm `com.osazi.roloc.unitydev` belongs to this team and is selectable. Do not change the game identifier or signing configuration to bypass this check.
+- [ ] Resolve store bundle ID: Apple rejected `com.osazi.roloc.unitydev` as unavailable for company team `BK7TPQ53FF`. Owner choice of a separate store ID is pending; existing dev signing has not been changed.
 - [ ] Create iOS record: Ring Rush; English (US); SKU `ring-rush-ios`. If Apple reports the name unavailable, report the exact blocker before selecting another name.
 - [ ] Record the actual App Store Connect app URL here after creation: **pending**.
 
@@ -20,7 +20,8 @@
 
 ## Information requiring owner confirmation
 
-- [ ] Public support URL and real support contact.
+- [x] Support email: `osahon@clearjar.co`.
+- [ ] Public support URL.
 - [ ] Public privacy-policy URL and privacy answers based on the exact release build and its SDKs/network services. Do not infer “no data collected” from offline Flow/Rush alone.
 - [ ] Copyright/legal rights-holder text; company name alone is not confirmation of copyright ownership.
 - [ ] App Review contact name, email and telephone; access instructions if any shipped feature requires an invitation or credentials.

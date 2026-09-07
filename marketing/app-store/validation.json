@@ -1,6 +1,6 @@
 {
-  "date": "2026-09-06",
-  "status": "LOCAL_ASSETS_VERIFIED_PORTAL_BLOCKED_BY_EXPIRED_MEMBERSHIP",
+  "date": "2026-09-07",
+  "status": "LOCAL_ASSETS_VERIFIED_PORTAL_SAVE_PENDING",
   "copy": {
     "name": {
       "count": 9,
@@ -21,7 +21,7 @@
       "pass": true
     },
     "description": {
-      "count": 1073,
+      "count": 1163,
       "max": 4000,
       "unit": "characters",
       "pass": true
@@ -33,7 +33,7 @@
       "pass": true
     },
     "releaseNotes": {
-      "count": 158,
+      "count": 192,
       "max": 4000,
       "unit": "characters",
       "pass": true
@@ -46,7 +46,7 @@
       "height": 2868,
       "format": "png",
       "opaque": true,
-      "sha256": "7314f4619fcba9907a873b7a1131741bffc0d1df4273ac02f3aff9f723d2baff"
+      "sha256": "ac9d9b756d4eb565bd375495c6eced242f1ba7dd5e9eb06c95c93c0fa2073d1a"
     },
     {
       "file": "screenshots/02-modes.png",
@@ -54,7 +54,7 @@
       "height": 2868,
       "format": "png",
       "opaque": true,
-      "sha256": "199320e845f8edb9838475e2524ddaec6a132d950b828c2d05ca5500c85f55b3"
+      "sha256": "a40939bec856553d9aed1c6da888e0cdfd2d2ae46e424981339d331016e1b0db"
     },
     {
       "file": "screenshots/03-motion.png",
@@ -62,7 +62,7 @@
       "height": 2868,
       "format": "png",
       "opaque": true,
-      "sha256": "76f01c2e226a3b54da5e458515ac9fb1ad764e8ac3a70693c84eaef03dcfbba3"
+      "sha256": "a6042b16807c550fd6aeabff8aae4122378b813cb9225c92f0008db64fdb1d52"
     },
     {
       "file": "screenshots/04-perfect.png",
@@ -70,7 +70,7 @@
       "height": 2868,
       "format": "png",
       "opaque": true,
-      "sha256": "8f98573efd945d612a085475fbd1059aa79005894047cc9bf10e1f35a2512761"
+      "sha256": "7a74ce97ae5ada1c0f6eded0681c6e4ecc07f440b7f72db57b8f293036212366"
     },
     {
       "file": "screenshots/05-collection.png",
@@ -78,7 +78,7 @@
       "height": 2868,
       "format": "png",
       "opaque": true,
-      "sha256": "662d10fa3b2ecf5a5b1b60b0bc8d3bfccc08f7a333140465ebb083e602c00b74"
+      "sha256": "717460009c71b02d54bb5c5f217015f90ae0e65daf7b4d51d90fb04fadb93239"
     },
     {
       "file": "screenshots/06-your-pace.png",
@@ -86,7 +86,7 @@
       "height": 2868,
       "format": "png",
       "opaque": true,
-      "sha256": "f1f0cc68b21f847aff78323a0bca574f9131f5611018bdfea3e815de2cc20f94"
+      "sha256": "9cb47d9884cf8ad01b8211def50025b340349c005ba4de73f27015661495d680"
     },
     {
       "file": "app-icon-1024.png",
@@ -105,8 +105,17 @@
       "sha256": "22c5f3656d4ec449c12858bfd3f4da9f54ba0b6d231bbe0ab48193c6d036cc6c"
     }
   ],
+  "screenshotCapture": {
+    "date": "2026-09-07",
+    "sourceCommit": "ea9f01e718e5b31cc9b46f95f2323512f0983737",
+    "build": 8,
+    "unityVersion": "6000.6.0f1",
+    "testResult": "source/capture-results.xml"
+  },
   "preview": {
     "file": "video/ring-rush-preview.mp4",
+    "captureDate": "2026-09-06",
+    "status": "RETAINED_EARLIER_GAMEPLAY_PREVIEW_NOT_REFRESHED_FOR_BUILD_8",
     "durationSeconds": 15,
     "width": 886,
     "height": 1920,
@@ -166,10 +175,10 @@
     "contrastErrors": 0
   },
   "manualReview": {
-    "thumbnailHeadlines": "Reviewed six-image contact sheet; readable headlines and faithful gameplay.",
-    "videoFrames": "Reviewed matching, moving-board and closing frames; caption stays outside play area.",
-    "noSound": "Browser preview played muted from 0 to 15 seconds; gameplay and closing message remain understandable without audio.",
-    "appStoreUpload": "Blocked; no media processing or saved listing verification possible yet.",
+    "thumbnailHeadlines": "Reviewed six refreshed build8 screenshots; current results, collection, symbols and settings. Removed Still selection claim.",
+    "videoFrames": "September 6 review (retained preview): Reviewed matching, moving-board and closing frames; caption stays outside play area.",
+    "noSound": "September 6 review (retained preview): Browser preview played muted from 0 to 15 seconds; gameplay and closing message remain understandable without audio.",
+    "appStoreUpload": "Local validation only. Verify media processing and saved listing separately in App Store Connect.",
     "deviceCapture": "Unity-rendered captures, not physical-iPhone recording."
   }
 }

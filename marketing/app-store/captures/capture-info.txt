@@ -1,5 +1,11 @@
+Screenshot-only refresh
 Unity 6000.6.0f1
-Seed 0
-Frames 380
-Duration 16.01154
-Moving capture True
+Version 0.1.0
+Seed 17
+Motion score 90
+Motion mode PuckOrbitDrifting
+Motion palette 5
+Resolution 1320x2868
+Real pointer handlers and gameplay rules; fresh temporary save; no video files modified.
+Source commit ea9f01e718e5b31cc9b46f95f2323512f0983737
+iOS build number 8
