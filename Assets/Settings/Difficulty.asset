@@ -45,6 +45,7 @@ MonoBehaviour:
     BreatherCooldownMatches: 10
   Variations:
     ColorShiftStartScore: 20
+    CombinedMotionStartScore: 20
     OrbitStartScore: 40
     DualOrbitStartScore: 60
     PuckOrbitDegreesPerSecond: 18

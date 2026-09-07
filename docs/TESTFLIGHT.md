@@ -45,7 +45,16 @@ Record the archive path, Git commit, bundle version/build number, deployment env
 
 A public release additionally requires verified App Attest integration, suspicious-submission review/exclusion, operational alerting, and a tested privacy/deletion process. Keep the closed-test gate until those controls are complete.
 
-## Current delivery record — build 6
+## Current delivery record — build 7
+
+- Source `210cbe3` freshly exported with Unity 6000.6.0f1 as **0.1.0, build 7** from an isolated checkout that excluded concurrent unfinished badge work. The retained export is `Builds/iOS-build7`; the successful Xcode Release archive is `Builds/Archives/RingRush-build7.xcarchive`.
+- Shifted palettes now persist through recovery, calm, and movement episodes until the next color shift or a new run. Floating pucks plus drifting rings are eligible from 20 matches; puck orbit plus ring drift and ring orbit plus floating pucks are eligible from 60. Each group has one compatible movement effect, and the existing recovery/calm rhythm remains.
+- Verification: 170 EditMode tests passed (one explicit network test skipped), including unchanged Daily fixtures; all 11 focused PlayMode checks passed. Combined-motion checks cover both groups moving, full movement sweeps, compact/tall geometry with cosmetics, persistent palettes, pauses/retries, and actual frame-driven dragging. Rendered captures were inspected. Backend CI passed.
+- Integration review verified the core scheduling contribution against the presentation consumers and confirmed that the isolated build matched all committed source changes. Extra clearance and bounded drift keep combined layouts separated.
+- Deep, strict code-sign verification passed for `com.osazi.roloc.unitydev`. Build 7 installed and launched wirelessly on the paired iPhone; CoreDevice verified the process under the new installation path.
+- This was a direct device install, not a TestFlight upload. Physical shade perception, extended touch play, and sustained on-device FPS remain hands-on acceptance items. Daily definitions and backend were unchanged.
+
+## Previous delivery record — build 6
 
 - Source `ca064b7` freshly exported with Unity 6000.6.0f1 as **0.1.0, build 6**. Export used an isolated checkout to exclude another task's unfinished badge edits. The retained export is `Builds/iOS-build6`; the successful Xcode Release archive is `Builds/Archives/RingRush-build6.xcarchive`.
 - Deep, strict code-sign verification passed for `com.osazi.roloc.unitydev`. Build 6 installed and launched wirelessly; CoreDevice verified the running process under the new installation path.
