@@ -12,7 +12,7 @@ namespace Roloc.Presentation
         int startingBest, startingCombo, startingPerfect;
         long startingPoints;
         Text modeChoice, boardChoice, progressLabel, livesLabel, chainLabel, feedbackLabel;
-        Text resultProgress, resultChains, dailyLabel;
+        Text resultProgress, resultChains, dailyLabel, resultReason;
         Button modeButton, boardButton;
         SoftShape backgroundArt;
         readonly MatchSymbol[] symbols = new MatchSymbol[8];
@@ -63,6 +63,7 @@ namespace Roloc.Presentation
             livesLabel = Label(game, "", 11, Ink, new Vector2(-92, -161), new Vector2(170, 22), new Vector2(.5f, 1));
             chainLabel = Label(game, "", 11, Ink, new Vector2(90, -161), new Vector2(172, 22), new Vector2(.5f, 1));
             feedbackLabel = Label(game, "", 15, Ink, new Vector2(0, 104), new Vector2(360, 32), new Vector2(.5f, 0));
+            resultReason = Label(results, "", 13, Muted, new Vector2(0, -173), new Vector2(345, 30), new Vector2(.5f, 1));
             resultChains = Label(results, "", 12, Ink, new Vector2(0, 268), new Vector2(360, 36), new Vector2(.5f, 0));
             resultProgress = Label(results, "", 12, Muted, new Vector2(0, 215), new Vector2(360, 63), new Vector2(.5f, 0));
             for (int c = 0; c < 4; c++)
@@ -184,6 +185,8 @@ namespace Roloc.Presentation
         void ShowResultExperience()
         {
             long earned = Saves.Data.ProgressPoints - startingPoints;
+            resultReason.text = Session.LastFailure == DropFailure.TimeExpired ? "Time ran out." :
+                Session.LastFailure == DropFailure.WrongRing ? "That was a different color's ring." : "The puck landed outside its matching ring.";
             string improvement = Session.BestCombo > startingCombo ? " · new combo best" : Session.BestPerfectStreak > startingPerfect ? " · new Perfect streak" : "";
             resultChains.text = "Combo " + Session.BestCombo + "  ·  Perfect streak " + Session.BestPerfectStreak + improvement;
             string unlocked = "";

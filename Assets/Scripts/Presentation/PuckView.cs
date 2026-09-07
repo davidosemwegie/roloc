@@ -22,20 +22,25 @@ namespace Roloc.Presentation
         int pointerId;
         Vector2 grabOffset;
         CanvasGroup group;
-        bool highlighted;
+        bool highlighted, highlightInitialized;
+        Color baseTint;
         float returnVelocityX, returnVelocityY;
 
         public void Configure(int color, Color tint)
         {
-            ColorIndex = color;
+            ColorIndex = color; baseTint = tint; highlightInitialized = false;
             GetComponent<SoftShape>().color = tint;
             group = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
         }
 
         public void SetHighlighted(bool active)
         {
-            highlighted = active;
-            if (group) group.alpha = active ? 1 : .48f;
+            if (highlightInitialized && highlighted == active) return;
+            highlighted = active; highlightInitialized = true;
+            if (group) group.alpha = 1;
+            // Bake the inactive face into the mesh; symbols retain full contrast.
+            var tint = active ? baseTint : Color.Lerp(baseTint, new Color32(240, 246, 252, 255), .52f);
+            GetComponent<SoftShape>().color = tint;
         }
 
         public void OnPointerDown(PointerEventData e)

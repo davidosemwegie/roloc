@@ -37,6 +37,18 @@ async function record(t: Test, client: ReturnType<Test["withIdentity"]>, challen
 beforeEach(()=>{ vi.useFakeTimers(); vi.setSystemTime(new Date("2026-09-06T12:00:00Z")); vi.stubEnv("RING_RUSH_CLOSED_TEST_CODE","local-test-only"); vi.stubEnv("RING_RUSH_CLOSED_TEST_EPOCH","1"); });
 afterEach(()=>{ vi.useRealTimers(); vi.unstubAllEnvs(); });
 describe("Publication and access",()=>{
+  it("reports scheduled health failures but accepts an intentional ranked pause",async()=>{
+    const t=setup();
+    const log=vi.spyOn(console,"error").mockImplementation(()=>{});
+    try {
+      await expect(t.action(internal.operations.checkHealth,{})).rejects.toThrow("Daily health check failed");
+      expect(log).toHaveBeenCalledWith("Daily health check failed: challenge availability or validation requires attention.");
+      await ready(t);
+      await t.mutation(internal.operations.setRankedEnabled,{enabled:false});
+      await expect(t.action(internal.operations.checkHealth,{})).resolves.toBeNull();
+      expect(log).toHaveBeenCalledTimes(1);
+    } finally { log.mockRestore(); }
+  });
   it("keeps concurrent publication idempotent and health notices stalled validation",async()=>{
     const t=setup();
     const created=await Promise.all([t.mutation(internal.publication.ensureUpcoming,{}),t.mutation(internal.publication.ensureUpcoming,{})]);

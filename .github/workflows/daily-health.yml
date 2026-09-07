@@ -1,6 +1,8 @@
 name: Daily availability
 
 on:
+  push:
+    paths: ['.github/workflows/daily-health.yml', 'backend/convex/**']
   schedule:
     - cron: '17,47 * * * *'
   workflow_dispatch:

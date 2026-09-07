@@ -4,6 +4,7 @@ using UnityEngine.UI;
 namespace Roloc.Presentation
 {
     /// <summary>Vector symbols remain recognizable without hue or font coverage.</summary>
+    [RequireComponent(typeof(CanvasRenderer))]
     public sealed class MatchSymbol : MaskableGraphic
     {
         public int Symbol;

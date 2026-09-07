@@ -48,11 +48,25 @@ namespace Roloc.Tests
         }
         IEnumerator Capture(string name)
         {
-            yield return null; yield return null;
-            var image = ScreenCapture.CaptureScreenshotAsTexture();
+            // A render target also works in headless batch tests, where no Game View exists.
+            var canvas = root.GetComponentInChildren<Canvas>();
+            var cameraObject = new GameObject("Capture camera");
+            var camera = cameraObject.AddComponent<Camera>(); camera.orthographic = true;
+            camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = Color.white;
+            camera.transform.position = new Vector3(0, 0, -10);
+            var target = new RenderTexture(400, 860, 24);
+            camera.targetTexture = target;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = camera; canvas.planeDistance = 1;
+            yield return null;
+            Canvas.ForceUpdateCanvases(); camera.Render();
+            var previous = RenderTexture.active; RenderTexture.active = target;
+            var image = new Texture2D(400, 860, TextureFormat.RGB24, false);
+            image.ReadPixels(new Rect(0, 0, 400, 860), 0, 0); image.Apply();
             Directory.CreateDirectory("TestResults/screens");
             File.WriteAllBytes("TestResults/screens/" + name + ".png", image.EncodeToPNG());
-            UnityEngine.Object.Destroy(image);
+            RenderTexture.active = previous; canvas.renderMode = RenderMode.ScreenSpaceOverlay; canvas.worldCamera = null;
+            camera.targetTexture = null; target.Release();
+            UnityEngine.Object.Destroy(image); UnityEngine.Object.Destroy(target); UnityEngine.Object.Destroy(cameraObject);
         }
 
         [UnityTest, Explicit("Captures actual Unity UI for visual review.")]

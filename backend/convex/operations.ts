@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation, internalQuery } from "./_generated/server";
+import { internalAction, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { cleanup, vWorkflowId } from "@convex-dev/workflow";
 import { components } from "./_generated/api";
@@ -12,6 +12,20 @@ export const health = internalQuery({
     const tomorrow = await ctx.db.query("challenges").withIndex("by_date", q => q.eq("date", utcDate(Date.now() + DAY))).unique();
     const stalled = await ctx.db.query("attempts").withIndex("by_status_and_submittedAt", q => q.eq("status", "validating").lte("submittedAt", Date.now() - 300_000)).first();
     return { ready: !!today && !!tomorrow && !stalled, validationStalled: !!stalled, todayAvailable: !!today, tomorrowAvailable: !!tomorrow, rankedEnabled: await rankedEnabled(ctx), publicCompetitionEnabled: false as const };
+  },
+});
+export const checkHealth = internalAction({
+  args: {}, returns: v.null(),
+  handler: async (ctx): Promise<null> => {
+    try {
+      const status = await ctx.runQuery(internal.operations.health, {});
+      if (status.ready) return null;
+    } catch {
+      // Keep operational failures visible without logging query details or player data.
+    }
+    const message = "Daily health check failed: challenge availability or validation requires attention.";
+    console.error(message);
+    throw new Error(message);
   },
 });
 export const setRankedEnabled = internalMutation({

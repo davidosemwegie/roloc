@@ -80,3 +80,17 @@ Guest authentication/session records have their own lifecycle and are not covere
 `Backend checks` runs `npm ci`, TypeScript checks, and Vitest on pushes and pull requests. It reads the shared canonical fixture at `Assets/Tests/EditMode/Core/DailyFixtures.json` from the full checkout; no deployment keys are needed. GitHub actions are pinned to reviewed release commits.
 
 Unity license provisioning and native signing are not configured in hosted CI. Unity EditMode/PlayMode and physical iPhone checks remain an integration gate for gameplay, rendering, saves, audio, Keychain, and sharing. See `TESTFLIGHT.md` for the native release process. Passing backend CI alone does not verify the app or imply a TestFlight upload.
+
+## Provisioned environments
+
+`ring-rush` belongs to **Clearjar Studio**, provisioned through its existing Vercel Marketplace Convex installation on the Free plan. Vercel resource: `store_ZQ6OVpm5ZVz7wiB5`. No Vercel web app is needed for the Unity client.
+
+| Purpose | Convex deployment | Use |
+| --- | --- | --- |
+| Development | `determined-aardvark-934` | Automated HTTP and Unity integration tests |
+| Closed testing | `affable-lyrebird-62` (`closed-test`) | Invited iPhone/TestFlight builds |
+| Production | `prestigious-stingray-252` | Published challenges; ranked submissions disabled |
+
+Each environment has independent auth keys, invitation codes, users, and standings. `.env.local` selects development. The ignored `.env.deploy-beta` contains a deployment-scoped administrative key for closed-test deployment; it must never be included in Unity. Deploy closed testing with `npx convex deploy --env-file .env.deploy-beta --yes`. The ordinary `npx convex deploy` targets default production, so check its displayed target before confirming.
+
+The accidentally provisioned personal-team development deployment has ranked access disabled and its invitation code removed. It is not connected to current builds. It and its unused personal production deployment may be deleted independently; they contain no migrated user data.
