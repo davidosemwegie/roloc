@@ -45,7 +45,15 @@ Record the archive path, Git commit, bundle version/build number, deployment env
 
 A public release additionally requires verified App Attest integration, suspicious-submission review/exclusion, operational alerting, and a tested privacy/deletion process. Keep the closed-test gate until those controls are complete.
 
-## Current delivery record — build 7
+## Current delivery record — build 8
+
+- Source `f9a12df` freshly exported from the full root project with Unity 6000.6.0f1 as **0.1.0, build 8**. This includes the badge collection and Perfect feedback omitted from build 7, together with persistent palettes and combined movement. Export: `Builds/iOS-build8`; Xcode Release archive: `Builds/Archives/RingRush-build8.xcarchive`.
+- Adds 12 run-score and nine lifetime badges, historical backfill, persistent unlocks, a menu collection, and inline results badges. Perfect matches have a short double ripple and distinct native haptic. Board resets and palette changes clear lingering Perfect feedback.
+- Parallel persistence review verified ordered atomic credit and duplicate suppression; the integrated presentation review checked effect cleanup and compact/tall badge captures. All 174 EditMode tests passed (one explicit network test skipped) and all 13 focused PlayMode tests passed, including the existing movement, Daily fixtures, input, and new badge/feedback coverage. Backend CI passed.
+- The archive passed deep, strict signing verification for `com.osazi.roloc.unitydev`. Build 8 installed and launched wirelessly on the paired iPhone; CoreDevice confirmed its new process running.
+- Direct device install only. Native haptic feel, extended physical play, and sustained FPS still require hands-on acceptance. No backend redeployment or TestFlight upload was performed.
+
+## Previous delivery record — build 7
 
 - Source `210cbe3` freshly exported with Unity 6000.6.0f1 as **0.1.0, build 7** from an isolated checkout that excluded concurrent unfinished badge work. The retained export is `Builds/iOS-build7`; the successful Xcode Release archive is `Builds/Archives/RingRush-build7.xcarchive`.
 - Shifted palettes now persist through recovery, calm, and movement episodes until the next color shift or a new run. Floating pucks plus drifting rings are eligible from 20 matches; puck orbit plus ring drift and ring orbit plus floating pucks are eligible from 60. Each group has one compatible movement effect, and the existing recovery/calm rhythm remains.
