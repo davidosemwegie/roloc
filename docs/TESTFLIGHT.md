@@ -45,7 +45,15 @@ Record the archive path, Git commit, bundle version/build number, deployment env
 
 A public release additionally requires verified App Attest integration, suspicious-submission review/exclusion, operational alerting, and a tested privacy/deletion process. Keep the closed-test gate until those controls are complete.
 
-## Current delivery record — 2026-09-07 UTC
+## Current delivery record — build 5
+
+- Source `bcc7817` was freshly exported with Unity 6000.6.0f1 as version **0.1.0, build 5**. Xcode Release archive succeeded at `Builds/Archives/RingRush.xcarchive`; deep, strict code-sign verification passed for `com.osazi.roloc.unitydev`.
+- Build 5 installed and launched wirelessly on the paired iPhone. CoreDevice confirmed the new installation's RingRush process running.
+- Includes the simplified results screen with open colored record typography and cosmetic progress, circular puck touch boundaries, and client rules revision 2. Two focused Unity layout/capture tests and backend CI passed before export.
+- Deployed the matching revision gate to Clearjar Studio's isolated closed-test deployment (`affable-lyrebird-62`). Its health endpoint reports ready, today's and tomorrow's challenges available, no stalled validation, and public competition disabled. Development and default production were not redeployed.
+- This is a direct device install; no new TestFlight distribution attempt was made. The account and hands-on acceptance gates below remain pending.
+
+## Previous delivery record — build 4
 
 - Unity 6000.6.0f1 freshly exported version **0.1.0, build 4**, using `BuildTestFlight` and the isolated Clearjar Studio closed-test deployment (`affable-lyrebird-62`). Production standings remain separate and ranked production remains disabled.
 - Xcode **Release archive succeeded** at `Builds/Archives/RingRush.xcarchive`. Code-sign verification passed for `com.osazi.roloc.unitydev`.
