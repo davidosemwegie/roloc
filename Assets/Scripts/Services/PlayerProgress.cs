@@ -25,6 +25,8 @@ namespace Roloc.Services
         public bool PerfectHintShown;
         public bool RecoveryHintShown;
         public bool RushSuggestionShown;
+        public bool AdPrivacyChoiceMade;
+        public bool PersonalizedAdsAllowed;
         public long ProgressPoints;
         public long TotalPerfects;
         public bool BadgesInitialized;

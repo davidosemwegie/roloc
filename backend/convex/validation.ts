@@ -4,10 +4,11 @@ import { internalQuery, internalMutation } from "./_generated/server";
 import { components, internal } from "./_generated/api";
 import { initialReplay, replayEvents, type ReplayState } from "./rules";
 import { boardVariant } from "./validators";
-import { CLIENT_RULES_REVISION, CLIENT_UPDATE_MESSAGE, DAY, scores } from "./model";
+import { supportsClientRulesRevision, CLIENT_UPDATE_MESSAGE, DAY, scores } from "./model";
 
 const mode = v.union(v.literal("Steady"), v.literal("Floating"), v.literal("Drifting"), v.literal("Breather"), v.literal("Rotation"));
 export const replayCheckpoint = v.object({
+  rulesVersion: v.optional(v.number()), revivesAvailable: v.optional(v.number()), awaitingRevive: v.optional(v.boolean()),
   rules: v.object({ seed: v.number(), rng: v.number(), variant: boardVariant, rings: v.array(v.number()), pucks: v.array(v.number()), active: v.number(), score: v.number(),
     phase: v.union(v.literal("Calm"), v.literal("Challenge"), v.literal("Recovery")), mode, previousChallenge: mode, remaining: v.number(),
     rotationSteps: v.number(), durationMs: v.number(), transitionMs: v.number() }),
@@ -36,8 +37,8 @@ export const beginReplay = internalQuery({
     const attempt = await ctx.db.get(args.attemptId);
     if (!attempt || attempt.status !== "validating") throw new Error("Attempt unavailable for validation");
     const challenge = await ctx.db.get(attempt.challengeId);
-    if (!challenge || challenge.rulesVersion !== 1) throw new Error("Unsupported Daily rules");
-    return initialReplay(challenge.seed, challenge.variant);
+    if (!challenge || !supportsClientRulesRevision(attempt.clientRulesRevision, challenge.rulesVersion)) throw new Error("Unsupported Daily rules");
+    return initialReplay(challenge.seed, challenge.variant, challenge.rulesVersion);
   },
 });
 export const validateChunk = internalQuery({
@@ -61,7 +62,7 @@ export const recordResult = internalMutation({
     if (!args.checkpoint.terminal && !error) error = "The run trace does not contain an ending.";
     if (args.checkpoint.events !== attempt.eventCount && !error) error = "The event count does not match the uploaded trace.";
     // A workflow started before the client-rule cutover must not add a new standing afterward.
-    if (attempt.clientRulesRevision !== CLIENT_RULES_REVISION) error = CLIENT_UPDATE_MESSAGE;
+    if (!supportsClientRulesRevision(attempt.clientRulesRevision, challenge?.rulesVersion ?? 0)) error = CLIENT_UPDATE_MESSAGE;
     const finalizedAt = Date.now();
     if (error) {
       await ctx.db.patch(attempt._id, { status: "rejected", reason: error, finalizedAt, purgeAt: finalizedAt + 7 * DAY });

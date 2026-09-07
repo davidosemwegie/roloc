@@ -1,0 +1,183 @@
+{
+  "rulesVersion": 2,
+  "seed": 42,
+  "elapsedMs": 100,
+  "reviveTransitionMs": 3000,
+  "variants": [
+    "lively",
+    "still"
+  ],
+  "scenarios": [
+    {
+      "name": "milestones-overflow-replenishment",
+      "steps": [
+        {
+          "action": "match",
+          "score": 19,
+          "bank": 0,
+          "state": "playing"
+        },
+        {
+          "action": "match",
+          "score": 20,
+          "bank": 1,
+          "state": "playing"
+        },
+        {
+          "action": "match",
+          "score": 49,
+          "bank": 1,
+          "state": "playing"
+        },
+        {
+          "action": "match",
+          "score": 50,
+          "bank": 2,
+          "state": "playing"
+        },
+        {
+          "action": "match",
+          "score": 99,
+          "bank": 2,
+          "state": "playing"
+        },
+        {
+          "action": "match",
+          "score": 100,
+          "bank": 3,
+          "state": "playing"
+        },
+        {
+          "action": "match",
+          "score": 150,
+          "bank": 3,
+          "state": "playing"
+        },
+        {
+          "action": "miss",
+          "score": 150,
+          "bank": 3,
+          "state": "failed"
+        },
+        {
+          "action": "revive",
+          "score": 150,
+          "bank": 2,
+          "state": "playing"
+        },
+        {
+          "action": "timeout",
+          "score": 150,
+          "bank": 2,
+          "state": "failed"
+        },
+        {
+          "action": "revive",
+          "score": 150,
+          "bank": 1,
+          "state": "playing"
+        },
+        {
+          "action": "inactive",
+          "score": 150,
+          "bank": 1,
+          "state": "failed"
+        },
+        {
+          "action": "revive",
+          "score": 150,
+          "bank": 0,
+          "state": "playing"
+        },
+        {
+          "action": "match",
+          "score": 199,
+          "bank": 0,
+          "state": "playing"
+        },
+        {
+          "action": "match",
+          "score": 200,
+          "bank": 1,
+          "state": "playing"
+        },
+        {
+          "action": "timeout",
+          "score": 200,
+          "bank": 1,
+          "state": "failed"
+        },
+        {
+          "action": "revive",
+          "score": 200,
+          "bank": 0,
+          "state": "playing"
+        },
+        {
+          "action": "match",
+          "score": 250,
+          "bank": 1,
+          "state": "playing"
+        },
+        {
+          "action": "miss",
+          "score": 250,
+          "bank": 1,
+          "state": "failed"
+        },
+        {
+          "action": "abandon",
+          "score": 250,
+          "bank": 1,
+          "state": "ended"
+        }
+      ]
+    },
+    {
+      "name": "below-first-milestone",
+      "steps": [
+        {
+          "action": "match",
+          "score": 19,
+          "bank": 0,
+          "state": "playing"
+        },
+        {
+          "action": "miss",
+          "score": 19,
+          "bank": 0,
+          "state": "ended"
+        }
+      ]
+    },
+    {
+      "name": "same-score-does-not-earn-again",
+      "steps": [
+        {
+          "action": "match",
+          "score": 20,
+          "bank": 1,
+          "state": "playing"
+        },
+        {
+          "action": "miss",
+          "score": 20,
+          "bank": 1,
+          "state": "failed"
+        },
+        {
+          "action": "revive",
+          "score": 20,
+          "bank": 0,
+          "state": "playing"
+        },
+        {
+          "action": "miss",
+          "score": 20,
+          "bank": 0,
+          "state": "ended"
+        }
+      ]
+    }
+  ]
+}
