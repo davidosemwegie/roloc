@@ -1,0 +1,53 @@
+name: Daily availability
+
+on:
+  schedule:
+    - cron: '17,47 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: daily-health
+  cancel-in-progress: true
+
+jobs:
+  daily-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      DAILY_HEALTH_URL: ${{ vars.RING_RUSH_DAILY_HEALTH_URL || secrets.RING_RUSH_DAILY_HEALTH_URL }}
+    steps:
+      - name: Verify published challenges
+        shell: python
+        run: |
+          import json
+          import os
+          import time
+          import urllib.parse
+          import urllib.request
+
+          url = os.environ.get("DAILY_HEALTH_URL", "")
+          parsed = urllib.parse.urlparse(url)
+          if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
+              raise SystemExit("Configure RING_RUSH_DAILY_HEALTH_URL with the public HTTPS /health/daily endpoint.")
+          failure = None
+          for attempt in range(3):
+              try:
+                  request = urllib.request.Request(url, headers={"Accept": "application/json"})
+                  with urllib.request.urlopen(request, timeout=10) as response:
+                      health = json.loads(response.read(16384))
+                  if not all(health.get(key) is True for key in ("ready", "todayAvailable", "tomorrowAvailable")):
+                      raise RuntimeError("Today's or tomorrow's immutable challenge is unavailable.")
+                  if health.get("publicCompetitionEnabled") is not False:
+                      raise RuntimeError("The deployment no longer confirms the closed-competition gate.")
+                  if health.get("rankedEnabled") is False:
+                      print("::notice::Challenges are available; ranked submissions are intentionally paused.")
+                  else:
+                      print("Today's and tomorrow's challenges are available. Closed-test gate is active.")
+                  break
+              except Exception as error:
+                  failure = error
+                  if attempt == 2:
+                      raise SystemExit("Daily health check failed: " + str(failure))
+                  time.sleep(5)

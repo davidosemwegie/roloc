@@ -1,0 +1,33 @@
+{
+  "name": "ring-rush-backend",
+  "version": "1.0.0",
+  "description": "Ring Rush shared Daily challenge backend",
+  "scripts": {
+    "dev": "convex dev",
+    "deploy": "convex deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm test",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@convex-dev/aggregate": "0.3.1",
+    "@convex-dev/auth": "0.0.95",
+    "@convex-dev/rate-limiter": "0.3.2",
+    "@convex-dev/workflow": "0.4.6",
+    "convex": "1.45.0"
+  },
+  "devDependencies": {
+    "@edge-runtime/vm": "5.0.0",
+    "@types/node": "26.4.1",
+    "convex-test": "0.0.56",
+    "typescript": "7.0.2",
+    "vitest": "5.0.0"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22.18"
+  }
+}
