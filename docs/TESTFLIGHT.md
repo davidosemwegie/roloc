@@ -45,7 +45,15 @@ Record the archive path, Git commit, bundle version/build number, deployment env
 
 A public release additionally requires verified App Attest integration, suspicious-submission review/exclusion, operational alerting, and a tested privacy/deletion process. Keep the closed-test gate until those controls are complete.
 
-## Current delivery record — build 5
+## Current delivery record — build 6
+
+- Source `ca064b7` freshly exported with Unity 6000.6.0f1 as **0.1.0, build 6**. Export used an isolated checkout to exclude another task's unfinished badge edits. The retained export is `Builds/iOS-build6`; the successful Xcode Release archive is `Builds/Archives/RingRush-build6.xcarchive`.
+- Deep, strict code-sign verification passed for `com.osazi.roloc.unitydev`. Build 6 installed and launched wirelessly; CoreDevice verified the running process under the new installation path.
+- Includes curated Color Shift palettes from 20 matches, single-group orbits from 40, and dual orbits from 60. The Still selector is removed; regular runs use Lively while historical Still records remain saved. There are four puck/ring pairs throughout. Published Daily definitions and backend were unchanged.
+- Verification: 155 EditMode tests passed (one explicit network test skipped), including unchanged Daily fixtures; 12 PlayMode checks passed, including actual frame-driven dragging, transition timing, orbit bounds, compact/tall captures, and removal of the Still selection without deleting its record. Backend CI passed. The integration review caught and corrected an extra palette transition delay, then verified the combined behavior.
+- This was a direct device install, not a TestFlight upload. Shade perception, extended physical touch play, and sustained on-device FPS remain hands-on acceptance items.
+
+## Previous delivery record — build 5
 
 - Source `bcc7817` was freshly exported with Unity 6000.6.0f1 as version **0.1.0, build 5**. Xcode Release archive succeeded at `Builds/Archives/RingRush.xcarchive`; deep, strict code-sign verification passed for `com.osazi.roloc.unitydev`.
 - Build 5 installed and launched wirelessly on the paired iPhone. CoreDevice confirmed the new installation's RingRush process running.
