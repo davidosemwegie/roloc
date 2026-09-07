@@ -36,6 +36,7 @@ Newly published challenges use rules v2; existing published rows remain v1. This
 
 ## Release checks
 
+- Before selecting an ads-enabled build in App Store Connect, change its age-rating Advertising answer to Yes and assess the actual ad content. Build 9 has no ads, so its current Advertising answer remains No until replaced. Keep public-beta Daily practice-only; enabling ranked competition requires a separate review of the Contests answer.
 - Run the backend CI and Unity EditMode/PlayMode suites, including `ReviveTests`, `ReviveFixtureTests`, and `AdFlowTests`.
 - Verify compact/tall iPhone board and revive layouts, banner separation, and no banners over overlays.
 - On a physical test device, exercise ATT allowed/denied/restricted, consent changes, rewarded completion/cancellation, close/reward callback order, backgrounding and interstitial close/failure.
