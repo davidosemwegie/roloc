@@ -19,15 +19,30 @@ namespace Roloc.Tests
         sealed class ScriptedAds : IAdService
         {
             public bool IsConfigured => true;
-            public bool IsInitialized => true;
-            public bool IsRewardedReady { get; set; } = true;
-            public bool IsInterstitialReady { get; set; } = true;
+            public bool IsInitialized { get; private set; }
+            bool rewardedAvailable = true, interstitialAvailable = true;
+            public bool IsRewardedReady { get => IsInitialized && rewardedAvailable; set => rewardedAvailable = value; }
+            public bool IsInterstitialReady { get => IsInitialized && interstitialAvailable; set => interstitialAvailable = value; }
+            public bool DeviceDataAllowed, Personalized;
+            public int InitializeCalls, Withdrawals;
             public int BannerHeightPixels => 50;
             public bool BannerVisible;
             public readonly List<Action<RewardedAdEvent>> Rewards = new List<Action<RewardedAdEvent>>();
             public readonly List<Action> Interstitials = new List<Action>();
-            public void Initialize(bool personalized, Action<bool> completed) => completed?.Invoke(true);
-            public void SetBannerVisible(bool visible) => BannerVisible = visible;
+            public void SetDeviceDataConsent(bool allowed)
+            {
+                if (DeviceDataAllowed && !allowed) Withdrawals++;
+                DeviceDataAllowed = allowed;
+                if (!allowed) { IsInitialized = false; Personalized = false; BannerVisible = false; }
+            }
+            public void Initialize(bool personalized, Action<bool> completed)
+            {
+                InitializeCalls++;
+                Personalized = DeviceDataAllowed && personalized;
+                IsInitialized = DeviceDataAllowed;
+                completed?.Invoke(IsInitialized);
+            }
+            public void SetBannerVisible(bool visible) => BannerVisible = visible && IsInitialized;
             public void ShowRewarded(Action<RewardedAdEvent> callback) => Rewards.Add(callback);
             public void ShowInterstitial(Action completed) => Interstitials.Add(completed);
             public void Dispose() { }
@@ -36,6 +51,7 @@ namespace Roloc.Tests
         GameObject root;
         RolocGame game;
         ScriptedAds ads;
+        AdsConfiguration configuration;
         string directory;
         int randomCalls;
         double randomValue;
@@ -60,8 +76,14 @@ namespace Roloc.Tests
             game.difficulty.FlowTransitionSeconds = 0;
             game.difficulty.RotationSeconds = 0;
             root.SetActive(true);
+            configuration = ScriptableObject.CreateInstance<AdsConfiguration>();
+            configuration.PrivacyPolicyUrl = "https://example.com/ring-rush-privacy";
+            typeof(RolocGame).GetField("adsConfiguration", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(game, configuration);
             game.Saves.Data.SelectedMode = "Rush";
             game.Saves.Data.TutorialCompleted = true;
+            game.Saves.Data.AdDeviceDataChoiceMade = true;
+            game.Saves.Data.AdDeviceDataAllowed = true;
+            game.StartCoroutine(FieldMethod<IEnumerator>("ApplyAdPrivacy", (Action)null));
             yield return null;
         }
 
@@ -69,6 +91,7 @@ namespace Roloc.Tests
         public IEnumerator TearDown()
         {
             UnityEngine.Object.Destroy(game.difficulty);
+            UnityEngine.Object.Destroy(configuration);
             UnityEngine.Object.Destroy(root);
             yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory, true);
@@ -98,6 +121,9 @@ namespace Roloc.Tests
         T Field<T>(string name)
             => (T)typeof(RolocGame).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(game);
 
+        T FieldMethod<T>(string method, params object[] args)
+            => (T)typeof(RolocGame).GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic).Invoke(game, args);
+
         void Click(string title)
         {
             var button = root.GetComponentsInChildren<Button>()
@@ -107,6 +133,124 @@ namespace Roloc.Tests
         }
 
         bool HasText(string text) => root.GetComponentsInChildren<Text>().Any(label => label.text == text);
+
+        void ResetPrivacyChoice()
+        {
+            ads.SetDeviceDataConsent(false);
+            ads.InitializeCalls = 0;
+            game.Saves.Data.AdDeviceDataChoiceMade = false;
+            game.Saves.Data.AdDeviceDataAllowed = false;
+        }
+
+        [UnityTest]
+        public IEnumerator LegacyPersonalizationIsNotDeviceConsentAndDeclineKeepsGameplayAvailable()
+        {
+            ResetPrivacyChoice();
+            game.Saves.Data.AdPrivacyChoiceMade = true;
+            game.Saves.Data.PersonalizedAdsAllowed = true;
+            Invoke("InitializeAdvertising");
+            typeof(RolocGame).GetField("adsConfiguration", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(game, configuration);
+            Assert.That(ads.InitializeCalls, Is.Zero, "Old saved choices cannot initialize the SDK.");
+            game.BeginRun();
+            Assert.That(HasText("Advertising choices"), Is.True);
+            Click("Play without ads");
+            Assert.That(game.Session.State, Is.EqualTo(RoundState.Playing));
+            Assert.That(ads.InitializeCalls, Is.Zero);
+            Assert.That(game.Saves.Data.AdDeviceDataChoiceMade, Is.True);
+            Assert.That(game.Saves.Data.AdDeviceDataAllowed, Is.False);
+            Assert.That(ads.IsRewardedReady, Is.False);
+            FailAt(20);
+            Assert.That(game.Session.State, Is.EqualTo(RoundState.GameOver));
+            game.BeginRun();
+            Assert.That(game.Session.State, Is.EqualTo(RoundState.Playing));
+            Invoke("OnApplicationPause", true);
+            Invoke("OnApplicationPause", false);
+            Invoke("UpdateAdvertising");
+            Assert.That(ads.InitializeCalls, Is.Zero);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator DeviceConsentPrecedesPersonalizationAndTrackingDenialStillAllowsRevives()
+        {
+            ResetPrivacyChoice();
+            game.BeginRun();
+            Click("Allow ad data use");
+            yield return null;
+            Assert.That(HasText("Ad personalization"), Is.True);
+            Assert.That(ads.InitializeCalls, Is.Zero);
+            Assert.That(game.Saves.Data.AdDeviceDataAllowed, Is.False, "Commit only the completed consent flow.");
+            Click("Allow personalized ads");
+            Assert.That(game.Saves.Data.AdDeviceDataAllowed, Is.True);
+            Assert.That(ads.InitializeCalls, Is.EqualTo(1));
+            Assert.That(ads.DeviceDataAllowed, Is.True);
+            Assert.That(NativeServices.TrackingAuthorizationStatus, Is.EqualTo(2), "Editor simulates denied ATT.");
+            Assert.That(ads.Personalized, Is.False);
+            FailAt(20);
+            Assert.That(HasText("Continue your streak?"), Is.True);
+            Click("Watch ad & continue");
+            ads.Rewards[0](RewardedAdEvent.Rewarded);
+            ads.Rewards[0](RewardedAdEvent.Closed);
+            Invoke("UpdateAdvertising");
+            Assert.That(game.Session.State, Is.EqualTo(RoundState.Transition));
+        }
+
+        [UnityTest]
+        public IEnumerator WithdrawalStopsInventoryIgnoresLateRewardsAndAllowsLaterLimitedAds()
+        {
+            game.BeginRun(); FailAt(20); Click("Watch ad & continue");
+            var oldCallback = ads.Rewards[0];
+            oldCallback(RewardedAdEvent.Closed);
+            yield return null;
+            Invoke("ShowAdPrivacy", (Action)null);
+            yield return null;
+            int initializationCount = ads.InitializeCalls;
+            Click("Turn off ads");
+            Assert.That(ads.Withdrawals, Is.EqualTo(1));
+            Assert.That(ads.InitializeCalls, Is.EqualTo(initializationCount), "Withdrawal must not initialize an SDK.");
+            Assert.That(ads.IsRewardedReady, Is.False);
+            Assert.That(ads.IsInterstitialReady, Is.False);
+            Assert.That(ads.BannerVisible, Is.False);
+            Assert.That(game.Session.State, Is.EqualTo(RoundState.GameOver));
+            Assert.That(game.Saves.Data.GamesPlayed, Is.EqualTo(1));
+            oldCallback(RewardedAdEvent.Rewarded);
+            Invoke("UpdateAdvertising");
+            Assert.That(game.Session.State, Is.EqualTo(RoundState.GameOver));
+            game.ShowMenu();
+            Invoke("ShowAdPrivacy", (Action)null);
+            yield return null;
+            Click("Allow ad data use");
+            yield return null;
+            Click("Use limited ads");
+            Assert.That(ads.InitializeCalls, Is.EqualTo(initializationCount + 1));
+            Assert.That(ads.DeviceDataAllowed, Is.True);
+            Assert.That(ads.Personalized, Is.False);
+            game.BeginRun();
+            oldCallback(RewardedAdEvent.Rewarded); oldCallback(RewardedAdEvent.Closed);
+            Invoke("UpdateAdvertising");
+            Assert.That(game.Session.State, Is.EqualTo(RoundState.Playing));
+            Assert.That(game.Session.Score, Is.Zero);
+            FailAt(20);
+            Assert.That(HasText("Continue your streak?"), Is.True);
+        }
+
+        [Test]
+        public void AdServiceRequiresDeviceConsentIndependentlyOfPersonalization()
+        {
+            using (var service = new FakeAdService())
+            {
+                service.Initialize(true, success => Assert.That(success, Is.False));
+                Assert.That(service.IsRewardedReady, Is.False);
+                service.SetDeviceDataConsent(true);
+                service.Initialize(false, success => Assert.That(success, Is.True));
+                Assert.That(service.IsRewardedReady, Is.True);
+                Assert.That(service.Personalized, Is.False);
+                service.SetDeviceDataConsent(false);
+                Assert.That(service.IsInitialized, Is.False);
+                service.Initialize(true, success => Assert.That(success, Is.False));
+                Assert.That(service.IsRewardedReady, Is.False);
+            }
+        }
 
         [UnityTest]
         public IEnumerator ReviveOfferFitsCompactAndTallSafeAreas()
@@ -153,6 +297,41 @@ namespace Roloc.Tests
                     texture.ReadPixels(new Rect(0, 0, size.x, size.y), 0, 0); texture.Apply();
                     File.WriteAllBytes(Path.Combine(output, "revive-" + size.x + ".png"), texture.EncodeToPNG());
                     RenderTexture.active = previous; UnityEngine.Object.Destroy(texture);
+                }
+                game.ShowMenu();
+                foreach (string screen in new[] { "ShowAdPrivacy", "ShowAdPersonalization" })
+                {
+                    Invoke(screen, (Action)null);
+                    foreach (var area in root.GetComponentsInChildren<Roloc.Presentation.SafeArea>(true))
+                    {
+                        area.enabled = false;
+                        var rect = (RectTransform)area.transform;
+                        rect.anchorMin = new Vector2(0, .04f);
+                        rect.anchorMax = new Vector2(1, .94f);
+                    }
+                    yield return null;
+                    Canvas.ForceUpdateCanvases();
+                    var consentOverlay = Field<RectTransform>("overlay");
+                    foreach (var label in consentOverlay.GetComponentsInChildren<Text>())
+                    {
+                        Assert.That(label.preferredHeight, Is.LessThanOrEqualTo(label.rectTransform.rect.height + 1), label.text);
+                        var corners = new Vector3[4]; label.rectTransform.GetWorldCorners(corners);
+                        foreach (var corner in corners)
+                        {
+                            var point = camera.WorldToViewportPoint(corner);
+                            Assert.That(point.x, Is.InRange(0f, 1f), label.text);
+                            Assert.That(point.y, Is.InRange(.04f, .94f), label.text);
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(output))
+                    {
+                        camera.Render();
+                        var previous = RenderTexture.active; RenderTexture.active = target;
+                        var texture = new Texture2D(size.x, size.y, TextureFormat.RGB24, false);
+                        texture.ReadPixels(new Rect(0, 0, size.x, size.y), 0, 0); texture.Apply();
+                        File.WriteAllBytes(Path.Combine(output, screen + "-" + size.x + ".png"), texture.EncodeToPNG());
+                        RenderTexture.active = previous; UnityEngine.Object.Destroy(texture);
+                    }
                 }
                 camera.targetTexture = null; target.Release(); UnityEngine.Object.Destroy(target);
             }

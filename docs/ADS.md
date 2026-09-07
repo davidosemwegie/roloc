@@ -6,7 +6,7 @@ Ring Rush uses Unity LevelPlay 9.5.0 with Unity Ads demand. The package lock pin
 
 The Unity Ads iOS app is registered as **Ring Rush**, general audience, in organization `2476041440047`, project `19a271b8-521b-4cba-bf26-786950060f49`. Its dashboard app ID is `c6c4fa2d-98b1-4192-a75d-aa7259e33884` and Unity Ads Game ID is `800368993`.
 
-The [Unity Ads placements](https://cloud.unity.com/organizations/2476041440047/monetization-v2/placements) are `Banner_iOS`, `Rewarded_iOS`, and `Interstitial_iOS`. These are demand-network identifiers for the LevelPlay connection; they are **not** the LevelPlay app key or ad-unit IDs consumed by `AdsConfiguration`. Network linking, test-device setup, and advertising policy disclosures remain required before enabling ads in a build. The store ID is not yet set because the app is not publicly released.
+The [Unity Ads placements](https://cloud.unity.com/organizations/2476041440047/monetization-v2/placements) are `Banner_iOS`, `Rewarded_iOS`, and `Interstitial_iOS`. These are demand-network identifiers for the LevelPlay connection; they are **not** the LevelPlay app key or ad-unit IDs consumed by `AdsConfiguration`. Test-device setup and advertising policy disclosures remain required before enabling ads in a build. The store ID is not yet set because the app is not publicly released.
 
 LevelPlay organization onboarding is complete using the owner's supplied company profile, Umbrellamode Inc, Union City, US. Do not use the Unity Ads Game ID as a substitute LevelPlay app key.
 
@@ -20,9 +20,11 @@ The [LevelPlay iOS app](https://platform.ironsrc.com/partners/next/adUnits/27fde
 
 These public identifiers are saved in `Assets/Resources/AdsConfiguration.asset`. The policy field remains empty so ads stay disabled until advertising disclosures are published. The existing [Ring Rush privacy policy](https://docs.google.com/document/d/1mDMFBulWr3so1DPojF6IYVHLHNd9H61ACp3FKwtMak0/view) describes the ad-free build 9 and must be updated before using it for advertising consent. Do not overwrite that policy during its separate App Store submission.
 
-LevelPlay currently reports that the ironSource Ads account is pending approval. Unity Ads network setup requires a monetization reporting API key and Organization Core ID `2476041440047`; key creation and network linking are pending. Never store that API key in the app or repository.
+Unity Ads is connected using an owner-authorized monetization reporting key and Organization Core ID `2476041440047`. The key remains in the dashboards, never the app or repository. All three active Unity Ads bidding instances map Game ID `800368993` to the matching placement above and target All Countries. Default ironSource demand instances were deactivated; only Unity Ads demand is active. Rewarded and interstitial ad-unit capping and pacing are disabled, as verified in their saved Advanced settings. LevelPlay still reports that the ironSource Ads account is pending approval; this notice does not establish whether Unity Ads test delivery will succeed.
 
-1. Create a LevelPlay iOS application for the bundle identifier of the intended build. Create banner, rewarded, and interstitial ad units. Use Unity Ads as the demand network and link its game/placement configuration. Do not enable SDK automatic initialization.
+Test-device registration requires the physical iPhone's advertising ID, not its Xcode device identifier. The connected-device inventory currently reports the owner's iPhone as unavailable, so registration and real callback verification remain pending. No placeholder device ID has been registered.
+
+1. Verify the saved LevelPlay app and ad-unit identifiers above against the intended iOS build. Unity Ads is the configured demand network. Do not enable SDK automatic initialization.
 2. Configure the rewarded unit to award one revive. Register device identifiers as test devices in the dashboard before requesting ads. Never click live ads while validating.
 3. In Unity, choose **Ring Rush → Advertising configuration**. Fill the four iOS dashboard identifiers and a published HTTPS privacy-policy URL. This creates `Assets/Resources/AdsConfiguration.asset`; the identifiers are application configuration, not admin credentials. Do not put dashboard API secrets in the app.
 4. The policy must cover both Unity advertising and the existing Daily service. Missing identifiers or policy disables advertising. The Editor uses no live ads; tests inject `IAdService` or `FakeAdService` explicitly. No production build fabricates rewards.
@@ -40,7 +42,9 @@ Banners reserve a 50-point native-height area above the iOS safe-area bottom, wi
 
 ## Consent and iOS
 
-Before first advertising initialization, the player chooses personalized or limited advertising. Personalized advertising additionally requests ATT when undetermined and active, after the consent panel dismisses. Declining either choice preserves gameplay and rewarded eligibility. Limited advertising passes GDPR consent false and CCPA sale/sharing opt-out true; it does not claim affirmative consent. Advertising settings can be revisited, and changed ATT status is reapplied on returning from iOS Settings. Changing effective consent destroys old inventory before reloading.
+Before advertising initialization, the player first accepts or declines advertising device-data use. Declining keeps the SDK uninitialized and allows ordinary gameplay; no ad inventory means no rewarded continuation. Accepting then offers personalized or limited advertising. Old saved personalization choices do not count as device-data consent. Personalized advertising additionally requests ATT when undetermined and active, after the consent panel dismisses. Declining tracking preserves gameplay and rewarded eligibility when advertising device-data consent is given. Limited advertising passes GDPR personalization consent false and CCPA sale/sharing opt-out true.
+
+Advertising settings can be revisited to turn ads off. Withdrawal stops app-controlled inventory, pending loads and retries, and passes restrictive SDK privacy signals. LevelPlay has no shutdown API, so do not describe withdrawal as unloading the native SDK or deleting earlier collection. Re-consent can restore inventory. Changed ATT status is reapplied on returning from iOS Settings. Changing effective personalization consent replaces old inventory. The separate device-data permission follows [Unity's pre-initialization consent guidance](https://docs.unity.com/en-us/grow/levelplay/platform/legal-resources/ironsource-gdpr-compliance); verify the actual region-specific disclosure and device behavior before release.
 
 The native bridge and build postprocessor add ATT and its purpose description. Confirm the archive's `NSUserTrackingUsageDescription`, SKAdNetwork identifiers and every embedded SDK privacy manifest. Update App Store privacy answers against the actual configured release, using `PRIVACY.md` as the implementation inventory. The general-audience setup is not a child-directed configuration.
 
@@ -55,4 +59,4 @@ Newly published challenges use rules v2; existing published rows remain v1. This
 - Verify compact/tall iPhone board and revive layouts, banner separation, and no banners over overlays.
 - On a physical test device, exercise ATT allowed/denied/restricted, consent changes, rewarded completion/cancellation, close/reward callback order, backgrounding and interstitial close/failure.
 - Inspect the generated iOS project and archive for linked ad frameworks, correct native dependency versions, SKAdNetwork entries and privacy manifests.
-- Until dashboard identifiers, a public policy and test-device configuration exist, mock flow tests and a successful export do not establish live ad delivery.
+- Until the policy covers advertising and test-device configuration exists, mock flow tests and a successful export do not establish live ad delivery.

@@ -14,6 +14,7 @@ namespace Roloc.Services
         bool IsRewardedReady { get; }
         bool IsInterstitialReady { get; }
         int BannerHeightPixels { get; }
+        void SetDeviceDataConsent(bool allowed);
         void Initialize(bool personalized, Action<bool> completed);
         void SetBannerVisible(bool visible);
         // Closed is not a terminal reward result: the SDK may deliver Rewarded afterwards.
@@ -36,6 +37,7 @@ namespace Roloc.Services
         Action<RewardedAdEvent> activeRewardCallback;
         bool initializing, disposed, bannerWanted, bannerLoaded, fullScreen, personalized;
         bool interstitialDisplayed;
+        bool deviceDataAllowed, sdkInitialized;
         bool? nativeBannerVisible;
         int generation, initializationFailures;
         int initializationAttempt;
@@ -59,25 +61,45 @@ namespace Roloc.Services
             }
         }
 
-        public bool IsInitialized { get; private set; }
+        public bool IsInitialized => sdkInitialized && deviceDataAllowed && !disposed;
         public bool IsRewardedReady => IsInitialized && !disposed && !fullScreen && rewarded != null && rewarded.IsAdReady();
         public bool IsInterstitialReady => IsInitialized && !disposed && !fullScreen && interstitial != null && interstitial.IsAdReady();
         // LevelPlay iOS anchors bottom-center banners to the native safeAreaLayoutGuide.
         // The gameplay safe-area container reserves this additional 50pt above its own bottom inset.
         public int BannerHeightPixels => IsConfigured ? Mathf.CeilToInt(50f * NativeServices.ScreenPixelsPerPoint) : 0;
 
+        public void SetDeviceDataConsent(bool allowed)
+        {
+            if (disposed || deviceDataAllowed == allowed) return;
+            deviceDataAllowed = allowed;
+            if (allowed) return;
+            // LevelPlay has no SDK shutdown API. Stop our inventory and future requests, and
+            // restrict the already initialized SDK; do not claim this erases prior processing.
+            LevelPlayPrivacySettings.SetGDPRConsent(false);
+            LevelPlayPrivacySettings.SetCCPA(true);
+            personalized = false;
+            initializationAttempt++;
+            initializing = false;
+            host.StopAllCoroutines();
+            var callbacks = initializedCallbacks;
+            initializedCallbacks = null;
+            DestroyInventory();
+            callbacks?.Invoke(false);
+        }
+
         public void Initialize(bool allowPersonalized, Action<bool> completed)
         {
-            if (!IsConfigured) { completed?.Invoke(false); return; }
+            if (!IsConfigured || !deviceDataAllowed) { completed?.Invoke(false); return; }
             // 9.5 replaces per-network maps with a shared consent signal propagated by adapters.
             // False is conservative for both declined personalization and unavailable ATT permission.
             LevelPlayPrivacySettings.SetGDPRConsent(allowPersonalized);
             LevelPlayPrivacySettings.SetCCPA(!allowPersonalized);
             bool changed = personalized != allowPersonalized;
             personalized = allowPersonalized;
-            if (IsInitialized)
+            if (sdkInitialized)
             {
-                if (changed) { DestroyInventory(); CreateInventory(); }
+                if (changed) DestroyInventory();
+                CreateInventory();
                 completed?.Invoke(true);
                 return;
             }
@@ -94,10 +116,18 @@ namespace Roloc.Services
             host.After(20, () => { if (initializing && !disposed && initializationAttempt == attempt) FinishInitialization(false); });
         }
 
-        void OnInitialized(LevelPlayConfiguration _) { if (!disposed) { IsInitialized = true; CreateInventory(); FinishInitialization(true); } }
+        void OnInitialized(LevelPlayConfiguration _)
+        {
+            if (disposed) return;
+            sdkInitialized = true;
+            if (!deviceDataAllowed) return;
+            CreateInventory();
+            FinishInitialization(true);
+        }
         void OnInitializationFailed(LevelPlayInitError _) { if (!disposed) FinishInitialization(false); }
         void FinishInitialization(bool success)
         {
+            if (!deviceDataAllowed || disposed) return;
             if (!success && !initializing) return;
             initializing = false;
             var callback = initializedCallbacks;
@@ -108,7 +138,7 @@ namespace Roloc.Services
             int attempt = initializationAttempt;
             float delay = Mathf.Min(60, 5 * Mathf.Pow(2, Mathf.Min(4, initializationFailures++)));
             host.After(delay, () => {
-                if (disposed || IsInitialized || initializing || attempt != initializationAttempt) return;
+                if (disposed || !deviceDataAllowed || IsInitialized || initializing || attempt != initializationAttempt) return;
                 Initialize(personalized && NativeServices.TrackingAuthorizationStatus == 3, null);
             });
         }
@@ -263,7 +293,7 @@ namespace Roloc.Services
         {
             if (disposed) return;
             disposed = true;
-            IsInitialized = false;
+            sdkInitialized = false;
             LevelPlay.OnInitSuccess -= OnInitialized;
             LevelPlay.OnInitFailed -= OnInitializationFailed;
             DestroyInventory();
