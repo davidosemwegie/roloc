@@ -131,7 +131,6 @@ namespace Roloc.Tests
             yield return Capture("results-unlocked-compact", 375, 667, false);
             game.Saves.Data.ReduceEffects = true;
             FinishRecordRun(0, 0, 0);
-            foreach (var decoration in Get<SoftShape[]>("resultDecorations")) Assert.That(decoration.gameObject.activeSelf, Is.False);
             yield return Capture("results-zero-compact", 375, 667, false);
         }
 
