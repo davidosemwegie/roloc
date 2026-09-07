@@ -518,7 +518,7 @@ namespace Roloc.Presentation
 
         Vector2 FloatOffset(int color)
         {
-            if (Session.BoardStyle == BoardStyle.Still || Session.IsDaily || Session.FlowMode != FlowMode.Floating || color == Session.ActiveColor || Session.WasTutorial) return Vector2.zero;
+            if (Session.BoardStyle == BoardStyle.Still || Session.IsDaily || !VariationMotion.FloatsPucks(Session.FlowMode) || color == Session.ActiveColor || Session.WasTutorial) return Vector2.zero;
             float phase = motionTime * 1.7f + color * 1.8f;
             return new Vector2(Mathf.Sin(phase * .7f) * .45f, Mathf.Sin(phase))
                 * Mathf.Clamp(difficulty.PuckFloatAmplitude, 0, 5) * motionBlend;
@@ -526,10 +526,10 @@ namespace Roloc.Presentation
 
         Vector2 DriftOffset(int color)
         {
-            if (Session.BoardStyle == BoardStyle.Still || Session.IsDaily || Session.FlowMode != FlowMode.Drifting || Session.WasTutorial) return Vector2.zero;
+            if (Session.BoardStyle == BoardStyle.Still || Session.IsDaily || !VariationMotion.DriftsRings(Session.FlowMode) || Session.WasTutorial) return Vector2.zero;
             float phase = motionTime * .8f + color * 1.6f;
             return new Vector2(Mathf.Sin(phase), Mathf.Cos(phase) * .65f)
-                * Mathf.Clamp(difficulty.RingDriftRadius, 0, 10) * motionBlend;
+                * Mathf.Clamp(difficulty.RingDriftRadius, 0, Expanded(Session.FlowMode) ? 6 : 10) * motionBlend;
         }
 
         void RefreshBoard(float dt)

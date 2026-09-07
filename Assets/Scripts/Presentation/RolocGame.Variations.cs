@@ -13,8 +13,8 @@ namespace Roloc.Presentation
         float orbitSeconds, paletteMoveSeconds, layoutBlend, layoutFrom, layoutTo;
         bool paletteChanging, paletteApplied, colorHintShown;
 
-        static bool Orbit(FlowMode mode) => mode == FlowMode.PuckOrbit || mode == FlowMode.RingOrbit || mode == FlowMode.DualOrbit;
-        static bool Expanded(FlowMode mode) => Orbit(mode);
+        static bool Orbit(FlowMode mode) => VariationMotion.HasOrbit(mode);
+        static bool Expanded(FlowMode mode) => Orbit(mode) || mode == FlowMode.FloatingDrifting;
         static Vector2 Radial(float radius, float degrees)
         {
             float radians = degrees * Mathf.Deg2Rad;
@@ -80,9 +80,9 @@ namespace Roloc.Presentation
             if (Expanded(Session.FlowMode))
             {
                 float angle = SlotAngle(slot);
-                if (Session.FlowMode == FlowMode.RingOrbit || Session.FlowMode == FlowMode.DualOrbit)
+                if (VariationMotion.OrbitsRings(Session.FlowMode))
                     angle -= Session.RingOrbitDirection * difficulty.Variations.RingOrbitDegreesPerSecond * orbitSeconds;
-                return Radial(220, angle);
+                return Radial(220, angle) + DriftOffset(identity);
             }
             return RingSlots[slot] + DriftOffset(identity);
         }
@@ -94,7 +94,7 @@ namespace Roloc.Presentation
             if (Expanded(Session.FlowMode))
             {
                 float angle = SlotAngle(slot);
-                if (Session.FlowMode == FlowMode.PuckOrbit || Session.FlowMode == FlowMode.DualOrbit)
+                if (VariationMotion.OrbitsPucks(Session.FlowMode))
                     angle -= Session.PuckOrbitDirection * difficulty.Variations.PuckOrbitDegreesPerSecond * orbitSeconds;
                 return Radial(82, angle);
             }
@@ -178,6 +178,9 @@ namespace Roloc.Presentation
         {
             switch (Session.FlowMode)
             {
+                case FlowMode.FloatingDrifting: return "FLOAT AND DRIFT.";
+                case FlowMode.PuckOrbitDrifting: return "ORBIT AND DRIFT.";
+                case FlowMode.RingOrbitFloating: return "FLOAT INTO ORBIT.";
                 case FlowMode.ColorShift: return "MATCH THE SHADE.";
                 case FlowMode.PuckOrbit: return "PUCKS ON THE MOVE.";
                 case FlowMode.RingOrbit: return "FOLLOW THE RINGS.";

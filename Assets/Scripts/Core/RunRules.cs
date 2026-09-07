@@ -12,7 +12,7 @@ namespace Roloc.Core
     {
         readonly Random random;
         readonly GameMode mode;
-        readonly FlowMode[] candidates = new FlowMode[7];
+        readonly FlowMode[] candidates = new FlowMode[10];
         readonly BoardStyle boardStyle;
         readonly VariationSettings settings;
         static readonly FlowMode[] Eligible = { FlowMode.Floating, FlowMode.Drifting, FlowMode.Rotation };
@@ -72,6 +72,9 @@ namespace Roloc.Core
                     AddCandidate(FlowMode.PuckOrbit, boardStyle == BoardStyle.Lively && awardedScore >= settings.OrbitStartScore, ref available);
                     AddCandidate(FlowMode.RingOrbit, boardStyle == BoardStyle.Lively && awardedScore >= settings.OrbitStartScore, ref available);
                     AddCandidate(FlowMode.DualOrbit, boardStyle == BoardStyle.Lively && awardedScore >= settings.DualOrbitStartScore, ref available);
+                    AddCandidate(FlowMode.FloatingDrifting, boardStyle == BoardStyle.Lively && awardedScore >= settings.CombinedMotionStartScore, ref available);
+                    AddCandidate(FlowMode.PuckOrbitDrifting, boardStyle == BoardStyle.Lively && awardedScore >= settings.DualOrbitStartScore, ref available);
+                    AddCandidate(FlowMode.RingOrbitFloating, boardStyle == BoardStyle.Lively && awardedScore >= settings.DualOrbitStartScore, ref available);
                 }
                 if (available == 0)
                 {

@@ -146,11 +146,32 @@ namespace Roloc.Tests
         }
 
         [UnityTest]
-        public IEnumerator PalettePreservesMatchingIdentityHighlightAndRestoresAfterEpisode()
+        public IEnumerator CombinedMotionUsesBothGroupsWithoutOverlappingOrClipping()
+        {
+            foreach (var mode in new[] { FlowMode.FloatingDrifting, FlowMode.PuckOrbitDrifting, FlowMode.RingOrbitFloating })
+            {
+                Reach(mode);
+                int inactive = (game.Session.ActiveColor + 1) % 4;
+                Refresh(1);
+                Vector2 ring = Rings[inactive].anchoredPosition;
+                Vector2 puck = Pucks[inactive].Rect.anchoredPosition;
+                Refresh(1);
+                Assert.That(Vector2.Distance(ring, Rings[inactive].anchoredPosition), Is.GreaterThan(.01f));
+                Assert.That(Vector2.Distance(puck, Pucks[inactive].Rect.anchoredPosition), Is.GreaterThan(.01f));
+                yield return Capture(mode.ToString(), 440, 956, true);
+                game.Saves.Data.ReduceEffects = true;
+                game.Saves.Data.EquippedPuck = "glass"; game.Saves.Data.EquippedRing = "orbit";
+                game.Saves.Data.EquippedBackground = "dusk"; Invoke("ApplyAppearance");
+                yield return Capture(mode + "-compact", 375, 667, true);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator PalettePersistsIntoMovementAndOnlyResetsForANewRun()
         {
             Reach(FlowMode.ColorShift);
             int palette = game.Session.PaletteIndex;
-            Assert.That(Get<float>("transitionDuration"), Is.EqualTo(.45f).Within(.001f), "The first color change at 20 has no position shuffle.");
+            Assert.That(Get<float>("transitionDuration"), Is.EqualTo(Get<float>("paletteMoveSeconds") + .45f).Within(.001f));
             Assert.That(Get<int>("displayedPalette"), Is.EqualTo(palette));
             AssertPalette();
             int active = game.Session.ActiveColor;
@@ -164,8 +185,17 @@ namespace Roloc.Tests
             yield return Capture("four-pinks", 440, 956);
             yield return Capture("four-pinks-compact", 375, 667);
             while (game.Session.FlowMode == FlowMode.ColorShift) Match();
-            Assert.That(Get<int>("displayedPalette"), Is.EqualTo(-1));
+            Assert.That(Get<int>("displayedPalette"), Is.EqualTo(palette));
             Assert.That(Get<CanvasGroup>("boardVisibility").alpha, Is.EqualTo(1));
+            AssertPalette();
+            for (int i = 0; i < 3000 && !VariationMotion.HasOrbit(game.Session.FlowMode); i++) Match();
+            Assert.That(VariationMotion.HasOrbit(game.Session.FlowMode), Is.True);
+            Assert.That(Get<int>("displayedPalette"), Is.EqualTo(game.Session.PaletteIndex));
+            Assert.That(game.Session.PaletteIndex, Is.GreaterThanOrEqualTo(0));
+            AssertPalette();
+            yield return Capture("persistent-palette-orbit", 440, 956, true);
+            game.ShowMenu(); game.BeginRun();
+            Assert.That(Get<int>("displayedPalette"), Is.EqualTo(-1));
         }
 
         void AssertPalette()

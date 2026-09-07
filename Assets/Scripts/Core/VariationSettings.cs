@@ -6,6 +6,7 @@ namespace Roloc.Core
     public sealed class VariationSettings
     {
         public int ColorShiftStartScore = 20;
+        public int CombinedMotionStartScore = 20;
         public int OrbitStartScore = 40;
         public int DualOrbitStartScore = 60;
         public float PuckOrbitDegreesPerSecond = 18f;

@@ -199,10 +199,11 @@ namespace Roloc.Core
             if (!legacyTargetOrder) ActiveColor = random.Next(4);
             if (!IsDaily && previousMode != FlowMode)
             {
-                PaletteIndex = FlowMode == FlowMode.ColorShift ? NextPalette() : -1;
-                PuckOrbitDirection = FlowMode == FlowMode.PuckOrbit || FlowMode == FlowMode.DualOrbit
+                // A new palette becomes the run palette until another Color Shift or a reset.
+                if (FlowMode == FlowMode.ColorShift) PaletteIndex = NextPalette();
+                PuckOrbitDirection = VariationMotion.OrbitsPucks(FlowMode)
                     ? (random.Next(2) == 0 ? -1 : 1) : 0;
-                RingOrbitDirection = FlowMode == FlowMode.RingOrbit || FlowMode == FlowMode.DualOrbit
+                RingOrbitDirection = VariationMotion.OrbitsRings(FlowMode)
                     ? (random.Next(2) == 0 ? -1 : 1) : 0;
             }
             bool layoutOwned = OwnsLayout(previousMode) || OwnsLayout(FlowMode);
@@ -312,8 +313,7 @@ namespace Roloc.Core
             elapsedMilliseconds = 0;
         }
 
-        static bool OwnsLayout(FlowMode mode) => mode == FlowMode.PuckOrbit || mode == FlowMode.RingOrbit
-            || mode == FlowMode.DualOrbit;
+        static bool OwnsLayout(FlowMode mode) => VariationMotion.HasOrbit(mode);
 
         int NextPalette()
         {
