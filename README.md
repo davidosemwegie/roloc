@@ -2,7 +2,7 @@
 
 The Unity 6.6 game lives at the repository root. Open this folder with **Unity 6000.6.0f1**, load `Assets/Scenes/Roloc.unity`, and press Play. Unity UI and the Input System support touch and Editor mouse input.
 
-Flow gives three chances, a gentler opening, and limited recovery. Rush keeps the strict one-chance rules. Regular runs use the Lively board; the board selector has been removed. Historical Still records remain saved. Every successful match earns local progress; centered Perfects earn an extra point. The collection, daily goals, audio choices, haptics, matching symbols, and reduced effects are saved locally. The original save filename and bundle ID `com.osazi.roloc.unitydev` are unchanged.
+Flow gives three chances, a gentler opening, and limited recovery. Rush keeps the strict one-chance rules. Regular runs use the Lively board; the board selector has been removed. Historical Still records remain saved. Every successful match earns local progress; centered Perfects earn an extra point. The collection, daily goals, audio choices, haptics, matching symbols, and reduced effects are saved locally. The original save filename is unchanged. Development exports use `com.clearjar.ringrush.dev`; TestFlight/store exports use `com.clearjar.ringrush`. Both use ClearJar Financial Inc. team `BK7TPQ53FF`. Changing the installed app identifier creates a separate iOS app container; existing development saves are not automatically migrated.
 
 The bright puck is the correct choice. All pucks can be dragged; releasing a dim puck costs a chance in Flow and ends Rush or Daily, even inside its own ring. Canceled touches do not count as mistakes. Results adapt to the safe area with separate rows for the score, records, progress, and replay actions.
 
@@ -30,7 +30,7 @@ unity test . --mode PlayMode --output TestResults/playmode.xml --timeout 300
 unity build . --target iOS --execute-method Roloc.Editor.ProjectBuilder.BuildIOS --output-path Builds/iOS --allow-dirty-build --timeout 600
 ```
 
-Always export freshly from Unity before an Xcode build. `ProjectBuilder.Configure` uses the existing Apple team `TYU4JMX349`. `BuildTestFlight` exports a release build and requires a unique `RING_RUSH_BUILD_NUMBER`. See [closed-test delivery](docs/TESTFLIGHT.md).
+Always export freshly from Unity before an Xcode build. `ProjectBuilder.Configure` selects the development identity. `BuildTestFlight` exports with the store identity, requires a unique `RING_RUSH_BUILD_NUMBER`, and restores development settings afterward, including on failure. See [closed-test delivery](docs/TESTFLIGHT.md).
 
 To configure Daily in a local build, set `RING_RUSH_CONVEX_URL` and `RING_RUSH_CLOSED_TEST_CODE` in the build process environment. The builder creates the ignored `Assets/Resources/DailyConnection.asset`. It contains a tester invitation code, never a Convex administrative key. Guest tokens use iOS Keychain; Editor tokens remain in memory. Offline Flow and Rush work without this asset.
 

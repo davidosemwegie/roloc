@@ -170,8 +170,8 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   androidMinAspectRatio: 1
   applicationIdentifier:
-    Standalone: com.osazi.roloc.unitydev
-    iPhone: com.osazi.roloc.unitydev
+    Standalone: com.clearjar.ringrush.dev
+    iPhone: com.clearjar.ringrush.dev
   buildNumber:
     Standalone: 0
     VisionOS: 0
@@ -248,7 +248,7 @@ PlayerSettings:
   metalCompileShaderBinary: 0
   iOSRenderExtraFrameOnPause: 0
   iosCopyPluginsCodeInsteadOfSymlink: 0
-  appleDeveloperTeamID: TYU4JMX349
+  appleDeveloperTeamID: BK7TPQ53FF
   iOSManualSigningProvisioningProfileID: 
   tvOSManualSigningProvisioningProfileID: 
   VisionOSManualSigningProvisioningProfileID: 
