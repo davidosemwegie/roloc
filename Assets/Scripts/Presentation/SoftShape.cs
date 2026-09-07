@@ -20,12 +20,25 @@ namespace Roloc.Presentation
         public string Finish { get => finish; set { if (finish != value) { finish = value; SetVerticesDirty(); } } }
         const int Segments = 96;
 
+        float OuterRadius(Rect rect) => Mathf.Min(rect.width, rect.height) * .5f - (shadow ? 5 : 1);
+
+        public override bool Raycast(Vector2 screenPoint, Camera eventCamera)
+        {
+            if (!base.Raycast(screenPoint, eventCamera)) return false;
+            if (kind != Shape.Disc) return true;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(rectTransform, screenPoint, eventCamera, out var point))
+                return false;
+            var rect = GetPixelAdjustedRect();
+            float radius = OuterRadius(rect);
+            return radius > 0 && (point - rect.center).sqrMagnitude <= radius * radius;
+        }
+
         protected override void OnPopulateMesh(VertexHelper mesh)
         {
             mesh.Clear();
             var r = GetPixelAdjustedRect();
             if (kind == Shape.Panel) { Panel(mesh, r); return; }
-            float radius = Mathf.Min(r.width, r.height) * 0.5f - (shadow ? 5 : 1);
+            float radius = OuterRadius(r);
             var center = r.center;
             bool ring = kind == Shape.Ring || kind == Shape.Arc;
             float inner = ring ? radius * (1 - thickness) : 0;

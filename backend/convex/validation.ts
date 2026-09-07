@@ -4,7 +4,7 @@ import { internalQuery, internalMutation } from "./_generated/server";
 import { components, internal } from "./_generated/api";
 import { initialReplay, replayEvents, type ReplayState } from "./rules";
 import { boardVariant } from "./validators";
-import { DAY, scores } from "./model";
+import { CLIENT_RULES_REVISION, CLIENT_UPDATE_MESSAGE, DAY, scores } from "./model";
 
 const mode = v.union(v.literal("Steady"), v.literal("Floating"), v.literal("Drifting"), v.literal("Breather"), v.literal("Rotation"));
 export const replayCheckpoint = v.object({
@@ -60,6 +60,8 @@ export const recordResult = internalMutation({
     if (attempt.submittedAt !== undefined && args.checkpoint.lastTMs > attempt.submittedAt - attempt.startedAt + 2000) error = "The submitted run takes longer than the attempt existed.";
     if (!args.checkpoint.terminal && !error) error = "The run trace does not contain an ending.";
     if (args.checkpoint.events !== attempt.eventCount && !error) error = "The event count does not match the uploaded trace.";
+    // A workflow started before the client-rule cutover must not add a new standing afterward.
+    if (attempt.clientRulesRevision !== CLIENT_RULES_REVISION) error = CLIENT_UPDATE_MESSAGE;
     const finalizedAt = Date.now();
     if (error) {
       await ctx.db.patch(attempt._id, { status: "rejected", reason: error, finalizedAt, purgeAt: finalizedAt + 7 * DAY });

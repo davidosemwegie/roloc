@@ -7,6 +7,11 @@ import type { DataModel, Doc, Id } from "./_generated/dataModel";
 import type { QueryCtx, MutationCtx } from "./_generated/server";
 
 export const DAY = 86_400_000;
+export const CLIENT_RULES_REVISION = 2;
+export const CLIENT_UPDATE_MESSAGE = "Update Ring Rush to play ranked Daily. Progress from this run stays on your device.";
+export function requireClientRulesRevision(revision: number | undefined) {
+  if (revision !== CLIENT_RULES_REVISION) fail("UPDATE_REQUIRED", CLIENT_UPDATE_MESSAGE);
+}
 export const MAX_CHUNK_EVENTS = 128;
 export const MAX_CHUNKS = 512;
 export const scores = new TableAggregate<{ Namespace: Id<"challenges">; Key: number; DataModel: DataModel; TableName: "dailyBests" }>(components.dailyScores, {

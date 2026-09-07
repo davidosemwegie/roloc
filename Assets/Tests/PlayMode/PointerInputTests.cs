@@ -118,6 +118,43 @@ namespace Roloc.Tests
         }
 
         [UnityTest]
+        public IEnumerator TransparentInactivePuckCornerDoesNotStartADragOrLoseAChance()
+        {
+            game.Saves.Data.TutorialCompleted = true;
+            game.BeginRun();
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            var puck = root.GetComponentsInChildren<PuckView>().First(p => p.ColorIndex != game.Session.ActiveColor);
+            Vector2 corner = RectTransformUtility.WorldToScreenPoint(null, puck.Rect.TransformPoint(new Vector3(35, 35, 0)));
+            yield return Touch(TouchPhase.Began, corner);
+            Assert.That(puck.IsDragging, Is.False, "The blank corner is outside the painted disc.");
+            yield return Touch(TouchPhase.Ended, corner);
+            Assert.That(game.Session.Chances, Is.EqualTo(3));
+            Assert.That(game.Session.State, Is.EqualTo(RoundState.Playing));
+            Assert.That(game.Session.Score, Is.Zero);
+        }
+
+        [UnityTest]
+        public IEnumerator CircularRaycastMatchesPaintedEdgeOnScaledBoard()
+        {
+            var puck = ActivePuck();
+            puck.Rect.parent.localScale = new Vector3(.6f, .6f, 1);
+            puck.Rect.localScale = new Vector3(.88f, .88f, 1);
+            Canvas.ForceUpdateCanvases();
+            var face = puck.GetComponent<SoftShape>();
+            float radius = Mathf.Min(face.GetPixelAdjustedRect().width, face.GetPixelAdjustedRect().height) * .5f - 5;
+            foreach (float offset in new[] { -.5f, .5f })
+            {
+                Vector2 position = RectTransformUtility.WorldToScreenPoint(null,
+                    puck.Rect.TransformPoint(new Vector3(radius + offset, 0, 0)));
+                var hits = new List<RaycastResult>();
+                EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = position }, hits);
+                Assert.That(hits.Any(hit => hit.gameObject == puck.gameObject), Is.EqualTo(offset < 0));
+            }
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator InactivePuckCanMoveButLosesAFlowChanceOnRelease()
         {
             game.Saves.Data.TutorialCompleted = true;

@@ -40,15 +40,15 @@ Anonymous sign-in is action `auth:signIn` with `{provider:"anonymous",params:{cl
 | Function | Kind | Arguments | Result |
 |---|---|---|---|
 | `daily:current` | query | `{}` | Current challenge or null; never future seeds |
-| `daily:createAttempt` | mutation | `{challengeId,requestId}` | Attempt |
+| `daily:createAttempt` | mutation | `{challengeId,requestId,clientRulesRevision:2}` | Attempt |
 | `daily:appendChunk` | mutation | `{attemptId,index,events}` | Attempt |
 | `daily:finalize` | mutation | `{attemptId,chunkCount}` | Attempt |
 | `daily:attemptStatus` | query | `{attemptId}` | Attempt |
 | `daily:myStanding` | query | `{challengeId}` | Personal standing |
 
-`requestId` is an installation-generated UUID, persisted before starting. A retry returns the existing attempt. A request ID cannot be reused for another challenge.
+`requestId` is an installation-generated UUID, persisted before starting. A retry returns the existing attempt. A request ID cannot be reused for another challenge or for a legacy attempt created without client rules revision 2.
 
-Challenge: `{id,date,seed,rulesVersion,variant,opensAt,closesAt,uploadDeadline,serverNow,rankedEnabled,publicCompetitionEnabled}`. Variant is lowercase `lively` or `still`; all absolute times are UTC epoch milliseconds. Rules version is currently 1.
+Challenge: `{id,date,seed,rulesVersion,variant,opensAt,closesAt,uploadDeadline,serverNow,rankedEnabled,publicCompetitionEnabled}`. Variant is lowercase `lively` or `still`; all absolute times are UTC epoch milliseconds. Challenge rules version is currently 1. The separate `clientRulesRevision` gate is exactly 2: it requires inactive-puck releases to end the attempt, represented by the existing `abandon` terminal event. Missing, older, or newer revisions return `UPDATE_REQUIRED` before returning any idempotent start.
 
 Attempt: `{attemptId,challengeId,status,nextChunkIndex,score,reason,uploadDeadline}`. Status is `open`, `validating`, `accepted`, `rejected`, or `expired`; score and reason are nullable.
 
@@ -59,6 +59,12 @@ Trace event: `{kind,round,tMs,elapsedMs,color,xQ,yQ}`. All fields are required. 
 Upload sequential chunks of 1–128 events, indices starting at zero. Identical retries are accepted; a reused index with changed contents is rejected. Up to 512 chunks and 25 hours are supported per attempt to bound resource use. Finalize only after uploading a terminal drop, timeout, or voluntary abandon. The server derives the score and runs bounded replay steps through Workflow; the client must show pending while status is `validating`.
 
 New ranked attempts close at midnight UTC. Upload and finalize must reach the server before 01:00 UTC. Already accepted/validating attempts remain queryable afterward, so resolve uncertain responses before pruning an upload queue. Timely submitted workflows may finish just after the deadline; standings remain provisional until they settle and the minute-level sealing task freezes them. Offline and late runs retain local progress but cannot be newly ranked.
+
+## Client revision 2 rollout
+
+Coordinate this backend release with the Unity client that sends `clientRulesRevision:2`. Deploying the backend first deliberately prevents older clients from starting ranked runs; regular modes and local earnings remain available. Existing challenge definitions, deterministic geometry, trace protocol, and already accepted standings remain unchanged. This is a closed-test compatibility gate, not proof of client integrity or a replacement for App Attest.
+
+Attempts created before this gate cannot be resumed via a reused request ID, appended to, or finalized, including identical upload retries. They return `UPDATE_REQUIRED`; the client should keep local earnings and start a fresh attempt after updating. Any old workflow still validating at deployment is rejected before adding a standing. The status query reports legacy open or validating attempts as rejected without mutating them, allowing upgraded clients to drain queued uploads. Accepted historical results remain readable. The schema field is optional to accommodate existing rows, and must not be backfilled: an absent revision identifies an attempt whose input rules were not verified at entry.
 
 ## Operations and retention
 

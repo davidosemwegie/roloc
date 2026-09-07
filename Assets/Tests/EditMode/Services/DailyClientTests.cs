@@ -30,6 +30,18 @@ namespace Roloc.Services.Tests
         }
 
         [Test]
+        public void RankedStartWirePayloadDeclaresTheRequiredFailureRulesRevision()
+        {
+            var argsType = typeof(DailyClient).GetNestedType("StartArgs", BindingFlags.NonPublic);
+            var args = Activator.CreateInstance(argsType, true);
+            argsType.GetField("challengeId").SetValue(args, "challenge");
+            argsType.GetField("requestId").SetValue(args, "retry-stable-id");
+            string json = JsonUtility.ToJson(args);
+            Assert.That(json, Does.Contain("\"clientRulesRevision\":2"));
+            Assert.That(json, Does.Contain("\"requestId\":\"retry-stable-id\""));
+        }
+
+        [Test]
         public void ChallengeRoundTripPreservesUnsignedSeedAndEpochMilliseconds()
         {
             const string json = "{\"id\":\"fixture\",\"date\":\"2026-09-06\",\"seed\":4294967295,\"rulesVersion\":1,\"variant\":\"lively\",\"opensAt\":1788652800000,\"closesAt\":1788739200000,\"uploadDeadline\":1788742800000}";

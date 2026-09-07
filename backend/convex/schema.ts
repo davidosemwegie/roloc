@@ -16,7 +16,7 @@ export default defineSchema({
     userId: v.id("users"), challengeId: v.id("challenges"), requestId: v.string(), status: attemptState,
     startedAt: v.number(), uploadDeadline: v.number(), nextChunkIndex: v.number(), eventCount: v.number(),
     submittedAt: v.optional(v.number()), finalizedAt: v.optional(v.number()), score: v.optional(v.number()), reason: v.optional(v.string()),
-    workflowId: v.optional(v.string()), purgeAt: v.number(),
+    workflowId: v.optional(v.string()), purgeAt: v.number(), clientRulesRevision: v.optional(v.number()),
   }).index("by_userId_and_requestId", ["userId", "requestId"])
     .index("by_challengeId_and_userId", ["challengeId", "userId"])
     .index("by_challengeId_and_status", ["challengeId", "status"])

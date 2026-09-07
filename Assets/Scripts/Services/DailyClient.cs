@@ -91,7 +91,12 @@ namespace Roloc.Services
                 DailyAttempt issued = null;
                 yield return Request<DailyAttempt>("mutation", "daily:createAttempt",
                     new StartArgs { challengeId = challenge.id, requestId = requestId }, true, value => issued = value, failed);
-                if (issued == null) yield break;
+                if (issued == null)
+                {
+                    // An upgraded client must not keep retrying a pre-upgrade attempt ID.
+                    if (lastErrorCode == "UPDATE_REQUIRED") ClearStartingRequest();
+                    yield break;
+                }
                 if (issued.status != "open")
                 { failed?.Invoke("This Daily attempt has already ended. Please start again."); ClearStartingRequest(); yield break; }
                 var existing = cache.pending.Find(item => item.attempt.attemptId == issued.attemptId);
@@ -417,7 +422,8 @@ namespace Roloc.Services
 
         [Serializable] private sealed class EmptyArgs { }
         [Serializable] private sealed class ChallengeArgs { public string challengeId; }
-        [Serializable] private sealed class StartArgs { public string challengeId; public string requestId; }
+        // Revision 2 requires inactive-puck releases to end a ranked run.
+        [Serializable] private sealed class StartArgs { public string challengeId; public string requestId; public int clientRulesRevision = 2; }
         [Serializable] private sealed class AttemptArgs { public string attemptId; }
         [Serializable] private sealed class ChunkArgs { public string attemptId; public int index; public DailyTraceEvent[] events; }
         [Serializable] private sealed class FinalizeArgs { public string attemptId; public int chunkCount; }

@@ -26,7 +26,7 @@ const token=refreshed.tokens.token;
 try {
   const challenge=await call("query","daily:current",{});
   assert.ok(challenge?.id,"Publish current challenge before smoke.");
-  const attempt=await call("mutation","daily:createAttempt",{challengeId:challenge.id,requestId:randomUUID()},token);
+  const attempt=await call("mutation","daily:createAttempt",{challengeId:challenge.id,requestId:randomUUID(),clientRulesRevision:2},token);
   const checkpoint=initialReplay(challenge.seed,challenge.variant),events=[];
   for(let i=0;i<3;i++) {
     const elapsedMs=100,[xQ,yQ]=ringCenter(checkpoint.rules,checkpoint.rules.active,elapsedMs);
