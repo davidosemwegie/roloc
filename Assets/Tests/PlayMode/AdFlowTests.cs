@@ -83,6 +83,7 @@ namespace Roloc.Tests
                 Assert.That(game.Session.Drop(game.Session.ActiveColor, true, true), Is.EqualTo(MatchResult.Matched));
                 game.Session.CompleteTransition();
             }
+            Invoke("RefreshBoard", 0f);
             Assert.That(game.Session.Drop(game.Session.ActiveColor, false), Is.EqualTo(MatchResult.Failed));
             Invoke("HandleRunFailure");
         }
@@ -123,7 +124,7 @@ namespace Roloc.Tests
                 var target = new RenderTexture(size.x, size.y, 24);
                 target.Create(); camera.targetTexture = target;
                 game.ShowMenu(); game.BeginRun(); FailAt(20);
-                foreach (var area in root.GetComponentsInChildren<SafeArea>(true))
+                foreach (var area in root.GetComponentsInChildren<Roloc.Presentation.SafeArea>(true))
                 {
                     area.enabled = false;
                     var rect = (RectTransform)area.transform;
