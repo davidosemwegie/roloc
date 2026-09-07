@@ -92,13 +92,14 @@ namespace Roloc.Tests
             }
         }
 
-        void FinishRecordRun()
+        void FinishRecordRun(int points = 240, int matches = 24, int perfects = 3)
         {
-            game.Saves.Data.ProgressPoints = 240;
+            game.ShowMenu();
+            game.Saves.Data.ProgressPoints = points;
             game.BeginRun();
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < matches; i++)
             {
-                game.Session.Drop(game.Session.ActiveColor, true, i >= 21);
+                game.Session.Drop(game.Session.ActiveColor, true, i >= matches - perfects);
                 Invoke("CreditMatch"); game.Session.CompleteTransition();
             }
             while (game.Session.State != RoundState.GameOver)
@@ -119,6 +120,19 @@ namespace Roloc.Tests
             Invoke("ShowResultExperience");
             Invoke("SetRanking", "Top 12.5% so far · 12345 players\nDaily best 240 · early results");
             yield return Capture("results-daily-compact", 375, 667, false);
+            game.Saves.Data.SelectedMode = "Rush";
+            game.Saves.Data.TotalScore = 392;
+            game.Saves.GetRecord("Rush", "Lively").HighScore = 99;
+            FinishRecordRun(520, 45, 10);
+            Assert.That(Get<UnityEngine.UI.Text[]>("resultStatValues")[0].text, Is.EqualTo("99"));
+            Assert.That(Get<UnityEngine.UI.Text[]>("resultStatValues")[1].text, Is.EqualTo("45"));
+            Assert.That(Get<UnityEngine.UI.Text[]>("resultStatValues")[2].text, Is.EqualTo("10"));
+            Assert.That(Get<UnityEngine.UI.Text>("resultRewardTitle").text, Is.EqualTo("Unlocked Orbit!"));
+            yield return Capture("results-unlocked-compact", 375, 667, false);
+            game.Saves.Data.ReduceEffects = true;
+            FinishRecordRun(0, 0, 0);
+            foreach (var decoration in Get<SoftShape[]>("resultDecorations")) Assert.That(decoration.gameObject.activeSelf, Is.False);
+            yield return Capture("results-zero-compact", 375, 667, false);
         }
 
         [UnityTest, Explicit("Captures actual Unity UI for visual review.")]
@@ -136,6 +150,12 @@ namespace Roloc.Tests
             Invoke("ShowResultExperience");
             Invoke("SetRanking", "Top 12.5% so far · 12345 players\nDaily best 240 · early results");
             yield return Capture("results-daily-compact", 375, 667);
+            game.Saves.Data.SelectedMode = "Rush";
+            game.Saves.Data.TotalScore = 392;
+            game.Saves.GetRecord("Rush", "Lively").HighScore = 99;
+            FinishRecordRun(520, 45, 10);
+            yield return Capture("results-unlocked", 440, 956);
+            yield return Capture("results-unlocked-compact", 375, 667);
         }
 
         [UnityTest, Explicit("Development-only end-to-end ranked game with real rendered pointer drops.")]

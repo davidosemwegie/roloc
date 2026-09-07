@@ -12,7 +12,7 @@ namespace Roloc.Presentation
         int startingBest, startingCombo, startingPerfect;
         long startingPoints;
         Text modeChoice, boardChoice, progressLabel, livesLabel, chainLabel, feedbackLabel;
-        Text resultProgress, resultChains, dailyLabel, resultReason;
+        Text resultProgress, dailyLabel, resultReason;
         Button modeButton, boardButton;
         SoftShape backgroundArt;
         readonly MatchSymbol[] symbols = new MatchSymbol[8];
@@ -182,17 +182,11 @@ namespace Roloc.Presentation
 
         void ShowResultExperience()
         {
-            long earned = Saves.Data.ProgressPoints - startingPoints;
-            resultReason.text = Session.LastFailure == DropFailure.InactivePuck ? "That puck wasn't highlighted." :
-                Session.LastFailure == DropFailure.TimeExpired ? "Time ran out." :
-                Session.LastFailure == DropFailure.WrongRing ? "That was a different color's ring." : "The puck landed outside its matching ring.";
-            string improvement = Session.BestCombo > startingCombo ? "\nNew combo best!" : Session.BestPerfectStreak > startingPerfect ? "\nNew Perfect streak!" : "";
-            resultChains.text = "Combo " + Session.BestCombo + "  ·  Perfect streak " + Session.BestPerfectStreak + improvement;
-            string unlocked = "";
-            foreach (var item in CosmeticCatalog.Unlocks)
-                if (startingPoints < item.UnlockAt && Saves.Data.ProgressPoints >= item.UnlockAt) unlocked = "Unlocked " + item.Name + "! · ";
-            resultProgress.text = unlocked + "+" + earned + " progress\n" + NextProgress();
-            resultBest.text = "BEST " + CurrentRecord().HighScore + " · " + Session.Mode.ToString().ToUpperInvariant() + " / " + Session.BoardStyle.ToString().ToUpperInvariant();
+            resultReason.text = Session.LastFailure == DropFailure.InactivePuck ? "Choose the highlighted puck next time." :
+                Session.LastFailure == DropFailure.TimeExpired ? "Just out of time. One more?" :
+                Session.LastFailure == DropFailure.WrongRing ? "Right puck, different color's ring." : "Just outside the matching ring.";
+            resultBest.text = Session.Mode.ToString().ToUpperInvariant() + " · " + Session.BoardStyle.ToString().ToUpperInvariant();
+            RefreshResultRewards();
             if (dailyStandingLabel) dailyStandingLabel.gameObject.SetActive(dailyRun);
             if (shareButton) shareButton.gameObject.SetActive(dailyRun);
         }
