@@ -1,4 +1,4 @@
-# Ring Rush closed TestFlight delivery
+# Ring Rush TestFlight delivery
 
 These are release instructions, acceptance gates, and dated delivery records. Archive, upload, processing, and invitation outcomes are recorded separately below.
 
@@ -35,7 +35,7 @@ The release owner may need to sign in, satisfy two-factor authentication, accept
 
 Provide beta description, what to test, a working feedback contact, and accurate export-compliance information. Create a private tester group and assign the processed build. Start with internal testers; external distribution may require Beta App Review. Share the invitation code/build only with that cohort. Apple documents the upload, group, review, and invitation flow in its [TestFlight overview](https://developer.apple.com/help/app-store-connect/test-a-beta-version/testflight-overview).
 
-Do not enable a public TestFlight invitation link or public Daily competition in this milestone. Invitations/messages require the user's authorized recipients. See `PRIVACY.md` for the disclosure inventory and unresolved release-owner checks.
+The owner authorized public TestFlight on September 7, 2026. Public gameplay testing is separate from public Daily competition: keep ranked Daily disabled on the beta deployment until its public-competition gates are complete. Invitations/messages require authorized recipients. See `PRIVACY.md` for the disclosure inventory and unresolved release-owner checks. App Store review and publication remain on hold.
 
 ## Acceptance and recorded outcome
 
@@ -51,15 +51,18 @@ A public release additionally requires verified App Attest integration, suspicio
 - Store `com.clearjar.ringrush` and development `com.clearjar.ringrush.dev` are registered under ClearJar Financial Inc. (`BK7TPQ53FF`). Existing build-8 installation used the legacy identifier recorded below; no device reinstall or save migration accompanied this change.
 - An isolated Unity 6000.6.0f1 store export using build number 9 passed. Xcode resolved `PRODUCT_BUNDLE_IDENTIFIER=com.clearjar.ringrush` and team `BK7TPQ53FF`; Unity settings reverted to the dev identity. A separate Configure invocation also passed. No archive, install or upload was made from this verification export; it excluded unfinished advertising changes.
 - Six screenshots, listing copy, subtitle, Casual/Action game categories and review contact are saved. Manual release is selected. No review submission or publication is authorized; the owner explicitly requested keeping the draft.
-- Public support/privacy URLs, copyright/content rights, final-build privacy and age disclosures, pricing/availability, review access for any gated Daily feature, and a processed store build remain release work. The earlier preview video has not been uploaded. The new app icon will come from a processed build.
+- Public support/privacy URLs, copyright/content rights, final-build privacy and age disclosures, pricing/availability, and alignment of the App Store version with a release binary remain release work. The earlier preview video has not been uploaded. Build 9 has processed successfully for TestFlight.
 
 ## TestFlight delivery — build 9 (September 7, 2026)
 
 - Stable source `9f44cf2` freshly exported with Unity 6000.6.0f1 as **0.1.0 (9)** into `Builds/iOS-store9`. Includes the build-8 game, refreshed store assets, and separated store/development identities; unfinished advertising work is excluded.
 - Xcode Release archive succeeded at `Builds/Archives/RingRush-store9.xcarchive`. The app resolves to `com.clearjar.ringrush`, team `BK7TPQ53FF`, iPhone only. Deep, strict signature verification passed. Unity settings returned to `com.clearjar.ringrush.dev`.
-- `xcodebuild -exportArchive` successfully uploaded the package to App Store Connect at 13:24 UTC. Apple processing is pending. Upload produced a non-blocking missing-dSYM warning for `UnityRuntime.framework`; Unity runtime crash symbolication may be incomplete.
-- Created **Ring Rush Private Beta**, an internal group with only the owner's authorized email. Automatic distribution is disabled so later uploads must be assigned deliberately. Build assignment and invitation are pending processing; no redeem code or successful TestFlight installation is claimed yet.
-- Beta feedback and contact details are saved in Apple. No App Store review or external Beta App Review was submitted. Public competition remains gated; the build uses the isolated ClearJar Studio closed-test deployment.
+- `xcodebuild -exportArchive` successfully uploaded the package to App Store Connect at 13:24 UTC. Apple processing completed and internal testing is active. Upload produced a non-blocking missing-dSYM warning for `UnityRuntime.framework`; Unity runtime crash symbolication may be incomplete.
+- Created **Ring Rush Private Beta** and assigned build 9. Automatic distribution is disabled so later uploads must be assigned deliberately. The internal group now contains the owner's two accounts; Apple displayed **Invited** for the Gmail account. No successful TestFlight installation has been verified.
+- Following the owner's public-beta request, created **Ring Rush Public Beta** and submitted build 9 to **Beta App Review**. Apple reports **Waiting for Review**. Public link: https://testflight.apple.com/join/uBd2Ca49. Apple explicitly states testers cannot join until this group has an approved build. No App Store review or publication was submitted.
+- Beta description, feedback/contact details, review instructions and build testing notes are saved. They accurately describe Daily as practice-only, with no ads or purchases.
+- Independent source inspection found that `publicCompetitionEnabled=false` is descriptive, while the compiled invitation code admits guests to isolated beta rankings. The coordinator verified client and backend paths, then used the existing `operations:setRankedEnabled` mutation to pause rankings on **affable-lyrebird-62 only**. `daily:current` confirmed `rankedEnabled=false`; Flow, Rush, local progress and Daily practice remain available. Existing standings are preserved; already accepted validation can finish. Development and default production were not changed.
+- Source/build-number CI passed. Archive/signature checks and the live challenge response provide validation beyond CI; physical-device acceptance is still pending. Public privacy URLs and operational privacy procedures remain unfinished release work.
 
 ## Current device delivery record — build 8
 

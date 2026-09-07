@@ -16,7 +16,7 @@
 - [ ] Upload `video/ring-rush-preview.mp4`; wait for processing, inspect playback and choose the 1.0-second poster frame.
 - [ ] Verify saved copy, screenshot order and processed video after reloading the record.
 - [ ] Initial release notes are prepared. Enter them only if the selected version workflow supports that field.
-- [ ] Check whether the release build supports iPad or other platforms; supply their required media if applicable. This delivery contains iPhone media only.
+- [x] Build 9 targets iPhone only (`UIDeviceFamily=[1]`); this delivery contains iPhone media.
 
 ## Information requiring owner confirmation
 
@@ -38,4 +38,4 @@
 - [ ] Review any Daily surface shipped in the build: do not imply public competition or global leaderboards. Provide review access/instructions or resolve release readiness separately.
 - [ ] Confirm screenshot UI matches the final build; regenerate captures after material UI changes.
 
-**Release boundary:** the owner explicitly requested no App Store review submission yet. TestFlight setup and a private invitation to the owner are authorized. Do not publish the app, change agreements, or purchase membership. Store/dev identity changes were separately approved.
+**Release boundary:** the owner explicitly requested no App Store review submission yet, then authorized public TestFlight. Build 9 is waiting for Beta App Review and the public link is https://testflight.apple.com/join/uBd2Ca49; it cannot accept testers until approved. Ranked Daily is paused on the beta deployment. Do not submit the App Store release, change agreements, or purchase membership. Store/dev identity changes were separately approved.

@@ -1,5 +1,11 @@
 # Ring Rush Daily operations
 
+## Public TestFlight beta status — September 7, 2026
+
+Ranked Daily is paused on `affable-lyrebird-62` using `operations:setRankedEnabled` with `enabled=false`. The public build-9 beta offers Daily practice; Flow, Rush, local progress and existing standings remain available. Verified through `daily:current`. Development and default production were not changed.
+
+The compiled invitation code admits guests from any installed copy. `publicCompetitionEnabled=false` is descriptive, not an independent admission control. Keep the actual ranked switch off while the public-competition gates remain incomplete. Already accepted validation may finish; paused submissions cannot advance into new validation.
+
 Unity is the repository root; the isolated Convex package is `backend/`. The Convex project is **ring-rush**. Development, automated tests, and closed production testing use separate data. Firebase, Mixpanel, and analytics are not part of this runtime.
 
 ## Deployment and configuration
