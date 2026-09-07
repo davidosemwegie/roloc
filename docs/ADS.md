@@ -8,6 +8,8 @@ The Unity Ads iOS app is registered as **Ring Rush**, general audience, in organ
 
 The [Unity Ads placements](https://cloud.unity.com/organizations/2476041440047/monetization-v2/placements) are `Banner_iOS`, `Rewarded_iOS`, and `Interstitial_iOS`. These are demand-network identifiers for the LevelPlay connection; they are **not** the LevelPlay app key or ad-unit IDs consumed by `AdsConfiguration`. LevelPlay registration/linking, test-device setup, and the published policy remain required before enabling ads in a build. The store ID is not yet set because the app is not publicly released.
 
+LevelPlay onboarding is currently blocked by a disabled country field showing `US`, despite the verified Canadian company address and corrected Unity account location. Reloading and signing in again did not refresh it. Resolve the country mismatch before submitting the company profile; do not use the Unity Ads Game ID as a substitute LevelPlay app key.
+
 1. Create a LevelPlay iOS application for the bundle identifier of the intended build. Create banner, rewarded, and interstitial ad units. Use Unity Ads as the demand network and link its game/placement configuration. Do not enable SDK automatic initialization.
 2. Configure the rewarded unit to award one revive. Register device identifiers as test devices in the dashboard before requesting ads. Never click live ads while validating.
 3. In Unity, choose **Ring Rush → Advertising configuration**. Fill the four iOS dashboard identifiers and a published HTTPS privacy-policy URL. This creates `Assets/Resources/AdsConfiguration.asset`; the identifiers are application configuration, not admin credentials. Do not put dashboard API secrets in the app.
