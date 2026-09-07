@@ -44,3 +44,13 @@ Have at least two guests play the same UTC Daily and verify identical initial bo
 Record the archive path, Git commit, bundle version/build number, deployment environment, native validation result, App Store Connect processing state, review state, and whether any tester actually installed it. Report incomplete steps as pending. Backend checks currently run in hosted CI; Unity licensing, device input, Keychain, signing, and TestFlight account steps require separate verification.
 
 A public release additionally requires verified App Attest integration, suspicious-submission review/exclusion, operational alerting, and a tested privacy/deletion process. Keep the closed-test gate until those controls are complete.
+
+## Current delivery record — 2026-09-07 UTC
+
+- Unity 6000.6.0f1 freshly exported version **0.1.0, build 2**, using `BuildTestFlight` and the isolated Clearjar Studio closed-test deployment (`affable-lyrebird-62`). Production standings remain separate and ranked production remains disabled.
+- Xcode **Release archive succeeded** at `Builds/Archives/RingRush.xcarchive`. Code-sign verification passed for `com.osazi.roloc.unitydev`.
+- Installed and launched on the connected iPhone; CoreDevice confirmed the RingRush process remained running.
+- Unity: 134 ordinary EditMode tests passed (one explicit network test skipped in the unfiltered suite). PlayMode checks passed across focused runs, including a real 45-match rendered/input Daily run accepted by Convex with a transition pause/resume. Actual UI captures were inspected for menu, board, collection, pause, and results.
+- GitHub backend and Daily health workflows passed. Scheduled Convex checks are live every five minutes; GitHub cron scheduling begins when the workflow reaches the default branch.
+- TestFlight distribution was attempted and stopped by Xcode with **“No Accounts with App Store Connect Access.”** No TestFlight upload or tester invitation was completed. An authorized App Store Connect account must be added in Xcode before retrying the existing archive export.
+- Physical-device audio/haptic perception, accessibility preferences, extended offline play, repeated relaunches, native sharing, and sustained FPS still need a hands-on acceptance pass. Installation and Editor tests do not establish those results.
