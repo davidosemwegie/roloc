@@ -6,9 +6,21 @@ Ring Rush uses Unity LevelPlay 9.5.0 with Unity Ads demand. The package lock pin
 
 The Unity Ads iOS app is registered as **Ring Rush**, general audience, in organization `2476041440047`, project `19a271b8-521b-4cba-bf26-786950060f49`. Its dashboard app ID is `c6c4fa2d-98b1-4192-a75d-aa7259e33884` and Unity Ads Game ID is `800368993`.
 
-The [Unity Ads placements](https://cloud.unity.com/organizations/2476041440047/monetization-v2/placements) are `Banner_iOS`, `Rewarded_iOS`, and `Interstitial_iOS`. These are demand-network identifiers for the LevelPlay connection; they are **not** the LevelPlay app key or ad-unit IDs consumed by `AdsConfiguration`. LevelPlay registration/linking, test-device setup, and the published policy remain required before enabling ads in a build. The store ID is not yet set because the app is not publicly released.
+The [Unity Ads placements](https://cloud.unity.com/organizations/2476041440047/monetization-v2/placements) are `Banner_iOS`, `Rewarded_iOS`, and `Interstitial_iOS`. These are demand-network identifiers for the LevelPlay connection; they are **not** the LevelPlay app key or ad-unit IDs consumed by `AdsConfiguration`. Network linking, test-device setup, and advertising policy disclosures remain required before enabling ads in a build. The store ID is not yet set because the app is not publicly released.
 
-LevelPlay onboarding is currently blocked by a disabled country field showing `US`, despite the verified Canadian company address and corrected Unity account location. Reloading and signing in again did not refresh it. Resolve the country mismatch before submitting the company profile; do not use the Unity Ads Game ID as a substitute LevelPlay app key.
+LevelPlay organization onboarding is complete using the owner's supplied company profile, Umbrellamode Inc, Union City, US. Do not use the Unity Ads Game ID as a substitute LevelPlay app key.
+
+The [LevelPlay iOS app](https://platform.ironsrc.com/partners/next/adUnits/27fdef9ad?visibility=show) is registered as Ring Rush (not live yet), app key `27fdef9ad`. Its saved ad units are:
+
+| Ad unit | Format | ID |
+| --- | --- | --- |
+| Gameplay Banner | Banner, 25-second refresh | `sc23sll38nkxeete` |
+| Continue Streak | Rewarded, one Revive | `k62ws729b3wloc8c` |
+| Between Games | Interstitial | `7ehidbf3tz1elcyf` |
+
+These public identifiers are saved in `Assets/Resources/AdsConfiguration.asset`. The policy field remains empty so ads stay disabled until advertising disclosures are published. The existing [Ring Rush privacy policy](https://docs.google.com/document/d/1mDMFBulWr3so1DPojF6IYVHLHNd9H61ACp3FKwtMak0/view) describes the ad-free build 9 and must be updated before using it for advertising consent. Do not overwrite that policy during its separate App Store submission.
+
+LevelPlay currently reports that the ironSource Ads account is pending approval. Unity Ads network setup requires a monetization reporting API key and Organization Core ID `2476041440047`; key creation and network linking are pending. Never store that API key in the app or repository.
 
 1. Create a LevelPlay iOS application for the bundle identifier of the intended build. Create banner, rewarded, and interstitial ad units. Use Unity Ads as the demand network and link its game/placement configuration. Do not enable SDK automatic initialization.
 2. Configure the rewarded unit to award one revive. Register device identifiers as test devices in the dashboard before requesting ads. Never click live ads while validating.
