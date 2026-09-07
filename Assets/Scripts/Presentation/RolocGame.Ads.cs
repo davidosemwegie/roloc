@@ -21,6 +21,7 @@ namespace Roloc.Presentation
         Text reviveCountdownLabel, reviveBankLabel;
         Button reviveWatchButton;
         RewardPlayback rewardPlayback;
+        Action pendingGameStart;
 
         sealed class RewardPlayback
         {
@@ -64,6 +65,7 @@ namespace Roloc.Presentation
 
         void UpdateAdvertising()
         {
+            CompletePendingGameStart();
             if (AdServiceOverride == null && ads != null && ads.IsInitialized && !privacyBusy && !fullScreenAdShowing
                 && applicationFocused && !applicationPaused && Saves.Data.AdPrivacyChoiceMade
                 && NativeServices.TrackingAuthorizationStatus != appliedTrackingStatus)
@@ -187,9 +189,19 @@ namespace Roloc.Presentation
             ads.ShowInterstitial(() => {
                 if (!this || completed) return;
                 completed = true;
-                startingAfterAd = fullScreenAdShowing = false;
-                start();
+                fullScreenAdShowing = false;
+                pendingGameStart = start;
+                CompletePendingGameStart();
             });
+        }
+
+        void CompletePendingGameStart()
+        {
+            if (pendingGameStart == null || !applicationFocused || applicationPaused) return;
+            var start = pendingGameStart;
+            pendingGameStart = null;
+            startingAfterAd = false;
+            start();
         }
 
         bool HasPrivacyPolicy() => adsConfiguration && Uri.TryCreate(adsConfiguration.PrivacyPolicyUrl,

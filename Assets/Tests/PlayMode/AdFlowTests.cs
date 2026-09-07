@@ -108,6 +108,56 @@ namespace Roloc.Tests
         bool HasText(string text) => root.GetComponentsInChildren<Text>().Any(label => label.text == text);
 
         [UnityTest]
+        public IEnumerator ReviveOfferFitsCompactAndTallSafeAreas()
+        {
+            var camera = new GameObject("Ad layout camera").AddComponent<Camera>();
+            camera.transform.SetParent(root.transform);
+            camera.transform.position = new Vector3(0, 0, -10);
+            camera.orthographic = true;
+            var canvas = root.GetComponentInChildren<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = camera;
+            canvas.planeDistance = 1;
+            foreach (var size in new[] { new Vector2Int(750, 1334), new Vector2Int(1320, 2868) })
+            {
+                var target = new RenderTexture(size.x, size.y, 24);
+                target.Create(); camera.targetTexture = target;
+                game.ShowMenu(); game.BeginRun(); FailAt(20);
+                foreach (var area in root.GetComponentsInChildren<SafeArea>(true))
+                {
+                    area.enabled = false;
+                    var rect = (RectTransform)area.transform;
+                    rect.anchorMin = new Vector2(0, .04f);
+                    rect.anchorMax = new Vector2(1, .94f);
+                }
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+                foreach (var button in root.GetComponentsInChildren<Button>().Where(b =>
+                    b.GetComponentInChildren<Text>()?.text == "Watch ad & continue" || b.GetComponentInChildren<Text>()?.text == "End game"))
+                {
+                    var corners = new Vector3[4]; ((RectTransform)button.transform).GetWorldCorners(corners);
+                    foreach (var corner in corners)
+                    {
+                        var point = camera.WorldToViewportPoint(corner);
+                        Assert.That(point.x, Is.InRange(0f, 1f));
+                        Assert.That(point.y, Is.InRange(.04f, .94f));
+                    }
+                }
+                string output = Environment.GetEnvironmentVariable("RING_RUSH_AD_CAPTURE_DIR");
+                if (!string.IsNullOrEmpty(output))
+                {
+                    Directory.CreateDirectory(output); camera.Render();
+                    var previous = RenderTexture.active; RenderTexture.active = target;
+                    var texture = new Texture2D(size.x, size.y, TextureFormat.RGB24, false);
+                    texture.ReadPixels(new Rect(0, 0, size.x, size.y), 0, 0); texture.Apply();
+                    File.WriteAllBytes(Path.Combine(output, "revive-" + size.x + ".png"), texture.EncodeToPNG());
+                    RenderTexture.active = previous; UnityEngine.Object.Destroy(texture);
+                }
+                camera.targetTexture = null; target.Release(); UnityEngine.Object.Destroy(target);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator EligibleFailureWaitsWithoutRecordingOrSpendingAndEndRecordsOnce()
         {
             game.BeginRun();
@@ -267,6 +317,51 @@ namespace Roloc.Tests
             Assert.That(game.Session.State, Is.EqualTo(RoundState.Playing));
             Assert.That(randomCalls, Is.EqualTo(1));
             yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator InterstitialCompletionWaitsForBothForegroundSignalsBeforeStartingOnce()
+        {
+            game.BeginRun();
+            // Close and display failure share IAdService's completion callback. Exercise both
+            // orders of iOS focus/unpause delivery after that callback has arrived in background.
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                FailAt(0); game.ShowMenu(); game.BeginRun();
+                Assert.That(ads.Interstitials.Count, Is.EqualTo(attempt + 1));
+                var waitingSession = game.Session;
+                Invoke("OnApplicationFocus", false);
+                Invoke("OnApplicationPause", true);
+                ads.Interstitials[attempt]();
+                ads.Interstitials[attempt]();
+                Invoke("UpdateAdvertising");
+                game.BeginRun();
+                yield return new WaitForSecondsRealtime(.06f);
+                Assert.That(game.Session, Is.SameAs(waitingSession));
+                Assert.That(game.Session.State, Is.EqualTo(RoundState.Menu));
+                Assert.That(ads.BannerVisible, Is.False);
+                Assert.That(randomCalls, Is.EqualTo(attempt + 1));
+
+                if (attempt == 0) Invoke("OnApplicationPause", false);
+                else Invoke("OnApplicationFocus", true);
+                Invoke("UpdateAdvertising");
+                Assert.That(game.Session, Is.SameAs(waitingSession), "Both foreground signals are required.");
+                Assert.That(game.Session.State, Is.EqualTo(RoundState.Menu));
+
+                if (attempt == 0) Invoke("OnApplicationFocus", true);
+                else Invoke("OnApplicationPause", false);
+                Invoke("UpdateAdvertising");
+                var next = game.Session;
+                Assert.That(next, Is.Not.SameAs(waitingSession));
+                Assert.That(next.State, Is.EqualTo(RoundState.Playing));
+                Assert.That(next.RoundElapsedMilliseconds, Is.Zero);
+                Assert.That(next.RemainingSeconds, Is.EqualTo(next.DurationSeconds));
+                ads.Interstitials[attempt]();
+                Invoke("UpdateAdvertising");
+                Assert.That(game.Session, Is.SameAs(next));
+                Assert.That(randomCalls, Is.EqualTo(attempt + 1));
+                Assert.That(game.Saves.Data.GamesPlayed, Is.EqualTo(attempt + 1));
+            }
         }
 
         [UnityTest]

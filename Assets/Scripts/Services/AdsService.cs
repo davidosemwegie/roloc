@@ -37,7 +37,7 @@ namespace Roloc.Services
         bool initializing, disposed, bannerWanted, bannerLoaded, fullScreen, personalized;
         bool interstitialDisplayed;
         bool? nativeBannerVisible;
-        int generation;
+        int generation, initializationFailures;
         int initializationAttempt;
 
         public LevelPlayAdService(AdsConfiguration config)
@@ -98,10 +98,19 @@ namespace Roloc.Services
         void OnInitializationFailed(LevelPlayInitError _) { if (!disposed) FinishInitialization(false); }
         void FinishInitialization(bool success)
         {
+            if (!success && !initializing) return;
             initializing = false;
             var callback = initializedCallbacks;
             initializedCallbacks = null;
             callback?.Invoke(success);
+            if (success) { initializationFailures = 0; return; }
+            // Offline startup is transient. Retry with capped backoff without blocking play.
+            int attempt = initializationAttempt;
+            float delay = Mathf.Min(60, 5 * Mathf.Pow(2, Mathf.Min(4, initializationFailures++)));
+            host.After(delay, () => {
+                if (disposed || IsInitialized || initializing || attempt != initializationAttempt) return;
+                Initialize(personalized && NativeServices.TrackingAuthorizationStatus == 3, null);
+            });
         }
 
         void CreateInventory()
