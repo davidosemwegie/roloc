@@ -189,33 +189,17 @@ namespace Roloc.Presentation
                 PuckView puck;
                 if (puckPrefab) puck = Instantiate(puckPrefab, board).GetComponent<PuckView>();
                 else puck = Circle(board, "Puck " + c, Palette[c], PuckSlots[c], 79, false).gameObject.AddComponent<PuckView>();
-                int color = c;
                 puck.name = "Puck " + c; puck.Configure(c, Palette[c]);
                 puck.GetComponent<SoftShape>().raycastTarget = true;
                 Place(puck.Rect, new Vector2(.5f, .5f), PuckSlots[c], new Vector2(79, 79));
                 puck.Home = PuckSlots[c];
-                puck.CanDrag = () => (Session.State == RoundState.Playing || Session.State == RoundState.Tutorial) && Session.ActiveColor == color;
+                puck.CanDrag = () => Session.State == RoundState.Playing || Session.State == RoundState.Tutorial;
                 puck.Released = ReleasePuck;
                 pucks[c] = puck;
             }
             instruction = Label(game, "Drag the bright puck to its ring", 14, Ink, new Vector2(0, 68), new Vector2(365, 50), new Vector2(.5f, 0));
             Label(game, "Match the color. Beat the clock.", 12, Muted, new Vector2(0, 40), new Vector2(370, 25), new Vector2(.5f, 0));
             ColorMarks(game);
-        }
-
-        void BuildResults()
-        {
-            Label(results, "RING RUSH", 12, Ink, new Vector2(0, -60), new Vector2(320, 24), new Vector2(.5f, 1));
-            resultTitle = Label(results, "Nice rush!", 39, Ink, new Vector2(0, -131), new Vector2(365, 63), new Vector2(.5f, 1));
-            resultTitle.fontStyle = FontStyle.Bold;
-            var medal = Circle(results, "Result ring", Palette[1], new Vector2(0, 28), 226, true);
-            Place(medal.rectTransform, new Vector2(.5f, .53f), new Vector2(0, 28), new Vector2(226, 226));
-            resultScore = Label(medal.transform, "0", 69, Ink, new Vector2(0, 9), new Vector2(170, 90));
-            resultScore.fontStyle = FontStyle.Bold;
-            Label(medal.transform, "MATCHES", 10, Muted, new Vector2(0, -43), new Vector2(130, 22));
-            resultBest = Label(results, "Your best: 0", 16, Muted, new Vector2(0, -114), new Vector2(320, 36));
-            Button(results, "PLAY AGAIN", new Vector2(0, 133), new Vector2(286, 60), new Vector2(.5f, 0), Palette[0], Color.white, BeginRun);
-            Button(results, "Back to menu", new Vector2(0, 70), new Vector2(230, 45), new Vector2(.5f, 0), Color.clear, Muted, ShowMenu);
         }
 
         public void BeginRun()
@@ -289,7 +273,11 @@ namespace Roloc.Presentation
             FlowMode previousMode = Session.FlowMode;
             var previousRings = Session.RingOrder;
             var previousPucks = Session.PuckOrder;
-            RecordDailyEvent("drop", c, puck.Rect.anchoredPosition);
+            bool inactive = c != Session.ActiveColor;
+            // v1 traces already support voluntarily ending an attempt without awarding a match.
+            // Use that terminal event for an inactive-puck mistake in the shared Daily.
+            if (inactive) RecordDailyEvent("abandon");
+            else RecordDailyEvent("drop", c, puck.Rect.anchoredPosition);
             var failure = DropFailure.MissedRing;
             if (!inside) for (int other = 0; other < 4; other++)
                 if (other != c && Vector2.Distance(puck.Rect.anchoredPosition, rings[other].anchoredPosition) <= outerRadius) failure = DropFailure.WrongRing;
@@ -313,7 +301,7 @@ namespace Roloc.Presentation
                 ShowTutorialComplete();
             }
             else if (Session.State == RoundState.Tutorial)
-                instruction.text = "Aim for the ring with the same color.\nYou've got this.";
+                instruction.text = inactive ? "Choose the bright puck.\nThen drag it to its matching ring." : "Aim for the ring with the same color.\nYou've got this.";
         }
 
         void ShowTutorialComplete()
@@ -338,6 +326,7 @@ namespace Roloc.Presentation
             resultBest.text = record ? "A little better, one color at a time." : "Your best: " + CurrentRecord().HighScore;
             ShowResultExperience();
             SubmitDailyIfNeeded();
+            LayoutResults();
             Screen.sleepTimeout = SleepTimeout.SystemSetting;
         }
 

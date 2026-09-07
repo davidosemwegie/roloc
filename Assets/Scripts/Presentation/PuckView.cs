@@ -42,7 +42,7 @@ namespace Roloc.Presentation
             if (highlightInitialized && highlighted == active) return;
             highlighted = active; highlightInitialized = true;
             if (group) group.alpha = 1;
-            // Inactive pucks keep only a faint color hint; full color and depth identify the playable puck.
+            // Inactive pucks keep only a faint color hint; full color and depth identify the correct puck.
             var tint = baseTint; tint.a = active ? 1f : .18f;
             face.shaded = active && activeShading;
             face.depth = active ? activeDepth : 0;

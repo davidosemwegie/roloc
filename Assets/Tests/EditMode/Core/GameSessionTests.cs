@@ -90,11 +90,14 @@ namespace Roloc.Tests
         }
 
         [Test]
-        public void InactivePucksAreIgnoredAndWrongActiveDropEndsOnce()
+        public void InactivePuckAndWrongActiveDropEachEndStrictRunOnce()
         {
             var session = NewGame();
-            Assert.That(session.Drop((session.ActiveColor + 1) % 4, false), Is.EqualTo(MatchResult.Ignored));
-            Assert.That(session.State, Is.EqualTo(RoundState.Playing));
+            Assert.That(session.Drop((session.ActiveColor + 1) % 4, true), Is.EqualTo(MatchResult.Failed));
+            Assert.That(session.LastFailure, Is.EqualTo(DropFailure.InactivePuck));
+            Assert.That(session.Drop(session.ActiveColor, true), Is.EqualTo(MatchResult.Ignored));
+            Assert.That(session.Tick(100f), Is.False);
+            session.StartGame();
             Assert.That(session.Drop(session.ActiveColor, false), Is.EqualTo(MatchResult.Failed));
             Assert.That(session.Drop(session.ActiveColor, false), Is.EqualTo(MatchResult.Ignored));
             Assert.That(session.Tick(100f), Is.False);
@@ -214,7 +217,6 @@ namespace Roloc.Tests
 
             session.StartGame();
             var gamePucks = session.PuckOrder;
-            session.Drop((session.ActiveColor + 1) % 4, true);
             Assert.That(session.Drop(session.ActiveColor, false), Is.EqualTo(MatchResult.Failed));
             Assert.That(session.PuckOrder, Is.SameAs(gamePucks));
 

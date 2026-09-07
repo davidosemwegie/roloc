@@ -4,7 +4,7 @@ namespace Roloc.Core
 {
     public enum GameMode { Flow, Rush, Daily }
     public enum BoardStyle { Lively, Still }
-    public enum DropFailure { None, MissedRing, WrongRing, TimeExpired }
+    public enum DropFailure { None, MissedRing, WrongRing, TimeExpired, InactivePuck }
     public enum RhythmPhase { Calm, Challenge, Recovery }
 
     /// <summary>Run pacing shared by ordinary modes and the versioned Daily rules.</summary>

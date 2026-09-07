@@ -23,6 +23,92 @@ namespace Roloc.Tests
             }
         }
 
+        [TestCase(GameMode.Flow, false)]
+        [TestCase(GameMode.Flow, true)]
+        [TestCase(GameMode.Rush, false)]
+        [TestCase(GameMode.Rush, true)]
+        [TestCase(GameMode.Daily, false)]
+        [TestCase(GameMode.Daily, true)]
+        public void ReleasingInactivePuckIsOneMistakeWithoutScoreOrSequenceAdvance(GameMode mode, bool geometry)
+        {
+            var game = mode == GameMode.Daily ? GameSession.CreateDaily(42, BoardStyle.Lively)
+                : new GameSession(mode, BoardStyle.Lively, new System.Random(42));
+            var control = mode == GameMode.Daily ? GameSession.CreateDaily(42, BoardStyle.Lively)
+                : new GameSession(mode, BoardStyle.Lively, new System.Random(42));
+            game.StartGame(); control.StartGame();
+            Matches(game, 2, true); Matches(control, 2, true);
+            int active = game.ActiveColor;
+            int inactive = (active + 1) % 4;
+            var rings = game.RingOrder; var pucks = game.PuckOrder;
+            var flow = game.FlowMode;
+            var center = game.GetRingCenter(inactive);
+            game.TickMilliseconds(100);
+            var result = geometry ? game.DropAt(inactive, center.X, center.Y) : game.Drop(inactive, true, true);
+            Assert.That(result, Is.EqualTo(mode == GameMode.Flow ? MatchResult.ChanceLost : MatchResult.Failed));
+            Assert.That(game.LastFailure, Is.EqualTo(DropFailure.InactivePuck));
+            Assert.That(game.Chances, Is.EqualTo(mode == GameMode.Flow ? 2 : 0));
+            Assert.That(game.Score, Is.EqualTo(2));
+            Assert.That(game.PerfectCount, Is.EqualTo(2));
+            Assert.That(game.Combo, Is.Zero); Assert.That(game.PerfectStreak, Is.Zero);
+            Assert.That(game.BestCombo, Is.EqualTo(2)); Assert.That(game.BestPerfectStreak, Is.EqualTo(2));
+            Assert.That(game.LastProgressEarned, Is.Zero); Assert.That(game.LastDropPerfect, Is.False);
+            Assert.That(game.ActiveColor, Is.EqualTo(active));
+            Assert.That(game.RingOrder, Is.SameAs(rings)); Assert.That(game.PuckOrder, Is.SameAs(pucks));
+            Assert.That(game.FlowMode, Is.EqualTo(flow));
+            Assert.That(game.DropAt(inactive, center.X, center.Y), Is.EqualTo(MatchResult.Ignored));
+            Assert.That(game.Drop(active, true), Is.EqualTo(MatchResult.Ignored));
+            Assert.That(game.Chances, Is.EqualTo(mode == GameMode.Flow ? 2 : 0));
+            if (mode != GameMode.Flow) return;
+            Assert.That(game.RemainingSeconds, Is.EqualTo(game.DurationSeconds));
+            game.CompleteTransition();
+            Matches(game, 1); Matches(control, 1);
+            Assert.That(game.ActiveColor, Is.EqualTo(control.ActiveColor));
+            CollectionAssert.AreEqual(control.RingOrder, game.RingOrder);
+            CollectionAssert.AreEqual(control.PuckOrder, game.PuckOrder);
+            Assert.That(game.FlowMode, Is.EqualTo(control.FlowMode));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void TutorialIgnoresInactiveReleaseEvenInsideItsOwnRing(bool geometry)
+        {
+            var game = Flow(); game.StartTutorial();
+            int inactive = (game.ActiveColor + 1) % 4;
+            var center = game.GetRingCenter(inactive);
+            var result = geometry ? game.DropAt(inactive, center.X, center.Y) : game.Drop(inactive, true, true);
+            Assert.That(result, Is.EqualTo(MatchResult.Ignored));
+            Assert.That(game.State, Is.EqualTo(RoundState.Tutorial));
+            Assert.That(game.LastFailure, Is.EqualTo(DropFailure.None));
+            Assert.That(game.Chances, Is.EqualTo(3)); Assert.That(game.Score, Is.Zero);
+            Assert.That(game.LastProgressEarned, Is.Zero); Assert.That(game.PerfectCount, Is.Zero);
+            Assert.That(game.Drop(game.ActiveColor, true), Is.EqualTo(MatchResult.TutorialCompleted));
+        }
+
+        [TestCase(-1)]
+        [TestCase(4)]
+        [TestCase(int.MinValue)]
+        [TestCase(int.MaxValue)]
+        public void InvalidColorCannotConsumeAChanceOrIndexGeometry(int color)
+        {
+            var game = Flow();
+            Assert.That(game.Drop(color, true), Is.EqualTo(MatchResult.Ignored));
+            Assert.That(game.DropAt(color, 0, 0), Is.EqualTo(MatchResult.Ignored));
+            Assert.That(game.Chances, Is.EqualTo(3)); Assert.That(game.Score, Is.Zero);
+            Assert.That(game.State, Is.EqualTo(RoundState.Playing));
+        }
+
+        [Test]
+        public void PausedInactiveReleaseCannotConsumeAChance()
+        {
+            var game = Flow(); game.Pause();
+            int inactive = (game.ActiveColor + 1) % 4;
+            Assert.That(game.Drop(inactive, true), Is.EqualTo(MatchResult.Ignored));
+            Assert.That(game.DropAt(inactive, 0, 0), Is.EqualTo(MatchResult.Ignored));
+            Assert.That(game.Chances, Is.EqualTo(3));
+            game.Resume();
+            Assert.That(game.State, Is.EqualTo(RoundState.Playing));
+        }
+
         [TestCase(0, 3.5f)]
         [TestCase(9, 3.5f)]
         [TestCase(10, 3f)]

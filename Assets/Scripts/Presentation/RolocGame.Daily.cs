@@ -25,10 +25,6 @@ namespace Roloc.Presentation
         void InitializeDaily() { daily = new DailyClient(null, SaveDirectoryOverride); }
         void BuildDailyUI()
         {
-            dailyStandingLabel = Label(results, "", 11, Ink, new Vector2(0, -205), new Vector2(350, 45), new Vector2(.5f, 1));
-            shareButton = Button(results, "SHARE DAILY", new Vector2(0, 32), new Vector2(190, 44), new Vector2(.5f, 0), Color.clear, Palette[1],
-                () => StartCoroutine(ShareDailyCard()));
-            dailyStandingLabel.gameObject.SetActive(false); shareButton.gameObject.SetActive(false);
             if (daily.IsConfigured) StartCoroutine(daily.RetryPending());
         }
 
@@ -159,7 +155,7 @@ namespace Roloc.Presentation
             string cohort = value.waiting ? "Waiting for more players" : "Top " + Math.Max(.1, value.topPercent).ToString("0.#") + "% " + (value.provisional ? "so far" : "final");
             return cohort + " · " + value.participants + " players\nDaily best " + value.bestScore + (value.early && !value.waiting ? " · early results" : "");
         }
-        void SetRanking(string caption) { rankingCaption = caption; if (dailyStandingLabel) dailyStandingLabel.text = caption; }
+        void SetRanking(string caption) { rankingCaption = caption; if (dailyStandingLabel) dailyStandingLabel.text = caption; LayoutResults(); }
 
         void LoadFinalStandingOnReturn()
         {

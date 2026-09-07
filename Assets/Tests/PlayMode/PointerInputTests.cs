@@ -118,6 +118,57 @@ namespace Roloc.Tests
         }
 
         [UnityTest]
+        public IEnumerator InactivePuckCanMoveButLosesAFlowChanceOnRelease()
+        {
+            game.Saves.Data.TutorialCompleted = true;
+            game.BeginRun();
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            int active = game.Session.ActiveColor;
+            var puck = root.GetComponentsInChildren<PuckView>().First(p => p.ColorIndex != active);
+            Vector2 start = RectTransformUtility.WorldToScreenPoint(null, puck.Rect.position);
+            Vector2 target = RingPosition(puck);
+            AssertPuckReceivesRaycast(puck, start);
+            yield return Touch(TouchPhase.Began, start);
+            yield return Touch(TouchPhase.Moved, target);
+            Assert.That(puck.IsDragging, Is.True);
+            Assert.That(game.Session.Chances, Is.EqualTo(3), "Dragging alone must not spend a chance.");
+            Assert.That(Vector2.Distance(RectTransformUtility.WorldToScreenPoint(null, puck.Rect.position), target), Is.LessThan(1));
+            yield return Touch(TouchPhase.Ended, target);
+            Assert.That(game.Session.Chances, Is.EqualTo(2));
+            Assert.That(game.Session.LastFailure, Is.EqualTo(DropFailure.InactivePuck));
+            Assert.That(game.Session.Score, Is.Zero);
+            Assert.That(game.Session.ActiveColor, Is.EqualTo(active));
+            Assert.That(game.Saves.Data.ProgressPoints, Is.Zero);
+        }
+
+        [UnityTest]
+        public IEnumerator InactivePuckReleaseEndsRushButCanceledTouchDoesNot()
+        {
+            game.Saves.Data.TutorialCompleted = true;
+            game.Saves.Data.SelectedMode = "Rush";
+            game.BeginRun();
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            var puck = root.GetComponentsInChildren<PuckView>().First(p => p.ColorIndex != game.Session.ActiveColor);
+            Vector2 start = RectTransformUtility.WorldToScreenPoint(null, puck.Rect.position);
+            Vector2 target = RingPosition(puck);
+            yield return Touch(TouchPhase.Began, start);
+            yield return Touch(TouchPhase.Moved, target);
+            yield return Touch(TouchPhase.Canceled, target);
+            Assert.That(game.Session.State, Is.EqualTo(RoundState.Playing));
+            start = RectTransformUtility.WorldToScreenPoint(null, puck.Rect.position);
+            yield return Touch(TouchPhase.Began, start);
+            Assert.That(puck.IsDragging, Is.True);
+            yield return Touch(TouchPhase.Moved, target);
+            yield return Touch(TouchPhase.Ended, target);
+            Assert.That(game.Session.State, Is.EqualTo(RoundState.GameOver));
+            Assert.That(game.Session.LastFailure, Is.EqualTo(DropFailure.InactivePuck));
+            Assert.That(game.Session.Score, Is.Zero);
+            Assert.That(game.Saves.Data.GamesPlayed, Is.EqualTo(1));
+        }
+
+        [UnityTest]
         public IEnumerator CanceledTouchInsideMatchingRingDoesNotScore()
         {
             game.Saves.Data.TutorialCompleted = true;

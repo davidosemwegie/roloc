@@ -117,6 +117,7 @@ namespace Roloc.Core
         public MatchResult DropAt(int color, int xQ, int yQ)
         {
             if (!CanDrop(color)) return MatchResult.Ignored;
+            if (color != ActiveColor) return DropClassified(color, false, false, DropFailure.InactivePuck);
             var point = new BoardPoint(xQ, yQ);
             var center = GetRingCenter(color);
             bool inside = DailyRules.Within(point, center, DailyRules.RingRadius);
@@ -140,18 +141,20 @@ namespace Roloc.Core
             return DailyRules.PuckHome(slot, color, ActiveColor, Score, dailySeed, FlowMode, BoardStyle, RoundElapsedMilliseconds);
         }
 
-        bool CanDrop(int color) => (State == RoundState.Playing || State == RoundState.Tutorial) && color == ActiveColor;
+        bool CanDrop(int color) => (State == RoundState.Playing || State == RoundState.Tutorial)
+            && color >= 0 && color < 4;
 
         MatchResult DropClassified(int color, bool inside, bool perfect, DropFailure failure)
         {
             if (!CanDrop(color)) return MatchResult.Ignored;
             if (State == RoundState.Tutorial)
             {
-                if (!inside) return MatchResult.Ignored;
+                if (color != ActiveColor || !inside) return MatchResult.Ignored;
                 State = RoundState.Menu;
                 return LastResult = MatchResult.TutorialCompleted;
             }
             ClearEvent();
+            if (color != ActiveColor) return LoseChance(DropFailure.InactivePuck);
             if (!inside) return LoseChance(failure);
 
             Score++;

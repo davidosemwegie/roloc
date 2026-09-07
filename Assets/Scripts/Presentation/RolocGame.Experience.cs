@@ -63,9 +63,6 @@ namespace Roloc.Presentation
             livesLabel = Label(game, "", 11, Ink, new Vector2(-92, -161), new Vector2(170, 22), new Vector2(.5f, 1));
             chainLabel = Label(game, "", 11, Ink, new Vector2(90, -161), new Vector2(172, 22), new Vector2(.5f, 1));
             feedbackLabel = Label(game, "", 15, Ink, new Vector2(0, 104), new Vector2(360, 32), new Vector2(.5f, 0));
-            resultReason = Label(results, "", 13, Muted, new Vector2(0, -173), new Vector2(345, 30), new Vector2(.5f, 1));
-            resultChains = Label(results, "", 12, Ink, new Vector2(0, 268), new Vector2(360, 36), new Vector2(.5f, 0));
-            resultProgress = Label(results, "", 12, Muted, new Vector2(0, 215), new Vector2(360, 63), new Vector2(.5f, 0));
             for (int c = 0; c < 4; c++)
             {
                 symbols[c] = MakeSymbol(pucks[c].transform, c, 22);
@@ -124,7 +121,8 @@ namespace Roloc.Presentation
         void RetryChance()
         {
             CancelAllTouches();
-            Hint(Session.LastFailure == DropFailure.TimeExpired ? "Time ran out · try this color again" : "Outside the matching ring · try again", 2.8f);
+            Hint(Session.LastFailure == DropFailure.InactivePuck ? "Choose the bright puck · try again" :
+                Session.LastFailure == DropFailure.TimeExpired ? "Time ran out · try this color again" : "Outside the matching ring · try again", 2.8f);
             BeginBoardTransition(false, false, false);
             if (transitionLeft > 0) { transitionDuration = transitionLeft = Mathf.Max(.45f, transitionDuration); }
             if (!Saves.Data.RecoveryHintShown)
@@ -185,9 +183,10 @@ namespace Roloc.Presentation
         void ShowResultExperience()
         {
             long earned = Saves.Data.ProgressPoints - startingPoints;
-            resultReason.text = Session.LastFailure == DropFailure.TimeExpired ? "Time ran out." :
+            resultReason.text = Session.LastFailure == DropFailure.InactivePuck ? "That puck wasn't highlighted." :
+                Session.LastFailure == DropFailure.TimeExpired ? "Time ran out." :
                 Session.LastFailure == DropFailure.WrongRing ? "That was a different color's ring." : "The puck landed outside its matching ring.";
-            string improvement = Session.BestCombo > startingCombo ? " · new combo best" : Session.BestPerfectStreak > startingPerfect ? " · new Perfect streak" : "";
+            string improvement = Session.BestCombo > startingCombo ? "\nNew combo best!" : Session.BestPerfectStreak > startingPerfect ? "\nNew Perfect streak!" : "";
             resultChains.text = "Combo " + Session.BestCombo + "  ·  Perfect streak " + Session.BestPerfectStreak + improvement;
             string unlocked = "";
             foreach (var item in CosmeticCatalog.Unlocks)
