@@ -4,6 +4,8 @@ The Unity 6.6 game lives at the repository root. Open this folder with **Unity 6
 
 Flow gives three chances, a gentler opening, and limited recovery. Rush keeps the strict one-chance rules. Lively and Still boards keep separate records. Every successful match earns local progress; centered Perfects earn an extra point. The collection, daily goals, audio choices, haptics, matching symbols, and reduced effects are saved locally. The original save filename and bundle ID `com.osazi.roloc.unitydev` are unchanged.
 
+The bright puck is the correct choice. All pucks can be dragged; releasing a dim puck costs a chance in Flow and ends Rush or Daily, even inside its own ring. Canceled touches do not count as mistakes. Results adapt to the safe area with separate rows for the score, records, progress, and replay actions.
+
 Daily uses the isolated [Convex backend](backend/README.md). Invited ranked attempts require an online start; gameplay then runs locally and finished traces queue for upload. Cached challenges are available as practice. Development and production must use separate deployments and invitation codes. Public competition stays disabled until App Attest and suspicious-submission review are ready.
 
 ## Develop
