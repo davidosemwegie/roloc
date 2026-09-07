@@ -102,6 +102,23 @@ namespace Roloc.Editor
             PlayerSettings.iOS.buildNumber = Environment.GetEnvironmentVariable("RING_RUSH_BUILD_NUMBER") ?? PlayerSettings.iOS.buildNumber;
             PlayerSettings.iOS.appleDeveloperTeamID = "TYU4JMX349";
             ConfigureDaily();
+            var settings = AssetDatabase.LoadAssetAtPath<DifficultySettings>("Assets/Settings/Difficulty.asset");
+            if (settings)
+            {
+                if (settings.Variations == null) settings.Variations = new VariationSettings();
+                EditorUtility.SetDirty(settings);
+                AssetDatabase.SaveAssets();
+            }
+            const string palettesPath = "Assets/Resources/VariationPalettes.asset";
+            var palettes = AssetDatabase.LoadAssetAtPath<VariationPalettes>(palettesPath);
+            if (!palettes)
+            {
+                palettes = ScriptableObject.CreateInstance<VariationPalettes>();
+                AssetDatabase.CreateAsset(palettes, palettesPath);
+                AssetDatabase.SaveAssets();
+            }
+            if (!VariationPalettes.IsValid(palettes.Palettes))
+                throw new InvalidOperationException("Variation palettes require six sets of four distinct opaque colors.");
             PlayerSettings.iOS.requiresFullScreen = true;
             QualitySettings.vSyncCount = 0; QualitySettings.antiAliasing = 0;
             EditorSettings.serializationMode = SerializationMode.ForceText;

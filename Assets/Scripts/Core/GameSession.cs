@@ -18,6 +18,7 @@ namespace Roloc.Core
         RoundState pausedState;
         double elapsedMilliseconds;
         int cleanMatchesSinceRecovery;
+        int previousPalette = -1;
 
         public RoundState State { get; private set; } = RoundState.Menu;
         public GameMode Mode { get; private set; } = GameMode.Rush;
@@ -26,6 +27,9 @@ namespace Roloc.Core
         public uint DailySeed => dailySeed;
         public int Score { get; private set; }
         public int ActiveColor { get; private set; }
+        public int PaletteIndex { get; private set; } = -1;
+        public int PuckOrbitDirection { get; private set; }
+        public int RingOrbitDirection { get; private set; }
         // Color at each board position. Consumers must not modify these arrays.
         public int[] RingOrder { get; private set; } = new[] { 0, 1, 2, 3 };
         public int[] PuckOrder { get; private set; } = new[] { 0, 1, 2, 3 };
@@ -66,7 +70,8 @@ namespace Roloc.Core
 
         public GameSession(GameMode mode, BoardStyle boardStyle, Random random = null,
             Func<int, float> secondsForScore = null, Func<int, bool> shouldShuffle = null,
-            Func<int, bool> shouldShufflePucks = null, bool variationsEnabled = true)
+            Func<int, bool> shouldShufflePucks = null, bool variationsEnabled = true,
+            VariationSettings variationSettings = null)
             : this(random, secondsForScore ?? (mode == GameMode.Flow
                 ? (Func<int, float>)DefaultRules.FlowSecondsForScore : DefaultRules.SecondsForScore),
                 shouldShuffle, shouldShufflePucks)
@@ -75,7 +80,7 @@ namespace Roloc.Core
                 throw new ArgumentException("Use CreateDaily to supply its published seed.", nameof(mode));
             Mode = mode;
             BoardStyle = boardStyle;
-            if (variationsEnabled) rhythm = new RhythmDirector(this.random, mode);
+            if (variationsEnabled) rhythm = new RhythmDirector(this.random, mode, boardStyle, variationSettings);
         }
 
         GameSession(uint seed, BoardStyle boardStyle) : this(new DailyRandom(seed))
@@ -99,6 +104,8 @@ namespace Roloc.Core
             ClearEvent();
             flowDirector?.Reset();
             WasTutorial = tutorial;
+            PaletteIndex = previousPalette = -1;
+            PuckOrbitDirection = RingOrbitDirection = 0;
             RingOrder = Permutation();
             PuckOrder = Permutation();
             ActiveColor = random.Next(4);
@@ -183,18 +190,35 @@ namespace Roloc.Core
             var previousMode = FlowMode;
             var previousRings = RingOrder;
             var previousPucks = PuckOrder;
-            ActiveColor = random.Next(4);
+            // Daily v1 and legacy injected schedules select the target first.
+            bool legacyTargetOrder = IsDaily || rhythm == null;
+            if (legacyTargetOrder) ActiveColor = random.Next(4);
             rhythm?.Advance(Score);
             flowDirector?.Advance(Score);
             RotationSteps = rhythm?.RotationSteps ?? flowDirector?.RotationSteps ?? 0;
-            // A coordinated turn owns this transition; do not also scramble either board.
-            if (RotationSteps != 0) PuckOrder = RotatedPucks(RotationSteps);
-            else
+            if (!legacyTargetOrder) ActiveColor = random.Next(4);
+            if (!IsDaily && previousMode != FlowMode)
             {
-                if (shouldShuffle(Score)) RingOrder = Permutation();
-                if (shouldShufflePucks(Score)) PuckOrder = DifferentPermutation(PuckOrder);
+                PaletteIndex = FlowMode == FlowMode.ColorShift ? NextPalette() : -1;
+                PuckOrbitDirection = FlowMode == FlowMode.PuckOrbit || FlowMode == FlowMode.DualOrbit
+                    ? (random.Next(2) == 0 ? -1 : 1) : 0;
+                RingOrbitDirection = FlowMode == FlowMode.RingOrbit || FlowMode == FlowMode.DualOrbit
+                    ? (random.Next(2) == 0 ? -1 : 1) : 0;
             }
-            RequiredTransitionMilliseconds = RotationSteps != 0 ? 750
+            bool layoutOwned = OwnsLayout(previousMode) || OwnsLayout(FlowMode);
+            // Continuous layouts own their entry, exit and in-episode transitions. No deferred shuffle.
+            if (!layoutOwned)
+            {
+                if (RotationSteps != 0) PuckOrder = RotatedPucks(RotationSteps);
+                else
+                {
+                    if (shouldShuffle(Score)) RingOrder = Permutation();
+                    if (shouldShufflePucks(Score)) PuckOrder = DifferentPermutation(PuckOrder);
+                }
+            }
+            else RotationSteps = 0;
+            RequiredTransitionMilliseconds = previousMode != FlowMode && layoutOwned ? 750
+                : RotationSteps != 0 ? 750
                 : previousRings != RingOrder && previousPucks != PuckOrder ? 675
                 : previousMode != FlowMode || previousRings != RingOrder || previousPucks != PuckOrder ? 450 : 240;
             DurationSeconds = secondsForScore(Score) + (rhythm?.ExtraSeconds ?? flowDirector?.ExtraSeconds ?? 0);
@@ -282,8 +306,23 @@ namespace Roloc.Core
             rhythm?.Reset();
             State = RoundState.Menu;
             Score = RotationSteps = 0;
+            PaletteIndex = previousPalette = -1;
+            PuckOrbitDirection = RingOrbitDirection = 0;
             RemainingSeconds = DurationSeconds = 0f;
             elapsedMilliseconds = 0;
+        }
+
+        static bool OwnsLayout(FlowMode mode) => mode == FlowMode.PuckOrbit || mode == FlowMode.RingOrbit
+            || mode == FlowMode.DualOrbit;
+
+        int NextPalette()
+        {
+            // Select the category first, retaining 50/25/25 weights even when avoiding repeats.
+            int category = random.Next(4);
+            int first = category < 2 ? 0 : category == 2 ? 2 : 4;
+            int palette = first + random.Next(2);
+            if (palette == previousPalette) palette = first + (1 - (palette - first));
+            return previousPalette = palette;
         }
 
         int[] DifferentPermutation(int[] previous)
@@ -304,7 +343,8 @@ namespace Roloc.Core
 
         int[] Permutation()
         {
-            var order = new[] { 0, 1, 2, 3 };
+            var order = new int[4];
+            for (int i = 0; i < order.Length; i++) order[i] = i;
             for (int i = order.Length - 1; i > 0; i--)
             {
                 int j = random.Next(i + 1);

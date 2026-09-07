@@ -12,7 +12,9 @@ namespace Roloc.Core
     {
         readonly Random random;
         readonly GameMode mode;
-        readonly FlowMode[] candidates = new FlowMode[3];
+        readonly FlowMode[] candidates = new FlowMode[7];
+        readonly BoardStyle boardStyle;
+        readonly VariationSettings settings;
         static readonly FlowMode[] Eligible = { FlowMode.Floating, FlowMode.Drifting, FlowMode.Rotation };
         int remaining, lastAwardedScore;
         FlowMode previousChallenge;
@@ -22,10 +24,13 @@ namespace Roloc.Core
         public int RotationSteps { get; private set; }
         public float ExtraSeconds => Phase == RhythmPhase.Recovery ? .65f : 0f;
 
-        public RhythmDirector(Random random, GameMode mode)
+        public RhythmDirector(Random random, GameMode mode, BoardStyle boardStyle = BoardStyle.Lively,
+            VariationSettings settings = null)
         {
             this.random = random ?? throw new ArgumentNullException(nameof(random));
             this.mode = mode;
+            this.boardStyle = boardStyle;
+            this.settings = settings ?? new VariationSettings();
         }
 
         public void Reset()
@@ -34,6 +39,11 @@ namespace Roloc.Core
             Mode = previousChallenge = FlowMode.Steady;
             RotationSteps = lastAwardedScore = 0;
             remaining = mode == GameMode.Flow ? 10 : random.Next(3, 6);
+        }
+
+        void AddCandidate(FlowMode candidate, bool eligible, ref int count)
+        {
+            if (eligible && candidate != previousChallenge) candidates[count++] = candidate;
         }
 
         public void Advance(int awardedScore)
@@ -45,11 +55,31 @@ namespace Roloc.Core
             if (Phase == RhythmPhase.Calm)
             {
                 Phase = RhythmPhase.Challenge;
-                // Keep early challenges gentle; rotation unlocks at forty matches.
-                var count = awardedScore >= 40 ? 3 : 2;
                 int available = 0;
-                for (int i = 0; i < count; i++)
-                    if (Eligible[i] != previousChallenge) candidates[available++] = Eligible[i];
+                if (mode == GameMode.Daily)
+                {
+                    // Published v1: retain candidate order and every random call.
+                    var count = awardedScore >= 40 ? 3 : 2;
+                    for (int i = 0; i < count; i++)
+                        if (Eligible[i] != previousChallenge) candidates[available++] = Eligible[i];
+                }
+                else
+                {
+                    AddCandidate(FlowMode.Floating, boardStyle == BoardStyle.Lively, ref available);
+                    AddCandidate(FlowMode.Drifting, boardStyle == BoardStyle.Lively, ref available);
+                    AddCandidate(FlowMode.Rotation, awardedScore >= 40, ref available);
+                    AddCandidate(FlowMode.ColorShift, awardedScore >= settings.ColorShiftStartScore, ref available);
+                    AddCandidate(FlowMode.PuckOrbit, boardStyle == BoardStyle.Lively && awardedScore >= settings.OrbitStartScore, ref available);
+                    AddCandidate(FlowMode.RingOrbit, boardStyle == BoardStyle.Lively && awardedScore >= settings.OrbitStartScore, ref available);
+                    AddCandidate(FlowMode.DualOrbit, boardStyle == BoardStyle.Lively && awardedScore >= settings.DualOrbitStartScore, ref available);
+                }
+                if (available == 0)
+                {
+                    Phase = RhythmPhase.Calm;
+                    Mode = FlowMode.Steady;
+                    remaining = random.Next(3, 6);
+                    return;
+                }
                 Mode = previousChallenge = candidates[random.Next(available)];
                 remaining = random.Next(3, 6);
                 if (Mode == FlowMode.Rotation) RotationSteps = random.Next(2) == 0 ? -1 : 1;

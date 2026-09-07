@@ -37,6 +37,7 @@ namespace Roloc.Core
         [Header("Random flow")]
         public bool RandomFlowEnabled = true;
         public FlowSettings Flow = new FlowSettings();
+        public VariationSettings Variations = new VariationSettings();
         [Range(0, 1)] public float FlowTransitionSeconds = .45f;
         [Range(0, 1.5f)] public float RotationSeconds = .75f;
         [Range(0, 5)] public float PuckFloatAmplitude = 3f;

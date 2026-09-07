@@ -19,7 +19,37 @@ MonoBehaviour:
   secondSeconds: 2
   thirdThreshold: 40
   thirdSeconds: 1.75
+  flowInitialSeconds: 3.5
+  flowFirstThreshold: 10
+  flowFirstSeconds: 3
+  flowSecondThreshold: 25
+  flowSecondSeconds: 2.5
+  flowThirdThreshold: 50
+  flowThirdSeconds: 2.25
   everyFiveAbove: 30
   everyTwoAbove: 60
   everyMatchAbove: 80
+  puckShuffleAbove: 40
+  puckShuffleInterval: 5
   TransitionSeconds: 0.24
+  RandomFlowEnabled: 1
+  Flow:
+    StartScore: 5
+    DriftStartScore: 20
+    RotationStartScore: 40
+    MinMatches: 3
+    MaxMatches: 5
+    MinCalmMatches: 1
+    MaxCalmMatches: 2
+    BreatherExtraSeconds: 0.65
+    BreatherCooldownMatches: 10
+  Variations:
+    ColorShiftStartScore: 20
+    OrbitStartScore: 40
+    DualOrbitStartScore: 60
+    PuckOrbitDegreesPerSecond: 18
+    RingOrbitDegreesPerSecond: 12
+  FlowTransitionSeconds: 0.45
+  RotationSeconds: 0.75
+  PuckFloatAmplitude: 3
+  RingDriftRadius: 8

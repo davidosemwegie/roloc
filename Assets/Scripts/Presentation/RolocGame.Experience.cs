@@ -11,9 +11,9 @@ namespace Roloc.Presentation
         string localRunId;
         int startingBest, startingCombo, startingPerfect;
         long startingPoints;
-        Text modeChoice, boardChoice, progressLabel, livesLabel, chainLabel, feedbackLabel;
+        Text modeChoice, progressLabel, livesLabel, chainLabel, feedbackLabel;
         Text resultProgress, dailyLabel, resultReason;
-        Button modeButton, boardButton;
+        Button modeButton;
         SoftShape backgroundArt;
         readonly MatchSymbol[] symbols = new MatchSymbol[8];
         readonly SoftShape[] trail = new SoftShape[12];
@@ -36,26 +36,27 @@ namespace Roloc.Presentation
         void CreateRegularSession()
         {
             var mode = Saves.Data.SelectedMode == "Rush" ? GameMode.Rush : GameMode.Flow;
-            var style = Saves.Data.SelectedBoard == "Still" ? BoardStyle.Still : BoardStyle.Lively;
+            // Regular runs now use Lively. Keep historical Still records in the save.
+            if (Saves.Data.SelectedBoard != "Lively")
+            {
+                Saves.Data.SelectedBoard = "Lively";
+                Saves.Save();
+            }
+            var style = BoardStyle.Lively;
             var random = RandomSeedOverride.HasValue ? new System.Random(RandomSeedOverride.Value) : new System.Random();
             Session = new GameSession(mode, style, random, mode == GameMode.Flow ? difficulty.GetFlowSeconds : difficulty.GetSeconds,
-                difficulty.IsShuffleScore, difficulty.IsPuckShuffleScore, difficulty.RandomFlowEnabled);
+                difficulty.IsShuffleScore, difficulty.IsPuckShuffleScore, difficulty.RandomFlowEnabled, difficulty.Variations);
         }
 
         ModeRecord CurrentRecord() => Saves.GetRecord(Session.Mode.ToString(), Session.BoardStyle.ToString());
 
         void BuildExperienceUI()
         {
-            modeButton = Button(menu, "", new Vector2(-75, 282), new Vector2(140, 44), new Vector2(.5f, 0), Color.white, Ink, () => {
+            modeButton = Button(menu, "", new Vector2(0, 282), new Vector2(286, 44), new Vector2(.5f, 0), Color.white, Ink, () => {
                 Saves.Data.SelectedMode = Saves.Data.SelectedMode == "Flow" ? "Rush" : "Flow";
                 selectedDaily = false; Saves.Save(); RefreshMenuExperience();
             });
-            modeChoice = Label(modeButton.transform, "FLOW · 3 CHANCES", 12, Ink, Vector2.zero, new Vector2(138, 42));
-            boardButton = Button(menu, "", new Vector2(75, 282), new Vector2(140, 44), new Vector2(.5f, 0), Color.white, Ink, () => {
-                Saves.Data.SelectedBoard = Saves.Data.SelectedBoard == "Lively" ? "Still" : "Lively";
-                Saves.Save(); RefreshMenuExperience();
-            });
-            boardChoice = Label(boardButton.transform, "LIVELY BOARD", 12, Ink, Vector2.zero, new Vector2(138, 42));
+            modeChoice = Label(modeButton.transform, "FLOW · 3 CHANCES", 12, Ink, Vector2.zero, new Vector2(280, 42));
             progressLabel = Label(menu, "", 12, Muted, new Vector2(0, 234), new Vector2(350, 35), new Vector2(.5f, 0));
             var dailyButton = Button(menu, "", new Vector2(0, 114), new Vector2(286, 48), new Vector2(.5f, 0), Palette[1], Color.white, ShowDaily);
             dailyLabel = Label(dailyButton.transform, "DAILY · SAME BOARD FOR EVERYONE", 12, Color.white, Vector2.zero, new Vector2(280, 44));
@@ -165,7 +166,6 @@ namespace Roloc.Presentation
             selectedDaily = false;
             menuBest.text = Saves.GetRecord(Saves.Data.SelectedMode, Saves.Data.SelectedBoard).HighScore.ToString();
             if (modeChoice) modeChoice.text = Saves.Data.SelectedMode == "Rush" ? "RUSH · 1 CHANCE" : "FLOW · 3 CHANCES";
-            if (boardChoice) boardChoice.text = Saves.Data.SelectedBoard.ToUpperInvariant() + " BOARD";
             if (progressLabel) progressLabel.text = NextProgress();
             ApplyAppearance();
             if (Saves.ShouldSuggestRush())
@@ -244,7 +244,7 @@ namespace Roloc.Presentation
         {
             if (Saves.Data.ReduceEffects || Saves.Data.EquippedTrail != "ribbon") return;
             var dot = trail[trailIndex]; dot.rectTransform.anchoredPosition = puck.Rect.anchoredPosition;
-            dot.color = Palette[puck.ColorIndex]; dot.gameObject.SetActive(true); trailLife[trailIndex] = .26f;
+            dot.color = BoardTint(puck.ColorIndex); dot.gameObject.SetActive(true); trailLife[trailIndex] = .26f;
             trailIndex = (trailIndex + 1) % trail.Length;
         }
         static Vector2 ToVector(BoardPoint point) => new Vector2(point.X / 1000f, point.Y / 1000f);

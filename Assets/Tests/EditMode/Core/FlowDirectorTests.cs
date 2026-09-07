@@ -59,7 +59,8 @@ namespace Roloc.Tests
                 }
                 Assert.That(firstEpisode, Is.InRange(5, 7));
             }
-            CollectionAssert.AreEquivalent(Enum.GetValues(typeof(FlowMode)), observed);
+            CollectionAssert.AreEquivalent(new[] { FlowMode.Steady, FlowMode.Floating, FlowMode.Drifting,
+                FlowMode.Breather, FlowMode.Rotation }, observed);
         }
 
         [Test]

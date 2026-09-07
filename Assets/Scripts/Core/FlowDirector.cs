@@ -2,7 +2,7 @@ using System;
 
 namespace Roloc.Core
 {
-    public enum FlowMode { Steady, Floating, Drifting, Breather, Rotation }
+    public enum FlowMode { Steady, Floating, Drifting, Breather, Rotation, ColorShift, PuckOrbit, RingOrbit, DualOrbit }
 
     /// <summary>Schedules the next round's variation after each awarded match.</summary>
     public sealed class FlowDirector

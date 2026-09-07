@@ -170,6 +170,7 @@ namespace Roloc.Presentation
 
             board = Container(game, "Board");
             Place(board, new Vector2(.5f, .43f), Vector2.zero, new Vector2(350, 440));
+            InitializeVariationPresentation();
             for (int c = 0; c < 4; c++)
             {
                 var ring = ringPrefab ? Instantiate(ringPrefab, board).GetComponent<SoftShape>() : Circle(board, "Ring " + c, Palette[c], RingSlots[c], 137, true);
@@ -231,6 +232,7 @@ namespace Roloc.Presentation
         {
             AbandonDailyIfNeeded();
             CancelAllTouches(); Session.ReturnToMenu();
+            ResetVariations();
             dailyRun = false;
             audioPlayer.StopMusic();
             SetScreen(menu);
@@ -251,6 +253,7 @@ namespace Roloc.Presentation
             transitionLeft = 0; rippleTime = 0; ripple.gameObject.SetActive(false);
             motionTime = motionBlend = 0;
             transitionRotation = 0;
+            ResetVariations();
             for (int slot = 0; slot < 4; slot++)
             {
                 rings[Session.RingOrder[slot]].anchoredPosition = RingSlots[slot];
@@ -442,6 +445,8 @@ namespace Roloc.Presentation
 
         void BeginBoardTransition(bool changed, bool modeChanged, bool bothBoards)
         {
+            CancelAllTouches();
+            PrepareVariationTransition();
             if (modeChanged) motionBlend = 0;
             transitionRotation = Session.RotationSteps;
             transitionBothBoards = bothBoards && transitionRotation == 0;
@@ -450,6 +455,7 @@ namespace Roloc.Presentation
             if (transitionBothBoards) transitionDuration = Mathf.Max(transitionDuration, Mathf.Clamp(difficulty.FlowTransitionSeconds * 1.5f, 0, 1.5f));
             if (transitionRotation != 0) transitionDuration = Mathf.Max(transitionDuration, Mathf.Clamp(difficulty.RotationSeconds, 0, 1.5f));
             if (Session.IsDaily) transitionDuration = Mathf.Max(transitionDuration, Session.RequiredTransitionMilliseconds / 1000f);
+            SetVariationTransitionDuration();
             for (int c = 0; c < 4; c++)
             {
                 ringFrom[c] = rings[c].anchoredPosition;
@@ -458,12 +464,13 @@ namespace Roloc.Presentation
                 pucks[c].BoardTransitioning = true;
                 pucks[c].SetHighlighted(c == Session.ActiveColor);
                 pucks[c].IdleOffset = FloatOffset(c);
+                ringTo[c] = ringFrom[c];
             }
             for (int slot = 0; slot < 4; slot++)
             {
                 int c = Session.RingOrder[slot];
-                ringTo[c] = Session.IsDaily ? ToVector(Session.GetRingCenter(c)) : RingSlots[slot] + DriftOffset(c);
-                pucks[Session.PuckOrder[slot]].Home = PuckSlots[slot];
+                ringTo[c] = Session.IsDaily ? ToVector(Session.GetRingCenter(c)) : RegularRingHome(c);
+                pucks[Session.PuckOrder[slot]].Home = Session.IsDaily ? PuckSlots[slot] : RegularPuckHome(Session.PuckOrder[slot]);
             }
             transitionLeft = transitionDuration;
             transitionClock = Time.realtimeSinceStartupAsDouble;
@@ -472,6 +479,7 @@ namespace Roloc.Presentation
 
         void AnimateBoard(float progress)
         {
+            progress = AnimateVariationTransition(progress);
             float ease = Mathf.SmoothStep(0, 1, progress);
             for (int c = 0; c < 4; c++)
             {
@@ -503,6 +511,7 @@ namespace Roloc.Presentation
         {
             AnimateBoard(1);
             foreach (var puck in pucks) { puck.BoardTransitioning = false; puck.SnapHome(); }
+            FinishVariationTransition();
             Session.CompleteTransition();
             dailyTickAt = Time.realtimeSinceStartupAsDouble;
         }
@@ -526,31 +535,31 @@ namespace Roloc.Presentation
         void RefreshBoard(float dt)
         {
             if (Session.State == RoundState.Menu || Session.State == RoundState.GameOver) return;
-            float available = safe.rect.height;
-            float boardScale = Mathf.Min(1, Mathf.Min((safe.rect.width - 16) / 350, (available - 275) / 440));
-            board.localScale = Vector3.one * Mathf.Max(.4f, boardScale);
+            FitVariationBoard();
             bool tutorial = Session.State == RoundState.Tutorial || Session.State == RoundState.Paused && Session.WasTutorial;
             if (Session.State == RoundState.Playing)
             {
                 motionTime += dt;
+                if (Orbit(Session.FlowMode)) orbitSeconds += dt;
                 motionBlend = Mathf.MoveTowards(motionBlend, 1, dt * 2);
             }
             scoreText.text = tutorial ? "Ready?" : Session.Score.ToString(); scoreText.fontSize = tutorial ? 44 : 74;
             tempoText.text = tutorial ? "No timer. Try a match." : "";
             if (!tutorial && Session.FlowMode != FlowMode.Steady)
-                tempoText.text = Session.FlowMode == FlowMode.Floating ? "LET IT FLOAT." :
-                    Session.FlowMode == FlowMode.Drifting ? "FOLLOW THE DRIFT." :
-                    Session.FlowMode == FlowMode.Breather ? "TAKE A BREATH." : "A FRESH PERSPECTIVE.";
+                tempoText.text = VariationCaption();
             timerFill.gameObject.SetActive(!tutorial);
             timerRect.sizeDelta = new Vector2(316 * Mathf.Clamp01(Session.RemainingSeconds / Mathf.Max(.001f, Session.DurationSeconds)), 8);
-            timerFill.color = Palette[Session.ActiveColor];
+            timerFill.color = BoardTint(Session.ActiveColor);
+            RefreshPuckSymbols();
             timeText.text = tutorial ? "" : Session.RemainingSeconds.ToString("0.0") + "s";
             for (int slot = 0; slot < 4; slot++)
             {
                 int c = Session.RingOrder[slot];
                 if (Session.State == RoundState.Playing || Session.State == RoundState.Tutorial)
                 {
-                    rings[c].anchoredPosition = Session.IsDaily ? ToVector(Session.GetRingCenter(c)) : RingSlots[slot] + DriftOffset(c);
+                    rings[c].anchoredPosition = Session.IsDaily ? ToVector(Session.GetRingCenter(c)) : RegularRingHome(c);
+                    if (!Session.IsDaily) pucks[c].Home = RegularPuckHome(c);
+                    pucks[c].FollowHomeExactly = Orbit(Session.FlowMode);
                     pucks[c].IdleOffset = Session.IsDaily ? ToVector(Session.GetPuckHome(c)) - pucks[c].Home : FloatOffset(c);
                 }
                 float bounce = !Saves.Data.ReduceEffects && rippleTime > 0 && c == rippleColor ? Mathf.Sin((.4f - rippleTime) / .4f * Mathf.PI) * .1f : 0;
@@ -563,7 +572,7 @@ namespace Roloc.Presentation
                 ripple.gameObject.SetActive(rippleTime > 0 && !Saves.Data.ReduceEffects);
                 ripple.rectTransform.anchoredPosition = ripplePosition;
                 ripple.rectTransform.localScale = Vector3.one * (1 + (.4f - rippleTime) * 1.5f);
-                var tint = Palette[rippleColor]; tint.a = rippleTime / .4f * .65f; ripple.color = tint;
+                var tint = BoardTint(rippleColor); tint.a = rippleTime / .4f * .65f; ripple.color = tint;
             }
             for (int i = 0; i < guide.Length; i++)
             {
@@ -572,7 +581,7 @@ namespace Roloc.Presentation
                 int c = Session.ActiveColor;
                 float f = (i + 1) / (float)(guide.Length + 1);
                 guide[i].rectTransform.anchoredPosition = Vector2.Lerp(pucks[c].Home, rings[c].anchoredPosition, f);
-                var tint = Palette[c]; tint.a = .25f + .3f * (Mathf.Sin(Time.unscaledTime * 4 - f * 6) * .5f + .5f);
+                var tint = BoardTint(c); tint.a = .25f + .3f * (Mathf.Sin(Time.unscaledTime * 4 - f * 6) * .5f + .5f);
                 guide[i].color = tint;
             }
         }

@@ -13,6 +13,7 @@ namespace Roloc.Presentation
         public bool ReduceEffects { get; set; }
         public bool MotionPaused { get; set; }
         public bool BoardTransitioning { get; set; }
+        public bool FollowHomeExactly { get; set; }
         public Vector2 IdleOffset { get; set; }
         public Vector2 Home { get; set; }
         public RectTransform Rect => (RectTransform)transform;
@@ -35,6 +36,11 @@ namespace Roloc.Presentation
             face = GetComponent<SoftShape>();
             activeDepth = face.depth; activeShading = face.shaded; face.color = tint;
             group = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
+        }
+
+        public void SetTint(Color tint)
+        {
+            baseTint = tint; highlightInitialized = false; SetHighlighted(highlighted);
         }
 
         public void SetHighlighted(bool active)
@@ -104,6 +110,7 @@ namespace Roloc.Presentation
             float dt = Mathf.Min(Time.unscaledDeltaTime, .05f);
             if (!IsDragging && !BoardTransitioning)
             {
+                if (FollowHomeExactly) Rect.anchoredPosition = Home + IdleOffset;
                 Vector2 p = Rect.anchoredPosition;
                 Vector2 target = Home + IdleOffset;
                 Rect.anchoredPosition = new Vector2(
