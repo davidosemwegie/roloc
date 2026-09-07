@@ -1,0 +1,24 @@
+{
+  "date": "2026-09-06",
+  "unityVersion": "6000.6.0f1",
+  "capture": "Real Unity renders, real pointer handlers and rules, isolated project and fresh save; no generated gameplay screens.",
+  "captureHarness": "source/StoreCaptureTests.cs",
+  "captureTiming": "captures/timeline.csv",
+  "sourceHashes": {
+    "Assets/Audio/playing.wav": "b1d023c6aa96dc3bd02686bb5b04b605e1c8c8b4a857ef5efdde2675d3fe5036",
+    "Assets/Audio/match.wav": "a2f454c31ff2f6b82b94640d7d96a2237052d387a6d9d4c76fb9f7af21a72204",
+    "Assets/Art/AppIcon.png": "9ed0b049e29f4214f933d159ec63c9fe37d34c2bfdc1649ce95c9d7ce38a6d12",
+    "Assets/Resources/Brand/Rounded-Bold.ttf": "c358630584e8e2d8fbd6121d0f4693255ffef6d1e6d4f3441fd6e5a963a11f9e",
+    "Assets/Scripts/Core/GameSession.cs": "819c62f651de94463c0faeb2608241d9fa9d1fc7ec1c31166aebb32edbd923fa",
+    "Assets/Scripts/Core/FlowDirector.cs": "d7d3ae41ddcc59fe0a799d8f20e4aed38621eebf43a33822ed3732f52ebc91bf",
+    "Assets/Scripts/Services/CosmeticCatalog.cs": "e8f326876f267355218a3c0b04d9a418effbd8f2cb1a4d824014f028c81b7021"
+  },
+  "artwork": {
+    "file": "artwork/sculpted-backdrop.png",
+    "method": "OpenAI image generation",
+    "role": "Decorative background outside embedded game screens only",
+    "brief": "Premium portrait pale icy #F0F6FC background, mostly empty center, sculpted electric blue #315DFF and orange #FF781F torus rings cropped near lower-left and upper-right, soft studio shadows, no text or UI."
+  },
+  "audio": "Source WAV files are byte-identical copies. Only music mix level and boundary fades are applied in the editable composition; no replacement music or effects.",
+  "icon": "Existing Assets/Art/AppIcon.png, resized to 1024 square and flattened opaque."
+}

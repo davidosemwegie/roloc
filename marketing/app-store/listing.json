@@ -1,0 +1,24 @@
+{
+  "locale": "en-US",
+  "name": "Ring Rush",
+  "subtitle": "Match colors. Find your flow.",
+  "promotionalText": "One bright puck. Four colorful rings. Find your rhythm in Flow, chase your best in Rush, and make every match your own.",
+  "description": "Match the color. Beat the clock.\n\nDrag the bright puck into its matching ring before time runs out. Simple to pick up, satisfying to get right, and always another chance to beat your best.\n\nFIND YOUR FLOW\nSettle into the rhythm with three chances, a gentler opening, and opportunities to recover a chance through clean matches.\n\nFEEL THE RUSH\nOne chance. A ticking clock. See how far your focus can take you in a sharper test of timing and accuracy.\n\nKEEP IT LIVELY. OR KEEP IT STILL.\nChoose a lively board with floating pucks, drifting rings, and smooth changes of position. Prefer less motion? Choose a Still board and chase a separate personal best.\n\nMAKE EVERY MATCH COUNT\nBuild your combo and land centered Perfect matches for extra cosmetic progress. Unlock puck finishes, ring styles, a trail, and a new background as you play.\n\nPLAY YOUR WAY\nMatching symbols add another way to read the colors. Adjust sound, music, haptics, and effects to suit you. Flow and Rush work offline, and your progress and preferences are saved on your device.\n\nFour colors. One more try.",
+  "keywords": "arcade,reflex,timing,drag,puck,rings,combo,precision,offline,casual,focus,flow,score",
+  "releaseNotes": "Meet Ring Rush: color matching with a little more movement. Play Flow or Rush, choose a Lively or Still board, land Perfect matches, and unlock your own look.",
+  "platform": "iOS",
+  "bundleId": "com.osazi.roloc.unitydev",
+  "sku": "ring-rush-ios",
+  "team": "ClearJar Financial Inc.",
+  "primaryCategory": "Games",
+  "proposedGameCategories": [
+    "Casual",
+    "Action"
+  ],
+  "supportUrl": null,
+  "privacyPolicyUrl": null,
+  "marketingUrl": null,
+  "copyright": null,
+  "reviewContact": null,
+  "status": "LOCAL_DRAFT_ACCOUNT_MEMBERSHIP_EXPIRED"
+}

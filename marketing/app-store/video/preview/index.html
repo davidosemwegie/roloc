@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=886,height=1920">
+<script src="assets/gsap.min.js"></script>
+<style>
+@font-face{font-family:Rounded;src:url('assets/Rounded-Bold.ttf')}
+*{box-sizing:border-box}html,body{margin:0;width:886px;height:1920px;overflow:hidden;background:#F0F6FC}
+#root{position:relative;width:886px;height:1920px;overflow:hidden}
+#gameplay{position:absolute;inset:0;width:886px;height:1920px;object-fit:contain}
+#closing{position:absolute;left:0;right:0;bottom:0;height:185px;opacity:0;display:flex;align-items:center;justify-content:center;background:#F0F6FC;color:#222347;border-radius:0;font:700 48px Rounded,sans-serif;letter-spacing:-1px;}
+</style></head><body>
+<div data-hf-id="hf-zact" id="root" data-composition-id="ring-rush" data-width="886" data-height="1920" data-duration="15">
+<video data-hf-id="hf-4p1b" id="gameplay" class="clip" src="assets/gameplay.mp4" data-start="0" data-duration="15" data-track-index="0" muted playsinline></video>
+<audio data-hf-id="hf-bspp" id="music" class="clip" src="assets/playing.wav" data-start="0" data-duration="15" data-track-index="1" data-volume="0.35" data-automation="{&quot;version&quot;: 1, &quot;lanes&quot;: [{&quot;target&quot;: &quot;volume&quot;, &quot;points&quot;: [{&quot;t&quot;: 0, &quot;v&quot;: 0}, {&quot;t&quot;: 0.15, &quot;v&quot;: 0.35}, {&quot;t&quot;: 14.7, &quot;v&quot;: 0.35}, {&quot;t&quot;: 15, &quot;v&quot;: 0}]}]}"></audio>
+<audio data-hf-id="hf-p0ba" id="match-0" class="clip" src="assets/match.wav" data-start="0.752585" data-duration="0.046667" data-track-index="2" data-volume="0.8"></audio>
+<audio data-hf-id="hf-ws7w" id="match-1" class="clip" src="assets/match.wav" data-start="1.856147" data-duration="0.046667" data-track-index="3" data-volume="0.8"></audio>
+<audio data-hf-id="hf-9bjo" id="match-2" class="clip" src="assets/match.wav" data-start="2.921620" data-duration="0.046667" data-track-index="4" data-volume="0.8"></audio>
+<audio data-hf-id="hf-0c16" id="match-3" class="clip" src="assets/match.wav" data-start="3.960516" data-duration="0.046667" data-track-index="5" data-volume="0.8"></audio>
+<audio data-hf-id="hf-nhq7" id="match-4" class="clip" src="assets/match.wav" data-start="5.036436" data-duration="0.046667" data-track-index="6" data-volume="0.8"></audio>
+<audio data-hf-id="hf-t7jc" id="match-5" class="clip" src="assets/match.wav" data-start="6.296401" data-duration="0.046667" data-track-index="7" data-volume="0.8"></audio>
+<audio data-hf-id="hf-wpeo" id="match-6" class="clip" src="assets/match.wav" data-start="7.577192" data-duration="0.046667" data-track-index="8" data-volume="0.8"></audio>
+<audio data-hf-id="hf-i739" id="match-7" class="clip" src="assets/match.wav" data-start="8.618859" data-duration="0.046667" data-track-index="9" data-volume="0.8"></audio>
+<audio data-hf-id="hf-agfo" id="match-8" class="clip" src="assets/match.wav" data-start="9.870496" data-duration="0.046667" data-track-index="10" data-volume="0.8"></audio>
+<audio data-hf-id="hf-oerm" id="match-9" class="clip" src="assets/match.wav" data-start="10.920430" data-duration="0.046667" data-track-index="11" data-volume="0.8"></audio>
+<audio data-hf-id="hf-jjjr" id="match-10" class="clip" src="assets/match.wav" data-start="12.204000" data-duration="0.046667" data-track-index="12" data-volume="0.8"></audio>
+<audio data-hf-id="hf-qil9" id="match-11" class="clip" src="assets/match.wav" data-start="13.489220" data-duration="0.046667" data-track-index="13" data-volume="0.8"></audio>
+<audio data-hf-id="hf-tifo" id="match-12" class="clip" src="assets/match.wav" data-start="14.524220" data-duration="0.046667" data-track-index="14" data-volume="0.8"></audio>
+<div data-hf-id="hf-8od7" id="closing" class="clip" data-start="13" data-duration="2" data-track-index="20" data-layout-allow-caption-zone="">Find your flow.</div>
+</div><script>
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+tl.set('#closing',{opacity:1},13);
+window.__timelines['ring-rush']=tl;
+</script></body></html>

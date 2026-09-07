@@ -1,0 +1,5 @@
+Unity 6000.6.0f1
+Seed 0
+Frames 380
+Duration 16.01154
+Moving capture True

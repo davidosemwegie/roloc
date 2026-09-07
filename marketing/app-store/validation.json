@@ -1,0 +1,175 @@
+{
+  "date": "2026-09-06",
+  "status": "LOCAL_ASSETS_VERIFIED_PORTAL_BLOCKED_BY_EXPIRED_MEMBERSHIP",
+  "copy": {
+    "name": {
+      "count": 9,
+      "max": 30,
+      "unit": "characters",
+      "pass": true
+    },
+    "subtitle": {
+      "count": 29,
+      "max": 30,
+      "unit": "characters",
+      "pass": true
+    },
+    "promotionalText": {
+      "count": 119,
+      "max": 170,
+      "unit": "characters",
+      "pass": true
+    },
+    "description": {
+      "count": 1073,
+      "max": 4000,
+      "unit": "characters",
+      "pass": true
+    },
+    "keywords": {
+      "count": 84,
+      "max": 100,
+      "unit": "UTF-8 bytes",
+      "pass": true
+    },
+    "releaseNotes": {
+      "count": 158,
+      "max": 4000,
+      "unit": "characters",
+      "pass": true
+    }
+  },
+  "images": [
+    {
+      "file": "screenshots/01-match.png",
+      "width": 1320,
+      "height": 2868,
+      "format": "png",
+      "opaque": true,
+      "sha256": "7314f4619fcba9907a873b7a1131741bffc0d1df4273ac02f3aff9f723d2baff"
+    },
+    {
+      "file": "screenshots/02-modes.png",
+      "width": 1320,
+      "height": 2868,
+      "format": "png",
+      "opaque": true,
+      "sha256": "199320e845f8edb9838475e2524ddaec6a132d950b828c2d05ca5500c85f55b3"
+    },
+    {
+      "file": "screenshots/03-motion.png",
+      "width": 1320,
+      "height": 2868,
+      "format": "png",
+      "opaque": true,
+      "sha256": "76f01c2e226a3b54da5e458515ac9fb1ad764e8ac3a70693c84eaef03dcfbba3"
+    },
+    {
+      "file": "screenshots/04-perfect.png",
+      "width": 1320,
+      "height": 2868,
+      "format": "png",
+      "opaque": true,
+      "sha256": "8f98573efd945d612a085475fbd1059aa79005894047cc9bf10e1f35a2512761"
+    },
+    {
+      "file": "screenshots/05-collection.png",
+      "width": 1320,
+      "height": 2868,
+      "format": "png",
+      "opaque": true,
+      "sha256": "662d10fa3b2ecf5a5b1b60b0bc8d3bfccc08f7a333140465ebb083e602c00b74"
+    },
+    {
+      "file": "screenshots/06-your-pace.png",
+      "width": 1320,
+      "height": 2868,
+      "format": "png",
+      "opaque": true,
+      "sha256": "f1f0cc68b21f847aff78323a0bca574f9131f5611018bdfea3e815de2cc20f94"
+    },
+    {
+      "file": "app-icon-1024.png",
+      "width": 1024,
+      "height": 1024,
+      "format": "png",
+      "opaque": true,
+      "sha256": "533a6101df204c2ce3280c8136aad36d79a4c18d0cb0ebfa7ac607d31703e294"
+    },
+    {
+      "file": "video/poster-frame.png",
+      "width": 886,
+      "height": 1920,
+      "format": "png",
+      "opaque": true,
+      "sha256": "22c5f3656d4ec449c12858bfd3f4da9f54ba0b6d231bbe0ab48193c6d036cc6c"
+    }
+  ],
+  "preview": {
+    "file": "video/ring-rush-preview.mp4",
+    "durationSeconds": 15,
+    "width": 886,
+    "height": 1920,
+    "codec": "h264",
+    "profile": "High",
+    "level": 40,
+    "fps": "30/1",
+    "frames": 450,
+    "bitrate": 10854101,
+    "pixelFormat": "yuv420p",
+    "fieldOrder": "progressive",
+    "audioCodec": "aac",
+    "audioChannels": 2,
+    "audioSampleRate": 48000,
+    "audioBitrate": 258006,
+    "sizeBytes": 20853712,
+    "sha256": "087ee31fd06cfc8be5627fe3020a83cd550b1e5bfb81e0b919d790ca3fb7b668",
+    "posterSeconds": 1
+  },
+  "audio": [
+    {
+      "file": "playing.wav",
+      "byteIdenticalOriginal": true
+    },
+    {
+      "file": "match.wav",
+      "byteIdenticalOriginal": true
+    }
+  ],
+  "audioLevels": {
+    "meanDb": -22.1,
+    "peakDb": -1,
+    "last20msPeakDb": -37.88
+  },
+  "matchEffectCount": 13,
+  "matchTimes": [
+    0.752585,
+    1.856147,
+    2.92162,
+    3.960516,
+    5.036436,
+    6.296401,
+    7.577192,
+    8.618859,
+    9.870496,
+    10.92043,
+    12.204,
+    13.48922,
+    14.52422
+  ],
+  "compositionChecks": {
+    "pass": true,
+    "lintErrors": 0,
+    "lintWarnings": 0,
+    "runtimeErrors": 0,
+    "layoutErrors": 0,
+    "contrastErrors": 0
+  },
+  "manualReview": {
+    "thumbnailHeadlines": "Reviewed six-image contact sheet; readable headlines and faithful gameplay.",
+    "videoFrames": "Reviewed matching, moving-board and closing frames; caption stays outside play area.",
+    "noSound": "Browser preview played muted from 0 to 15 seconds; gameplay and closing message remain understandable without audio.",
+    "appStoreUpload": "Blocked; no media processing or saved listing verification possible yet.",
+    "deviceCapture": "Unity-rendered captures, not physical-iPhone recording."
+  }
+}

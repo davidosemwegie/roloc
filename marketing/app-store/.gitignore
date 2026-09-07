@@ -1,0 +1,9 @@
+**/node_modules/
+**/.hyperframes/
+**/.cache/
+**/.thumbnails/
+**/.waveform-cache/
+captures/frames/
+source/capture-project-path.txt
+video/ring-rush-render.mp4
+source/render.log
