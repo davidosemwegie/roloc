@@ -1,4 +1,6 @@
-# Draft listing handoff
+# App Store submission handoff
+
+**September 7, 2026:** owner-authorized App Store submission completed. Version **1.0**, binary **0.1.0 (9)**, is **Waiting for Review**. [Submission status](https://appstoreconnect.apple.com/apps/6809459301/distribution/reviewsubmissions/details/d62fa954-e2c6-4c4d-8ece-1d694414d344). Approval and release remain pending.
 
 ## Account and app record
 
@@ -14,28 +16,29 @@
 - [x] Saved Games category with Casual and Action subcategories.
 - [x] Uploaded six PNGs to the 6.9-inch iPhone set, sorted 01–06; verified order after reload.
 - [ ] Upload `video/ring-rush-preview.mp4`; wait for processing, inspect playback and choose the 1.0-second poster frame.
-- [ ] Verify saved copy, screenshot order and processed video after reloading the record.
+- [x] Verified saved copy and six screenshots after reloading; optional preview video remains omitted.
 - [ ] Initial release notes are prepared. Enter them only if the selected version workflow supports that field.
 - [x] Build 9 targets iPhone only (`UIDeviceFamily=[1]`); this delivery contains iPhone media.
 
 ## Information requiring owner confirmation
 
 - [x] Support email: `osahon@clearjar.co`.
-- [ ] Public support URL.
-- [ ] Public privacy-policy URL and privacy answers based on the exact release build and its SDKs/network services. Do not infer “no data collected” from offline Flow/Rush alone.
-- [ ] Copyright/legal rights-holder text; company name alone is not confirmation of copyright ownership.
+- [x] Public Google support form saved; reply email/device details optional, no sign-in required, responses private. URL in `listing.json`.
+- [x] Public Google Doc privacy policy saved; anyone with link is Viewer. App Privacy published for Email Address, Customer Support, Gameplay Content, User ID, and Product Interaction: App Functionality, linked, no tracking. See `docs/PRIVACY.md`.
+- [x] Copyright `2026 ClearJar Financial Inc.`; owner explicitly confirmed rights or permission for all artwork/music/effects.
 - [x] App Review contact name, email and supplied telephone saved privately in Apple.
-- [ ] Final-build review instructions for gated Daily features.
-- [ ] Age-rating questionnaire, content-rights declarations, export compliance, and any region-specific compliance/trader details.
-- [ ] Pricing and storefront availability; no price has been selected in this task.
+- [x] Final-build review instructions explain tutorial, offline modes, practice-only Daily, and no ads/purchases/analytics.
+- [x] Age-rating questionnaire saved as 4+ with regional equivalents; no advertising/contests for this build. Content rights recorded. Build export compliance accepted by Apple.
+- [ ] Reassess regional licenses/trader details before relevant commercial or distribution changes; no agreements were changed during this setup.
+- [x] Free pricing saved for all 175 storefronts; worldwide availability on release.
 - [ ] Optional marketing URL, category details and truthful accessibility declarations.
 
 ## Build and release readiness
 
-- [ ] Select a properly signed, processed release build using the existing bundle ID.
-- [ ] Confirm the build supplies the existing 1024 × 1024 icon correctly.
+- [x] Selected processed build 9 with `com.clearjar.ringrush`; Apple accepted it in the review submission.
+- [x] Existing 1024 × 1024 icon verified in source and Apple's included build assets.
 - [ ] Verify real-device behavior, offline Flow/Rush, cosmetics and preferences against the final listing.
-- [ ] Review any Daily surface shipped in the build: do not imply public competition or global leaderboards. Provide review access/instructions or resolve release readiness separately.
+- [x] Reviewed Daily surface and supplied practice-only review instructions. Ranked submissions remain paused on the isolated beta deployment.
 - [ ] Confirm screenshot UI matches the final build; regenerate captures after material UI changes.
 
-**Release boundary:** the owner explicitly requested no App Store review submission yet, then authorized public TestFlight. Build 9 is waiting for Beta App Review and the public link is https://testflight.apple.com/join/uBd2Ca49; it cannot accept testers until approved. Ranked Daily is paused on the beta deployment. Do not submit the App Store release, change agreements, or purchase membership. Store/dev identity changes were separately approved.
+**Release state:** the owner subsequently authorized App Store review; Apple now reports Waiting for Review. The existing automatic-release-after-approval selection remains enabled. TestFlight's separate public link is https://testflight.apple.com/join/uBd2Ca49; its last verified state was Waiting for Beta App Review. Ranked Daily remains paused. Future advertising builds require a revised policy, privacy label, and age questionnaire before submission. Agreements and membership were not changed.

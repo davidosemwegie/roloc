@@ -1,6 +1,15 @@
-# Ring Rush privacy disclosure draft
+# Ring Rush privacy disclosure inventory
 
-This is an implementation inventory for the release owner. It is not a submitted App Store disclosure or a published privacy policy. Review the final binary, enabled deployment, third-party infrastructure settings, and [Apple's privacy definitions](https://developer.apple.com/app-store/app-privacy-details/) before completing App Store Connect.
+This implementation inventory supports the release owner. The public policy and submitted disclosure are recorded below. Reassess the final binary, enabled deployment, third-party infrastructure settings, and [Apple's privacy definitions](https://developer.apple.com/app-store/app-privacy-details/) whenever collection changes.
+
+## Published policy and build 9 disclosure — September 7, 2026
+
+- [Public privacy policy](https://docs.google.com/document/d/1mDMFBulWr3so1DPojF6IYVHLHNd9H61ACp3FKwtMak0/view): Google Doc in the owner's ChatGPT folder. Drive metadata confirms `anyone / reader`, with search discovery disabled. Visitors can view, not edit.
+- [Support form](https://docs.google.com/forms/d/e/1FAIpQLSdZvo9IH7wCY63cpYVSbsQ_I2aA6aBaN9RZIhyPInVIswdT4g/viewform): one required message, optional reply email and device/app version. Anyone with the link can respond without signing in; automatic email collection, one-response restriction, and public response summaries are off. Contact: `osahon@clearjar.co`.
+- App Privacy responses published in App Store Connect: **Email Address**, **Customer Support**, **Gameplay Content**, **User ID**, and **Product Interaction**. All are used for **App Functionality**, linked to the user, and not used for tracking. Product Interaction covers the ranked drop/timing/pause trace, not an analytics SDK.
+- Build 9 contains no advertising or analytics SDK. Rankings remain paused on the isolated beta deployment. Ordinary modes and Daily practice remain local; existing ranked guests may still authenticate for saved standings or queued uploads. Do not label the app “Data Not Collected.”
+- Source review covered `DailyClient`, the Daily presentation flow, native Keychain/sharing code, validation retention, and scheduled purge. The coordinator checked the material paths and verified the published form and Drive permissions. Provider logs/backups and a complete operator deletion process remain operational follow-up; the policy does not promise immediate or automated deletion.
+- Update this policy, the App Privacy responses, and age-rating Advertising answer before shipping the separate advertising integration. The build-9 policy must not be reused unchanged for an ads-enabled binary.
 
 ## Data used by this version
 
@@ -21,7 +30,7 @@ The application has no advertising or analytics SDK and does not send cosmetic p
 
 ## App Store Connect review items
 
-- Assess **Identifiers / User ID** and **Usage Data / Gameplay Content** for Daily guest records and run traces, used for app functionality. Determine whether other usage or diagnostics categories apply to actual operational collection.
+- Assess **Identifiers / User ID**, **User Content / Gameplay Content**, and **Usage Data / Product Interaction** for Daily guest records and run traces, used for app functionality. Determine whether other usage or diagnostics categories apply to actual operational collection.
 - Treat data associated with a persistent guest identifier conservatively as linked until the release owner confirms Apple's definitions against the implemented lifecycle.
 - Confirm there is no cross-company tracking or advertising use in the submitted build or provider configuration; do not request App Tracking Transparency for a use the app does not perform.
 - Inspect the Unity-generated privacy manifest and every embedded framework. Required-reason API declarations must match the actual binary, including preferences, timestamps, storage, and native code usage where applicable.

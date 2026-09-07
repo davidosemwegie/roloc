@@ -35,7 +35,7 @@ The release owner may need to sign in, satisfy two-factor authentication, accept
 
 Provide beta description, what to test, a working feedback contact, and accurate export-compliance information. Create a private tester group and assign the processed build. Start with internal testers; external distribution may require Beta App Review. Share the invitation code/build only with that cohort. Apple documents the upload, group, review, and invitation flow in its [TestFlight overview](https://developer.apple.com/help/app-store-connect/test-a-beta-version/testflight-overview).
 
-The owner authorized public TestFlight on September 7, 2026. Public gameplay testing is separate from public Daily competition: keep ranked Daily disabled on the beta deployment until its public-competition gates are complete. Invitations/messages require authorized recipients. See `PRIVACY.md` for the disclosure inventory and unresolved release-owner checks. App Store review and publication remain on hold.
+The owner authorized public TestFlight on September 7, 2026, then explicitly authorized App Store review after listing setup. Public gameplay testing is separate from public Daily competition: keep ranked Daily disabled on the beta deployment until its public-competition gates are complete. Invitations/messages require authorized recipients. See `PRIVACY.md` for the disclosure inventory and unresolved operational checks.
 
 ## Acceptance and recorded outcome
 
@@ -54,6 +54,15 @@ A public release additionally requires verified App Attest integration, suspicio
 - Public support/privacy URLs, copyright/content rights, final-build privacy and age disclosures, pricing/availability, and alignment of the App Store version with a release binary remain release work. The earlier preview video has not been uploaded. Build 9 has processed successfully for TestFlight.
 
 ## TestFlight delivery — build 9 (September 7, 2026)
+
+### Subsequent App Store submission
+
+- The owner authorized App Review and confirmed ownership or distribution permission for all artwork and original recordings. App Information records no third-party content and a 4+ age rating with regional equivalents; copyright is `2026 ClearJar Financial Inc.`.
+- Public support form and read-only Google Docs privacy policy are saved in `marketing/app-store/listing.json`. App Privacy responses were published for support and guest-linked ranking data, used for functionality without tracking. No ads/analytics are included in this build; Daily ranked submissions remain disabled.
+- Saved free prices across 175 countries/regions and availability on release. The owner's existing **automatic release after approval** selection remains enabled. Reviewer contact and instructions explain offline Flow/Rush, the tutorial, and practice-only Daily.
+- On September 7, 2026 at 14:13 UTC, Apple confirmed **1 Item Submitted**: store version **1.0**, processed binary **0.1.0 (9)**. The [submission](https://appstoreconnect.apple.com/apps/6809459301/distribution/reviewsubmissions/details/d62fa954-e2c6-4c4d-8ece-1d694414d344) shows **Waiting for Review**, ID `d62fa954-e2c6-4c4d-8ece-1d694414d344`. This is App Store review, separate from the earlier TestFlight Beta App Review. Approval and public release have not been verified.
+
+### Build and beta history
 
 - Stable source `9f44cf2` freshly exported with Unity 6000.6.0f1 as **0.1.0 (9)** into `Builds/iOS-store9`. Includes the build-8 game, refreshed store assets, and separated store/development identities; unfinished advertising work is excluded.
 - Xcode Release archive succeeded at `Builds/Archives/RingRush-store9.xcarchive`. The app resolves to `com.clearjar.ringrush`, team `BK7TPQ53FF`, iPhone only. Deep, strict signature verification passed. Unity settings returned to `com.clearjar.ringrush.dev`.

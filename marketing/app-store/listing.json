@@ -15,10 +15,10 @@
     "Casual",
     "Action"
   ],
-  "supportUrl": null,
-  "privacyPolicyUrl": null,
+  "supportUrl": "https://docs.google.com/forms/d/e/1FAIpQLSdZvo9IH7wCY63cpYVSbsQ_I2aA6aBaN9RZIhyPInVIswdT4g/viewform",
+  "privacyPolicyUrl": "https://docs.google.com/document/d/1mDMFBulWr3so1DPojF6IYVHLHNd9H61ACp3FKwtMak0/view",
   "marketingUrl": null,
-  "copyright": null,
+  "copyright": "2026 ClearJar Financial Inc.",
   "reviewContact": {
     "email": "osahon@clearjar.co",
     "firstName": "Osahon",
@@ -26,7 +26,7 @@
     "phone": null,
     "phoneSavedInAppStoreConnect": true
   },
-  "status": "APP_STORE_CONNECT_DRAFT_SAVED_NOT_SUBMITTED",
+  "status": "WAITING_FOR_REVIEW",
   "supportEmail": "osahon@clearjar.co",
   "developmentBundleId": "com.clearjar.ringrush.dev",
   "appleTeamId": "BK7TPQ53FF",
@@ -34,5 +34,12 @@
   "appStoreConnectUrl": "https://appstoreconnect.apple.com/apps/6809459301/distribution",
   "screenshotsUploaded": 6,
   "previewUploaded": false,
-  "releaseMode": "Manual"
+  "releaseMode": "Automatic after approval",
+  "price": "Free",
+  "availability": "All 175 countries or regions; available on app release",
+  "ageRating": "4+ with regional equivalents",
+  "storeVersion": "1.0",
+  "submittedBuild": "0.1.0 (9)",
+  "submittedAt": "2026-09-07T14:13:00Z",
+  "submissionId": "d62fa954-e2c6-4c4d-8ece-1d694414d344"
 }
