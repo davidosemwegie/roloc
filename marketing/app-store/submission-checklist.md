@@ -4,7 +4,7 @@
 
 - [x] Recheck access: New App form opens for ClearJar Financial Inc. on September 7, 2026. Paid Apps agreement warning remains visible.
 - [x] Rechecked and created one Ring Rush record (Apple ID `6809459301`).
-- [x] Registered approved store ID `com.clearjar.ringrush` for company team `BK7TPQ53FF`; existing dev identifier/signing remain unchanged.
+- [x] Registered approved store ID `com.clearjar.ringrush` and separate dev ID `com.clearjar.ringrush.dev` for company team `BK7TPQ53FF`; the existing legacy device installation remains intact.
 - [x] Created owner-approved title “Ring Rush - Match the colors”; English (US); SKU `ring-rush-ios`; bundle ID `com.clearjar.ringrush`.
 - [x] App record: https://appstoreconnect.apple.com/apps/6809459301/distribution
 

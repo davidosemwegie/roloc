@@ -1,6 +1,6 @@
 # Ring Rush closed TestFlight delivery
 
-These are release instructions and acceptance gates. This document does not assert that an archive was uploaded, Apple approved a build, or testers were invited.
+These are release instructions, acceptance gates, and dated delivery records. Archive, upload, processing, and invitation outcomes are recorded separately below.
 
 ## Prepare the exact version
 
@@ -52,6 +52,14 @@ A public release additionally requires verified App Attest integration, suspicio
 - An isolated Unity 6000.6.0f1 store export using build number 9 passed. Xcode resolved `PRODUCT_BUNDLE_IDENTIFIER=com.clearjar.ringrush` and team `BK7TPQ53FF`; Unity settings reverted to the dev identity. A separate Configure invocation also passed. No archive, install or upload was made from this verification export; it excluded unfinished advertising changes.
 - Six screenshots, listing copy, subtitle, Casual/Action game categories and review contact are saved. Manual release is selected. No review submission or publication is authorized; the owner explicitly requested keeping the draft.
 - Public support/privacy URLs, copyright/content rights, final-build privacy and age disclosures, pricing/availability, review access for any gated Daily feature, and a processed store build remain release work. The earlier preview video has not been uploaded. The new app icon will come from a processed build.
+
+## TestFlight delivery — build 9 (September 7, 2026)
+
+- Stable source `9f44cf2` freshly exported with Unity 6000.6.0f1 as **0.1.0 (9)** into `Builds/iOS-store9`. Includes the build-8 game, refreshed store assets, and separated store/development identities; unfinished advertising work is excluded.
+- Xcode Release archive succeeded at `Builds/Archives/RingRush-store9.xcarchive`. The app resolves to `com.clearjar.ringrush`, team `BK7TPQ53FF`, iPhone only. Deep, strict signature verification passed. Unity settings returned to `com.clearjar.ringrush.dev`.
+- `xcodebuild -exportArchive` successfully uploaded the package to App Store Connect at 13:24 UTC. Apple processing is pending. Upload produced a non-blocking missing-dSYM warning for `UnityRuntime.framework`; Unity runtime crash symbolication may be incomplete.
+- Created **Ring Rush Private Beta**, an internal group with only the owner's authorized email. Automatic distribution is disabled so later uploads must be assigned deliberately. Build assignment and invitation are pending processing; no redeem code or successful TestFlight installation is claimed yet.
+- Beta feedback and contact details are saved in Apple. No App Store review or external Beta App Review was submitted. Public competition remains gated; the build uses the isolated ClearJar Studio closed-test deployment.
 
 ## Current device delivery record — build 8
 
