@@ -47,10 +47,11 @@ A public release additionally requires verified App Attest integration, suspicio
 
 ## Current delivery record — 2026-09-07 UTC
 
-- Unity 6000.6.0f1 freshly exported version **0.1.0, build 2**, using `BuildTestFlight` and the isolated Clearjar Studio closed-test deployment (`affable-lyrebird-62`). Production standings remain separate and ranked production remains disabled.
+- Unity 6000.6.0f1 freshly exported version **0.1.0, build 4**, using `BuildTestFlight` and the isolated Clearjar Studio closed-test deployment (`affable-lyrebird-62`). Production standings remain separate and ranked production remains disabled.
 - Xcode **Release archive succeeded** at `Builds/Archives/RingRush.xcarchive`. Code-sign verification passed for `com.osazi.roloc.unitydev`.
-- Installed and launched on the connected iPhone; CoreDevice confirmed the RingRush process remained running.
+- Build 4 installed and launched successfully on the paired iPhone over the local network. CoreDevice confirmed the RingRush process remained running. The first launch command timed out; a subsequent launch succeeded.
 - Unity: 134 ordinary EditMode tests passed (one explicit network test skipped in the unfiltered suite). PlayMode checks passed across focused runs, including a real 45-match rendered/input Daily run accepted by Convex with a transition pause/resume. Actual UI captures were inspected for menu, board, collection, pause, and results.
+- Build 4 adds faint inactive pucks, inactive-puck release penalties, and a measured results stack that adapts to the safe area. The integrated change passed 73 focused Unity rule tests and six PlayMode touch/layout/capture tests, including compact and tall iPhone safe areas. Rendered captures were inspected.
 - GitHub backend and Daily health workflows passed. Scheduled Convex checks are live every five minutes; GitHub cron scheduling begins when the workflow reaches the default branch.
 - TestFlight distribution was attempted and stopped by Xcode with **“No Accounts with App Store Connect Access.”** No TestFlight upload or tester invitation was completed. An authorized App Store Connect account must be added in Xcode before retrying the existing archive export.
 - Physical-device audio/haptic perception, accessibility preferences, extended offline play, repeated relaunches, native sharing, and sustained FPS still need a hands-on acceptance pass. Installation and Editor tests do not establish those results.
