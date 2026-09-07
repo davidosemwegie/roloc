@@ -27,6 +27,8 @@ namespace Roloc.Services
         public bool RushSuggestionShown;
         public long ProgressPoints;
         public long TotalPerfects;
+        public bool BadgesInitialized;
+        public List<string> UnlockedBadges = new List<string>();
         public int LongestCombo;
         public int LongestPerfectStreak;
         public string EquippedPuck = "classic";
@@ -65,6 +67,7 @@ namespace Roloc.Services
         public long ProgressEarned;
         public long GoalProgressEarned;
         public bool Finalized;
+        public List<string> NewBadges = new List<string>();
     }
 
     [Serializable]

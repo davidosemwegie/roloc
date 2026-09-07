@@ -40,7 +40,7 @@ extern "C" {
     void RRHaptic(int strength) {
         dispatch_async(dispatch_get_main_queue(), ^{
             UIImpactFeedbackGenerator* generator = [[UIImpactFeedbackGenerator alloc]
-                initWithStyle:strength ? UIImpactFeedbackStyleMedium : UIImpactFeedbackStyleLight];
+                initWithStyle:strength == 2 ? UIImpactFeedbackStyleRigid : strength ? UIImpactFeedbackStyleMedium : UIImpactFeedbackStyleLight];
             [generator prepare];
             [generator impactOccurredWithIntensity:strength ? 0.7 : 0.4];
         });

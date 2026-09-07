@@ -47,11 +47,11 @@ namespace Roloc.Services
 #endif
             }
         }
-        public static void Haptic(bool enabled, bool milestone = false)
+        public static void Haptic(bool enabled, bool milestone = false, bool perfect = false)
         {
             if (!enabled) return;
 #if UNITY_IOS && !UNITY_EDITOR
-            RRHaptic(milestone ? 1 : 0);
+            RRHaptic(perfect ? 2 : milestone ? 1 : 0);
 #endif
         }
         public static void Share(string text, string imagePath = "")

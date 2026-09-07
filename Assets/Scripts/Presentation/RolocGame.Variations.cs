@@ -33,6 +33,9 @@ namespace Roloc.Presentation
         void ClearBoardEffects()
         {
             rippleTime = 0; ripple.gameObject.SetActive(false);
+            perfectFeedbackLeft = 0;
+            foreach (var effect in perfectRipples)
+                if (effect) effect.gameObject.SetActive(false);
             for (int i = 0; i < trail.Length; i++)
             {
                 trailLife[i] = 0;

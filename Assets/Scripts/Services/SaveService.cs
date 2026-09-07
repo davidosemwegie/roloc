@@ -114,6 +114,7 @@ namespace Roloc.Services
             run.LongestPerfectStreak = Math.Max(run.LongestPerfectStreak, perfectStreak);
             int matchPoints = perfect ? 2 : 1;
             Data.TotalScore = SaturatingAdd(Data.TotalScore, 1);
+            BadgeCatalog.Credit(Data);
             if (perfect) Data.TotalPerfects = SaturatingAdd(Data.TotalPerfects, 1);
             Data.LongestCombo = Math.Max(Data.LongestCombo, run.LongestCombo);
             Data.LongestPerfectStreak = Math.Max(Data.LongestPerfectStreak, run.LongestPerfectStreak);
@@ -236,6 +237,7 @@ namespace Roloc.Services
 
         private static void Sanitize(PlayerProgress data)
         {
+            BadgeCatalog.Initialize(data);
             data.SchemaVersion = CurrentSchemaVersion;
             data.HighScore = Math.Max(0, data.HighScore);
             data.GamesPlayed = Math.Max(0, data.GamesPlayed);

@@ -63,6 +63,7 @@ namespace Roloc.Presentation
             resultRewardTrack.shadow = resultRewardTrack.shaded = false; resultRewardTrack.cornerRadius = 3;
             resultRewardFill = Box(resultRewardTrack.transform, "Earned progress", Palette[2], Vector2.zero, Vector2.zero);
             resultRewardFill.shadow = resultRewardFill.shaded = false; resultRewardFill.cornerRadius = 3;
+            BuildBadgeUI();
             dailyStandingLabel = Label(results, "", 11, Ink, Vector2.zero, Vector2.zero);
             resultReplay = (RectTransform)Button(results, "PLAY AGAIN", Vector2.zero, new Vector2(320, 56),
                 new Vector2(.5f, .5f), Palette[0], Color.white, BeginRun).transform;
@@ -76,6 +77,7 @@ namespace Roloc.Presentation
 
         void RefreshResultRewards()
         {
+            RefreshResultBadges();
             resultStatValues[0].text = CurrentRecord().HighScore.ToString();
             resultStatValues[1].text = Session.BestCombo.ToString();
             resultStatValues[2].text = Session.BestPerfectStreak.ToString();
@@ -108,6 +110,7 @@ namespace Roloc.Presentation
 
         void LateUpdate()
         {
+            UpdatePerfectFeedback();
             if (results.gameObject.activeInHierarchy && resultLayoutSize != results.rect.size) LayoutResults();
         }
 
@@ -125,7 +128,7 @@ namespace Roloc.Presentation
             resultLayoutSize = results.rect.size;
             float width = Mathf.Min(350, resultLayoutSize.x - 32);
             bool compact = resultLayoutSize.y < 720;
-            float gap = compact ? 7 : 16, headerHeight = compact ? 34 : 44;
+            float gap = compact ? (resultBadgeRow.gameObject.activeSelf ? 4 : 7) : 16, headerHeight = compact ? 34 : 44;
             resultTitle.fontSize = Session.Score > startingBest ? 28 : compact ? 32 : 38;
             float titleHeight = MeasureResultText(resultTitle, width);
             float reasonHeight = MeasureResultText(resultReason, width);
@@ -134,8 +137,9 @@ namespace Roloc.Presentation
             float rewardBodyHeight = MeasureResultText(resultProgress, rewardTextWidth);
             float rewardHeight = Mathf.Max(90, rewardTitleHeight + rewardBodyHeight + 28);
             float rankingHeight = dailyStandingLabel.gameObject.activeSelf ? MeasureResultText(dailyStandingLabel, width) : 0;
-            int rows = rankingHeight > 0 ? 9 : 8;
-            float fixedHeight = headerHeight + titleHeight + reasonHeight + 78 + rewardHeight + rankingHeight + 56 + 44 + (rows - 1) * gap;
+            float badgeHeight = resultBadgeRow.gameObject.activeSelf ? 82 : 0;
+            int rows = (rankingHeight > 0 ? 9 : 8) + (badgeHeight > 0 ? 1 : 0);
+            float fixedHeight = headerHeight + titleHeight + reasonHeight + 78 + rewardHeight + badgeHeight + rankingHeight + 56 + 44 + (rows - 1) * gap;
             float medalHeight = Mathf.Clamp(resultLayoutSize.y - 24 - fixedHeight, 48, 270);
             resultMedal.localScale = Vector3.one * Mathf.Min(width / 300, medalHeight / 260);
             float y = Mathf.Max(12, (resultLayoutSize.y - fixedHeight - medalHeight) * .5f);
@@ -162,6 +166,12 @@ namespace Roloc.Presentation
             resultRewardFill.rectTransform.anchoredPosition = Vector2.zero;
             resultRewardFill.rectTransform.sizeDelta = new Vector2((width - 80) * resultRewardFraction, 6);
             resultRewardFill.gameObject.SetActive(resultRewardFraction > 0);
+            if (badgeHeight > 0)
+            {
+                PlaceResultRow(resultBadgeRow, width, badgeHeight, ref y, gap);
+                resultBadgeViewport.sizeDelta = new Vector2(width, 62);
+                resultBadgeHeading.rectTransform.sizeDelta = new Vector2(width, 18);
+            }
             if (rankingHeight > 0) PlaceResultRow(dailyStandingLabel.rectTransform, width, rankingHeight, ref y, gap);
             PlaceResultRow(resultReplay, width, 56, ref y, gap);
             PlaceResultRow(resultFooter, width, 44, ref y, gap);

@@ -104,7 +104,7 @@ namespace Roloc.Presentation
             Saves.RecordMatch(localRunId, Session.Score, Session.Mode.ToString(), Session.BoardStyle.ToString(),
                 Session.LastDropPerfect, Session.Combo, Session.PerfectStreak);
             bool milestone = Session.Combo == 5 || Session.Combo == 10 || Session.Combo == 25 || Session.Combo % 50 == 0;
-            NativeServices.Haptic(Saves.Data.HapticsEnabled, milestone || Session.LastChanceRestored);
+            NativeServices.Haptic(Saves.Data.HapticsEnabled, milestone || Session.LastChanceRestored, Session.LastDropPerfect);
             if (Session.LastChanceRestored)
             {
                 Hint("Chance restored · 15 clean matches", 2.5f);

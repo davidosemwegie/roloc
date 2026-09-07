@@ -290,7 +290,8 @@ namespace Roloc.Presentation
             {
                 CreditMatch();
                 audioPlayer.PlayMatch(Session.Combo, Session.LastDropPerfect);
-                ripplePosition = rings[c].anchoredPosition; rippleColor = c; rippleTime = .4f;
+                ripplePosition = rings[c].anchoredPosition; rippleColor = c; rippleTime = Session.LastDropPerfect ? 0 : .4f;
+                if (Session.LastDropPerfect) StartPerfectFeedback(ripplePosition, BoardTint(c));
                 bool changed = previousMode != Session.FlowMode || previousRings != Session.RingOrder || previousPucks != Session.PuckOrder;
                 BeginBoardTransition(changed, previousMode != Session.FlowMode,
                     previousRings != Session.RingOrder && previousPucks != Session.PuckOrder);
