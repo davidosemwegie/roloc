@@ -2,9 +2,9 @@
 
 English (US), refreshed September 7, 2026 for **ClearJar Financial Inc.**
 
-**Status: local draft; App Store Connect setup in progress.** On September 7, 2026, the New App form opened under ClearJar Financial Inc. (`BK7TPQ53FF`). Apple rejected registration of the existing development bundle ID `com.osazi.roloc.unitydev` as unavailable on this team. A store identifier choice is pending; no Ring Rush record or media upload has been completed yet. The portal also displays an expired Paid Apps agreement, which is separate from app identity registration.
+**Status: App Store Connect draft saved.** [Ring Rush - Match the colors](https://appstoreconnect.apple.com/apps/6809459301/distribution) is registered under ClearJar Financial Inc. (`BK7TPQ53FF`) with store bundle ID `com.clearjar.ringrush`, English (US), and SKU `ring-rush-ios`. Development uses the separately registered `com.clearjar.ringrush.dev`. Six screenshots are uploaded in 01–06 order and verified after reload; name, subtitle, promotional text, description, keywords, Casual/Action game categories and review contact are saved. Manual release is selected. Nothing has been submitted for App Store review or published. TestFlight setup and a private invitation are authorized separately and in progress.
 
-The listing copy has been updated for build 8, including movement combinations, color shifts and badges, and no longer offers Still boards. The confirmed support email is `osahon@clearjar.co`; public support/privacy URLs, review telephone, and copyright ownership remain unconfirmed.
+The listing copy has been updated for build 8, including movement combinations, color shifts and badges, and no longer offers Still boards. The confirmed support email is `osahon@clearjar.co`; the review contact, including the supplied phone, is saved privately in Apple. Public support/privacy URLs and copyright ownership remain unconfirmed.
 
 ## Review and deliverables
 
@@ -48,4 +48,4 @@ Specifications checked September 6, 2026:
 - [App preview specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/app-preview-specifications/): accepted portrait resolution, duration, H.264 and AAC delivery settings.
 - [App Store search](https://developer.apple.com/app-store/search/): accurate naming, subtitle, keyword and visual positioning guidance.
 
-App Store Connect acceptance and video processing remain unverified until app registration and actual upload. The current blocker is store bundle-ID ownership; the New App form is accessible. The marketing captures reflect the project snapshot used for this session; check them against the final release build if gameplay or UI changes before launch.
+App Store Connect accepted all six screenshots and their order was verified after reload. The retained September 6 preview video has not been uploaded; its processing remains unverified. The marketing captures reflect the project snapshot used for this session; check them against the final release build if gameplay or UI changes before launch.

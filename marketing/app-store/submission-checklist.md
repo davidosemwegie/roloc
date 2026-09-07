@@ -3,16 +3,16 @@
 ## Account and app record
 
 - [x] Recheck access: New App form opens for ClearJar Financial Inc. on September 7, 2026. Paid Apps agreement warning remains visible.
-- [ ] Recheck for an existing Ring Rush record before creating another.
-- [ ] Resolve store bundle ID: Apple rejected `com.osazi.roloc.unitydev` as unavailable for company team `BK7TPQ53FF`. Owner choice of a separate store ID is pending; existing dev signing has not been changed.
-- [ ] Create iOS record: Ring Rush; English (US); SKU `ring-rush-ios`. If Apple reports the name unavailable, report the exact blocker before selecting another name.
-- [ ] Record the actual App Store Connect app URL here after creation: **pending**.
+- [x] Rechecked and created one Ring Rush record (Apple ID `6809459301`).
+- [x] Registered approved store ID `com.clearjar.ringrush` for company team `BK7TPQ53FF`; existing dev identifier/signing remain unchanged.
+- [x] Created owner-approved title “Ring Rush - Match the colors”; English (US); SKU `ring-rush-ios`; bundle ID `com.clearjar.ringrush`.
+- [x] App record: https://appstoreconnect.apple.com/apps/6809459301/distribution
 
 ## Metadata and media
 
-- [ ] Save name, subtitle, promotional text, description and keywords from `listing.json`.
-- [ ] Set Games category; Casual and Action are proposed game subcategories, subject to available portal options.
-- [ ] Add the six PNGs to the appropriate large iPhone display set, in filename order 01–06.
+- [x] Saved name, subtitle, promotional text, description and keywords from `listing.json`.
+- [x] Saved Games category with Casual and Action subcategories.
+- [x] Uploaded six PNGs to the 6.9-inch iPhone set, sorted 01–06; verified order after reload.
 - [ ] Upload `video/ring-rush-preview.mp4`; wait for processing, inspect playback and choose the 1.0-second poster frame.
 - [ ] Verify saved copy, screenshot order and processed video after reloading the record.
 - [ ] Initial release notes are prepared. Enter them only if the selected version workflow supports that field.
@@ -24,7 +24,8 @@
 - [ ] Public support URL.
 - [ ] Public privacy-policy URL and privacy answers based on the exact release build and its SDKs/network services. Do not infer “no data collected” from offline Flow/Rush alone.
 - [ ] Copyright/legal rights-holder text; company name alone is not confirmation of copyright ownership.
-- [ ] App Review contact name, email and telephone; access instructions if any shipped feature requires an invitation or credentials.
+- [x] App Review contact name, email and supplied telephone saved privately in Apple.
+- [ ] Final-build review instructions for gated Daily features.
 - [ ] Age-rating questionnaire, content-rights declarations, export compliance, and any region-specific compliance/trader details.
 - [ ] Pricing and storefront availability; no price has been selected in this task.
 - [ ] Optional marketing URL, category details and truthful accessibility declarations.
@@ -37,4 +38,4 @@
 - [ ] Review any Daily surface shipped in the build: do not imply public competition or global leaderboards. Provide review access/instructions or resolve release readiness separately.
 - [ ] Confirm screenshot UI matches the final build; regenerate captures after material UI changes.
 
-**Stop at draft:** this task does not authorize submission for review, publishing, purchasing membership, changing agreements or signing settings, commits, or pushes.
+**Release boundary:** the owner explicitly requested no App Store review submission yet. TestFlight setup and a private invitation to the owner are authorized. Do not publish the app, change agreements, or purchase membership. Store/dev identity changes were separately approved.

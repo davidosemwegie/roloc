@@ -1,10 +1,10 @@
 # Ring Rush — English (US) App Store copy
 
-Local draft updated for build 8. App Store Connect save status must be verified separately.
+Name, subtitle, promotional text, description, keywords and review contact saved in App Store Connect. Six build-8 screenshots uploaded in order. Not submitted for review; manual release selected. Initial release notes are local draft only.
 
 ## Name
 
-Ring Rush
+Ring Rush - Match the colors
 
 ## Subtitle
 

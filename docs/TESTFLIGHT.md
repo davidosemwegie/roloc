@@ -19,12 +19,12 @@ From the repository root, with the private environment already configured:
 /Users/david/.unity/bin/unity build . --target iOS --execute-method Roloc.Editor.ProjectBuilder.BuildTestFlight --output-path Builds/iOS --allow-dirty-build --timeout 600 --no-tail --format json
 ```
 
-`BuildTestFlight` uses the device SDK and `BuildOptions.None` and requires `RING_RUSH_BUILD_NUMBER`. `BuildIOS` remains the development export. Ensure the output shown by Unity is the directory opened in Xcode.
+`BuildTestFlight` uses the device SDK and `BuildOptions.None`, selects `com.clearjar.ringrush` on team `BK7TPQ53FF`, and requires `RING_RUSH_BUILD_NUMBER`. `BuildIOS` uses `com.clearjar.ringrush.dev`; store export restores this development identity afterward. Ensure the output shown by Unity is the directory opened in Xcode.
 
-Archive the fresh project with the existing identifier `com.osazi.roloc.unitydev` and Apple team `TYU4JMX349`:
+Archive the fresh store project with identifier `com.clearjar.ringrush` and Apple team `BK7TPQ53FF`:
 
 ```sh
-xcodebuild -project Builds/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -destination 'generic/platform=iOS' -archivePath Builds/Archives/RingRush.xcarchive -allowProvisioningUpdates DEVELOPMENT_TEAM=TYU4JMX349 archive
+xcodebuild -project Builds/iOS/Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release -destination 'generic/platform=iOS' -archivePath Builds/Archives/RingRush.xcarchive -allowProvisioningUpdates DEVELOPMENT_TEAM=BK7TPQ53FF archive
 ```
 
 In Xcode Organizer, validate the archive and choose distribution to App Store Connect. Confirm the identifier, version, build number, icon, privacy manifest, and selected deployment before upload. Do not upload an app pointing to a developer's test data. Native archive success is separate from successful App Store Connect processing.
@@ -45,7 +45,15 @@ Record the archive path, Git commit, bundle version/build number, deployment env
 
 A public release additionally requires verified App Attest integration, suspicious-submission review/exclusion, operational alerting, and a tested privacy/deletion process. Keep the closed-test gate until those controls are complete.
 
-## Current delivery record — build 8
+## Store registration and identity verification
+
+- App Store Connect draft: [Ring Rush - Match the colors](https://appstoreconnect.apple.com/apps/6809459301/distribution), Apple ID `6809459301`, English (US), SKU `ring-rush-ios`.
+- Store `com.clearjar.ringrush` and development `com.clearjar.ringrush.dev` are registered under ClearJar Financial Inc. (`BK7TPQ53FF`). Existing build-8 installation used the legacy identifier recorded below; no device reinstall or save migration accompanied this change.
+- An isolated Unity 6000.6.0f1 store export using build number 9 passed. Xcode resolved `PRODUCT_BUNDLE_IDENTIFIER=com.clearjar.ringrush` and team `BK7TPQ53FF`; Unity settings reverted to the dev identity. A separate Configure invocation also passed. No archive, install or upload was made from this verification export; it excluded unfinished advertising changes.
+- Six screenshots, listing copy, subtitle, Casual/Action game categories and review contact are saved. Manual release is selected. No review submission or publication is authorized; the owner explicitly requested keeping the draft.
+- Public support/privacy URLs, copyright/content rights, final-build privacy and age disclosures, pricing/availability, review access for any gated Daily feature, and a processed store build remain release work. The earlier preview video has not been uploaded. The new app icon will come from a processed build.
+
+## Current device delivery record — build 8
 
 - Source `f9a12df` freshly exported from the full root project with Unity 6000.6.0f1 as **0.1.0, build 8**. This includes the badge collection and Perfect feedback omitted from build 7, together with persistent palettes and combined movement. Export: `Builds/iOS-build8`; Xcode Release archive: `Builds/Archives/RingRush-build8.xcarchive`.
 - Adds 12 run-score and nine lifetime badges, historical backfill, persistent unlocks, a menu collection, and inline results badges. Perfect matches have a short double ripple and distinct native haptic. Board resets and palette changes clear lingering Perfect feedback.
