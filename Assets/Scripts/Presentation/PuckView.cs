@@ -24,12 +24,16 @@ namespace Roloc.Presentation
         CanvasGroup group;
         bool highlighted, highlightInitialized;
         Color baseTint;
+        SoftShape face;
+        float activeDepth;
+        bool activeShading;
         float returnVelocityX, returnVelocityY;
 
         public void Configure(int color, Color tint)
         {
             ColorIndex = color; baseTint = tint; highlightInitialized = false;
-            GetComponent<SoftShape>().color = tint;
+            face = GetComponent<SoftShape>();
+            activeDepth = face.depth; activeShading = face.shaded; face.color = tint;
             group = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
         }
 
@@ -38,9 +42,11 @@ namespace Roloc.Presentation
             if (highlightInitialized && highlighted == active) return;
             highlighted = active; highlightInitialized = true;
             if (group) group.alpha = 1;
-            // Bake the inactive face into the mesh; symbols retain full contrast.
-            var tint = active ? baseTint : Color.Lerp(baseTint, new Color32(240, 246, 252, 255), .52f);
-            GetComponent<SoftShape>().color = tint;
+            // Inactive pucks keep only a faint color hint; full color and depth identify the playable puck.
+            var tint = baseTint; tint.a = active ? 1f : .18f;
+            face.shaded = active && activeShading;
+            face.depth = active ? activeDepth : 0;
+            face.color = tint;
         }
 
         public void OnPointerDown(PointerEventData e)
