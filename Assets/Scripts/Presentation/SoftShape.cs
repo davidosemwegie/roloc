@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace Roloc.Presentation
 {
-    /// <summary>Resolution-independent UI artwork. No textures, shaders or post-processing required.</summary>
+    /// <summary>Resolution-independent UI artwork with shared material finishes for cosmetics.</summary>
     [AddComponentMenu("ROLOC/Soft Shape")]
     [RequireComponent(typeof(CanvasRenderer))]
     public sealed class SoftShape : MaskableGraphic
@@ -17,8 +17,37 @@ namespace Roloc.Presentation
         public bool shadow = true;
         [Range(0, 12)] public float depth = 6;
         string finish = "classic";
-        public string Finish { get => finish; set { if (finish != value) { finish = value; SetVerticesDirty(); } } }
+        public string Finish { get => finish; set { if (finish != value) { finish = value; EnableFinishChannels(); SetAllDirty(); } } }
+        bool animateFinish = true;
+        public bool AnimateFinish { get => animateFinish; set { if (animateFinish != value) { animateFinish = value; SetVerticesDirty(); } } }
+        static readonly Material[] finishes = new Material[4];
+        int FinishIndex => finish == "glass" ? 0 : finish == "pearl" ? 1 : finish == "porcelain" ? 2 : finish == "orbit" ? 3 : -1;
+        bool HasMaterialFinish => kind != Shape.Panel && FinishIndex >= 0;
+        public override Material defaultMaterial
+        {
+            get
+            {
+                if (!HasMaterialFinish) return base.defaultMaterial;
+                int index = FinishIndex;
+                if (!finishes[index])
+                {
+                    var shader = Resources.Load<Shader>("CosmeticFinish");
+                    if (!shader) return base.defaultMaterial;
+                    finishes[index] = new Material(shader) { name = "Cosmetic " + finish, hideFlags = HideFlags.HideAndDontSave };
+                    finishes[index].SetFloat("_Finish", index);
+                }
+                return finishes[index];
+            }
+        }
         const int Segments = 96;
+
+        void EnableFinishChannels()
+        {
+            if (HasMaterialFinish && canvas) canvas.additionalShaderChannels |= AdditionalCanvasShaderChannels.TexCoord1;
+        }
+
+        protected override void OnEnable() { base.OnEnable(); EnableFinishChannels(); }
+        protected override void OnCanvasHierarchyChanged() { base.OnCanvasHierarchyChanged(); EnableFinishChannels(); }
 
         float OuterRadius(Rect rect) => Mathf.Min(rect.width, rect.height) * .5f - (shadow ? 5 : 1);
 
@@ -44,6 +73,11 @@ namespace Roloc.Presentation
             float inner = ring ? radius * (1 - thickness) : 0;
             float sweep = kind == Shape.Arc ? progress : 1;
             if (sweep <= 0) return;
+            if (HasMaterialFinish)
+            {
+                FinishQuad(mesh, center, radius, inner, sweep);
+                return;
+            }
             if (shadow)
             {
                 Band(mesh, center + Vector2.down * 5, radius + 3, ring ? inner - 2 : 0,
@@ -55,28 +89,31 @@ namespace Roloc.Presentation
                 Band(mesh, center + Vector2.down * depth, radius, inner,
                     new Color(color.r * .65f, color.g * .65f, color.b * .72f, color.a), false, sweep);
             Band(mesh, center, radius, inner, color, shaded, sweep);
-            // Finishes only paint inside the original radius; hit geometry stays fixed.
-            if (finish == "glass" && !ring)
-            {
-                Band(mesh, center, radius - 2, radius - 4, new Color(1, 1, 1, color.a * .55f), false, 1);
-                Band(mesh, center + new Vector2(-radius * .24f, radius * .31f), radius * .22f, 0,
-                    new Color(1, 1, 1, color.a * .28f), false, 1);
-            }
-            else if (finish == "pearl" && !ring)
-            {
-                for (int k = 0; k < 4; k++)
-                    Band(mesh, center, radius * (.82f - k * .13f), 0, new Color(1, .95f, 1, color.a * .075f), false, 1);
-            }
-            else if (finish == "porcelain" && ring)
-                Band(mesh, center, radius - 2, radius - 4, new Color(1, 1, 1, color.a * .7f), false, 1);
-            else if (finish == "orbit" && ring)
-                Band(mesh, center, (radius + inner) * .5f + 1, (radius + inner) * .5f - 1,
-                    new Color(1, 1, 1, color.a * .7f), false, 1);
             if (shaded)
             {
                 Color rim = Color.Lerp(color, Color.white, .12f); rim.a = color.a;
                 Band(mesh, center, radius, radius - .8f, rim, false, sweep);
             }
+        }
+
+        void FinishQuad(VertexHelper mesh, Vector2 center, float radius, float inner, float sweep)
+        {
+            if (radius <= 0) return;
+            float extrusion = shaded ? depth : 0;
+            float pad = shadow ? 9 : 1;
+            var parameters = new Vector4(inner / radius, sweep, extrusion / radius,
+                (shadow ? 4 : 0) + (shaded ? 2 : 0) + (animateFinish ? 1 : 0));
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 offset = new Vector2((i == 1 || i == 2 ? 1 : -1) * (radius + pad),
+                    i >= 2 ? radius + pad : -radius - pad - extrusion);
+                var vertex = UIVertex.simpleVert;
+                vertex.position = center + offset; vertex.color = color;
+                vertex.uv0 = new Vector4(offset.x / radius, offset.y / radius, 0, 0);
+                vertex.uv1 = parameters;
+                mesh.AddVert(vertex);
+            }
+            mesh.AddTriangle(0, 1, 2); mesh.AddTriangle(2, 3, 0);
         }
 
         static void Band(VertexHelper mesh, Vector2 center, float outer, float inner, Color tint, bool gradient, float sweep)

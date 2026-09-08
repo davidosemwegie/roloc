@@ -95,11 +95,8 @@ namespace Roloc.Presentation
                 : snapshot.PointsToNextUnlock + " more progress to " + snapshot.NextUnlock.Name;
             resultProgress.text = unlocked != null ? "+" + earned + " progress\n" + next : next;
             var preview = unlocked ?? snapshot.NextUnlock;
-            resultRewardPreview.Finish = preview?.Id ?? "orbit";
-            resultRewardPreview.kind = preview == null || preview.Category == CosmeticCategory.Ring ? SoftShape.Shape.Ring :
-                preview.Category == CosmeticCategory.Trail ? SoftShape.Shape.Arc : SoftShape.Shape.Disc;
-            resultRewardPreview.progress = .75f;
-            resultRewardPreview.color = preview?.Category == CosmeticCategory.Background ? new Color32(158, 151, 202, 255) : Palette[1];
+            resultRewardPreview.color = Palette[1];
+            ConfigureCosmeticPreview(resultRewardPreview, preview?.Id ?? "orbit", preview?.Category ?? CosmeticCategory.Ring);
             long previous = 0;
             if (!snapshot.AllUnlocked)
                 foreach (var item in CosmeticCatalog.Unlocks) if (item.UnlockAt <= snapshot.Points) previous = item.UnlockAt;

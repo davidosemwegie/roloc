@@ -16,9 +16,8 @@ namespace Roloc.Presentation
         Button modeButton;
         SoftShape backgroundArt;
         readonly MatchSymbol[] symbols = new MatchSymbol[8];
-        readonly SoftShape[] trail = new SoftShape[12];
-        readonly float[] trailLife = new float[12];
-        int trailIndex;
+        RibbonGraphic trail;
+        PuckView trailOwner;
         float feedbackLeft;
         bool selectedDaily;
 
@@ -69,13 +68,13 @@ namespace Roloc.Presentation
                 symbols[c] = MakeSymbol(pucks[c].transform, c, 22);
                 symbols[c + 4] = MakeSymbol(rings[c], c, 22);
                 pucks[c].Moved = DrawTrail;
+                pucks[c].DragEnded = EndTrail;
             }
-            for (int i = 0; i < trail.Length; i++)
-            {
-                trail[i] = Circle(board, "Ribbon " + i, Palette[0], Vector2.zero, 13, false);
-                trail[i].shadow = trail[i].shaded = false; trail[i].transform.SetAsFirstSibling();
-                trail[i].gameObject.SetActive(false);
-            }
+            var ribbonRect = Container(board, "Ribbon trail");
+            ribbonRect.anchorMin = Vector2.zero; ribbonRect.anchorMax = Vector2.one;
+            ribbonRect.offsetMin = ribbonRect.offsetMax = Vector2.zero;
+            ribbonRect.SetAsFirstSibling();
+            trail = ribbonRect.gameObject.AddComponent<RibbonGraphic>();
             BuildDailyUI();
         }
 
@@ -144,14 +143,6 @@ namespace Roloc.Presentation
             }
             if (livesLabel) livesLabel.text = Session.WasTutorial ? "" : Session.Mode == GameMode.Flow ? Session.Chances + " / 3 CHANCES" : Session.IsDaily ? "DAILY · RUSH" : "RUSH · 1 CHANCE";
             if (chainLabel) chainLabel.text = Session.WasTutorial ? "" : "COMBO " + Session.Combo + "  ·  PERFECT " + Session.PerfectStreak;
-            for (int i = 0; i < trail.Length; i++)
-            {
-                if (!trail[i] || trailLife[i] <= 0) continue;
-                if (Session.State == RoundState.Paused) continue;
-                trailLife[i] -= Time.unscaledDeltaTime;
-                var tint = trail[i].color; tint.a = Mathf.Max(0, trailLife[i]) * .7f;
-                trail[i].color = tint; trail[i].gameObject.SetActive(trailLife[i] > 0 && !Saves.Data.ReduceEffects);
-            }
         }
 
         string NextProgress()
@@ -193,14 +184,13 @@ namespace Roloc.Presentation
 
         void ShowCollection()
         {
-            var panel = NewOverlay("Your collection", Saves.Data.ProgressPoints + " progress · " + NextProgress(), 660);
+            var panel = NewOverlay("Your collection", Saves.Data.ProgressPoints + " progress · " + NextProgress(), 620);
             int i = 0;
             foreach (var item in CosmeticCatalog.Unlocks)
             {
-                var captured = item; float y = 145 - i++ * 65;
-                var preview = Circle(panel, item.Name + " preview", item.Category == CosmeticCategory.Background ? new Color32(211, 208, 240, 255) : Palette[(i - 1) % 4], new Vector2(-112, y), 46, item.Category == CosmeticCategory.Ring);
-                preview.Finish = item.Id;
-                if (item.Category == CosmeticCategory.Trail) { preview.kind = SoftShape.Shape.Arc; preview.progress = .65f; }
+                var captured = item; float y = 126 - i++ * 72;
+                var preview = Circle(panel, item.Name + " preview", item.Category == CosmeticCategory.Puck ? Palette[0] : item.Category == CosmeticCategory.Trail ? Palette[1] : Palette[2], new Vector2(-112, y), 60, item.Category == CosmeticCategory.Ring);
+                ConfigureCosmeticPreview(preview, item.Id, item.Category);
                 bool unlocked = Saves.Data.ProgressPoints >= item.UnlockAt;
                 bool equipped = Saves.GetEquipped(item.Category) == item.Id;
                 Label(panel, item.Name + " · " + item.Category, 13, Ink, new Vector2(2, y + 13), new Vector2(160, 24));
@@ -212,8 +202,8 @@ namespace Roloc.Presentation
                 choose.interactable = unlocked;
                 choose.GetComponentInChildren<Text>().fontSize = 10;
             }
-            Button(panel, "Daily goals", new Vector2(-70, -265), new Vector2(135, 48), new Vector2(.5f, .5f), Color.white, Ink, ShowGoals);
-            Button(panel, "Done", new Vector2(76, -265), new Vector2(135, 48), new Vector2(.5f, .5f), Palette[0], Color.white, () => overlay.gameObject.SetActive(false));
+            Button(panel, "Daily goals", new Vector2(-70, -249), new Vector2(135, 48), new Vector2(.5f, .5f), Color.white, Ink, ShowGoals);
+            Button(panel, "Done", new Vector2(76, -249), new Vector2(135, 48), new Vector2(.5f, .5f), Palette[0], Color.white, () => overlay.gameObject.SetActive(false));
         }
 
         void ShowGoals()
@@ -228,24 +218,53 @@ namespace Roloc.Presentation
 
         void ApplyAppearance()
         {
-            if (backgroundArt) backgroundArt.color = Saves.Data.EquippedBackground == "dusk" ? new Color32(217, 216, 237, 255) : Paper;
+            if (backgroundArt) backgroundArt.color = Paper;
+            if (trail) { trail.Clear(); trailOwner = null; }
             for (int c = 0; c < 4; c++)
             {
                 if (!pucks[c]) continue;
                 pucks[c].ReduceEffects = Saves.Data.ReduceEffects;
                 pucks[c].GetComponent<SoftShape>().Finish = Saves.Data.EquippedPuck;
+                pucks[c].GetComponent<SoftShape>().AnimateFinish = !Saves.Data.ReduceEffects;
                 ringArt[c].Finish = Saves.Data.EquippedRing;
+                ringArt[c].AnimateFinish = !Saves.Data.ReduceEffects;
                 if (symbols[c]) symbols[c].gameObject.SetActive(Saves.Data.SymbolsEnabled);
                 if (symbols[c + 4]) symbols[c + 4].gameObject.SetActive(Saves.Data.SymbolsEnabled);
             }
         }
 
+        void ConfigureCosmeticPreview(SoftShape preview, string id, CosmeticCategory category)
+        {
+            bool ribbon = category == CosmeticCategory.Trail;
+            preview.kind = category == CosmeticCategory.Ring ? SoftShape.Shape.Ring : SoftShape.Shape.Disc;
+            preview.Finish = id;
+            preview.AnimateFinish = !Saves.Data.ReduceEffects;
+            preview.enabled = !ribbon;
+            var strip = preview.GetComponentInChildren<RibbonGraphic>(true);
+            if (ribbon && !strip)
+            {
+                var rect = Container(preview.transform, "Ribbon sample");
+                rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+                rect.offsetMin = rect.offsetMax = Vector2.zero;
+                strip = rect.gameObject.AddComponent<RibbonGraphic>(); strip.Preview = true;
+            }
+            if (strip) { strip.color = preview.color; strip.gameObject.SetActive(ribbon); }
+            preview.SetAllDirty();
+        }
+
+        void EndTrail(PuckView puck)
+        {
+            if (trailOwner != puck) return;
+            if (trail) trail.Clear();
+            trailOwner = null;
+        }
+
         void DrawTrail(PuckView puck)
         {
-            if (Saves.Data.ReduceEffects || Saves.Data.EquippedTrail != "ribbon") return;
-            var dot = trail[trailIndex]; dot.rectTransform.anchoredPosition = puck.Rect.anchoredPosition;
-            dot.color = BoardTint(puck.ColorIndex); dot.gameObject.SetActive(true); trailLife[trailIndex] = .26f;
-            trailIndex = (trailIndex + 1) % trail.Length;
+            if (!trail || Saves.Data.ReduceEffects || Saves.Data.EquippedTrail != "ribbon" || !puck.IsDragging) return;
+            if (trailOwner != puck) { trail.Clear(); trailOwner = puck; }
+            trail.color = BoardTint(puck.ColorIndex);
+            trail.AddPoint(puck.Rect.anchoredPosition);
         }
         static Vector2 ToVector(BoardPoint point) => new Vector2(point.X / 1000f, point.Y / 1000f);
     }

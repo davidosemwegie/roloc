@@ -161,7 +161,7 @@ namespace Roloc.Tests
                 yield return Capture(mode.ToString(), 440, 956, true);
                 game.Saves.Data.ReduceEffects = true;
                 game.Saves.Data.EquippedPuck = "glass"; game.Saves.Data.EquippedRing = "orbit";
-                game.Saves.Data.EquippedBackground = "dusk"; Invoke("ApplyAppearance");
+                game.Saves.Data.EquippedBackground = "classic"; Invoke("ApplyAppearance");
                 yield return Capture(mode + "-compact", 375, 667, true);
             }
         }
