@@ -161,10 +161,32 @@ namespace Roloc.Services.Tests
             Assert.That(loaded.GetEquipped(CosmeticCategory.Background), Is.EqualTo("classic"));
         }
 
+        [Test]
+        public void RemovedDuskBackgroundFallsBackWithoutLosingSavedProgressOrEquipment()
+        {
+            File.WriteAllText(Path.Combine(directory, SaveService.FileName),
+                "{\"SchemaVersion\":2,\"ProgressPoints\":393,\"TotalScore\":321,\"EquippedBackground\":\"dusk\","
+                + "\"EquippedPuck\":\"glass\",\"EquippedTrail\":\"ribbon\",\"EquippedRing\":\"porcelain\"}");
+            var saves = new SaveService(directory);
+            Assert.That(saves.GetEquipped(CosmeticCategory.Background), Is.EqualTo("classic"));
+            Assert.That(saves.Equip(CosmeticCategory.Background, "dusk"), Is.False);
+            Assert.That(saves.GetProgressSnapshot().NextUnlock.Id, Is.EqualTo("pearl"));
+            Assert.That(saves.GetProgressSnapshot().PointsToNextUnlock, Is.EqualTo(7));
+            saves.Save();
+
+            var loaded = new SaveService(directory);
+            Assert.That(loaded.GetEquipped(CosmeticCategory.Background), Is.EqualTo("classic"));
+            Assert.That(loaded.Data.ProgressPoints, Is.EqualTo(393));
+            Assert.That(loaded.Data.TotalScore, Is.EqualTo(321));
+            Assert.That(loaded.GetEquipped(CosmeticCategory.Puck), Is.EqualTo("glass"));
+            Assert.That(loaded.GetEquipped(CosmeticCategory.Trail), Is.EqualTo("ribbon"));
+            Assert.That(loaded.GetEquipped(CosmeticCategory.Ring), Is.EqualTo("porcelain"));
+        }
+
         [TestCase(0, "glass", 40)]
         [TestCase(40, "ribbon", 60)]
         [TestCase(100, "porcelain", 80)]
-        [TestCase(180, "dusk", 100)]
+        [TestCase(180, "pearl", 220)]
         [TestCase(280, "pearl", 120)]
         [TestCase(400, "orbit", 150)]
         public void ProgressSnapshotExplainsNextUnlock(int points, string nextId, int remaining)

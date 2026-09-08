@@ -36,11 +36,8 @@ namespace Roloc.Presentation
             perfectFeedbackLeft = 0;
             foreach (var effect in perfectRipples)
                 if (effect) effect.gameObject.SetActive(false);
-            for (int i = 0; i < trail.Length; i++)
-            {
-                trailLife[i] = 0;
-                if (trail[i]) trail[i].gameObject.SetActive(false);
-            }
+            if (trail) trail.Clear();
+            trailOwner = null;
         }
 
         void ApplyBoardPalette(int index)

@@ -24,7 +24,6 @@ namespace Roloc.Services
             new CosmeticDefinition("glass", "Glass", CosmeticCategory.Puck, 40),
             new CosmeticDefinition("ribbon", "Ribbon", CosmeticCategory.Trail, 100),
             new CosmeticDefinition("porcelain", "Porcelain", CosmeticCategory.Ring, 180),
-            new CosmeticDefinition("dusk", "Dusk", CosmeticCategory.Background, 280),
             new CosmeticDefinition("pearl", "Pearl", CosmeticCategory.Puck, 400),
             new CosmeticDefinition("orbit", "Orbit", CosmeticCategory.Ring, 550)
         };

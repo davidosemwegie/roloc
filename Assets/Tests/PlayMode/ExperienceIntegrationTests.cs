@@ -134,6 +134,69 @@ namespace Roloc.Tests
             yield return Capture("results-zero-compact", 375, 667, false);
         }
 
+        [UnityTest]
+        public IEnumerator CosmeticMaterialsAndRibbonMatchPreviewsAndKeepInputGeometry()
+        {
+            game.Saves.Data.ProgressPoints = 600;
+            game.Saves.Equip(CosmeticCategory.Puck, "glass");
+            game.Saves.Equip(CosmeticCategory.Ring, "porcelain");
+            game.Saves.Equip(CosmeticCategory.Trail, "ribbon");
+            Invoke("ShowCollection");
+            yield return null;
+            Assert.That(root.GetComponentsInChildren<SoftShape>().Any(s => s.name == "Dusk preview"), Is.False);
+            var glassPreview = root.GetComponentsInChildren<SoftShape>().Single(s => s.name == "Glass preview");
+            var ribbonPreview = root.GetComponentsInChildren<RibbonGraphic>().Single(s => s.Preview);
+            Assert.That(ribbonPreview.raycastTarget, Is.False);
+            Assert.That(glassPreview.material.shader.isSupported, Is.True);
+            Assert.That(glassPreview.material.shader.name, Is.EqualTo("ROLOC/Cosmetic Finish"));
+            yield return Capture("cosmetics-collection", 440, 956);
+            yield return Capture("cosmetics-collection-compact", 375, 667);
+            var sharedGlass = glassPreview.material;
+            game.BeginRun(); yield return null;
+            var puck = root.GetComponentsInChildren<PuckView>().Single(p => p.ColorIndex == game.Session.ActiveColor);
+            var face = puck.GetComponent<SoftShape>();
+            Assert.That(face.material, Is.SameAs(sharedGlass));
+            Assert.That(face.Raycast(RectTransformUtility.WorldToScreenPoint(null, puck.Rect.position), null), Is.True);
+            Assert.That(face.Raycast(RectTransformUtility.WorldToScreenPoint(null, puck.Rect.TransformPoint(new Vector3(39, 39))), null), Is.False);
+            var pointer = new PointerEventData(EventSystem.current) { pointerId = 11,
+                position = RectTransformUtility.WorldToScreenPoint(null, puck.Rect.position) };
+            puck.OnPointerDown(pointer);
+            puck.OnDrag(pointer); pointer.position += new Vector2(40, 30); puck.OnDrag(pointer);
+            Assert.That(Get<RibbonGraphic>("trail").PointCount, Is.GreaterThan(1));
+            puck.OnCancel(pointer);
+            Assert.That(Get<RibbonGraphic>("trail").PointCount, Is.Zero);
+            yield return Capture("cosmetics-glass-porcelain", 440, 956);
+            game.Saves.Equip(CosmeticCategory.Puck, "pearl");
+            game.Saves.Equip(CosmeticCategory.Ring, "orbit");
+            game.Saves.Data.ReduceEffects = true; Invoke("ApplyAppearance");
+            Assert.That(face.AnimateFinish, Is.False);
+            Assert.That(root.GetComponentsInChildren<SoftShape>().Where(s => s.name.StartsWith("Ring ")).All(s => !s.AnimateFinish), Is.True);
+            puck.OnPointerDown(pointer); puck.OnDrag(pointer);
+            Assert.That(Get<RibbonGraphic>("trail").PointCount, Is.Zero);
+            puck.OnCancel(pointer);
+            yield return Capture("cosmetics-pearl-orbit", 440, 956);
+        }
+
+        [UnityTest, Explicit("Material contact sheet for visual review on the actual Unity renderer.")]
+        public IEnumerator CaptureCosmeticMaterialStudy()
+        {
+            var panel = (RectTransform)typeof(RolocGame).GetMethod("NewOverlay", BindingFlags.NonPublic | BindingFlags.Instance)
+                .Invoke(game, new object[] { "Material study", "Glass · Pearl · Porcelain · Orbit", 620f });
+            string[] finishes = { "glass", "pearl", "porcelain", "orbit" };
+            Color32[] tints = { new Color32(255,119,24,255), new Color32(47,76,240,255), new Color32(182,221,44,255), new Color32(235,55,134,255) };
+            for (int row = 0; row < 4; row++)
+                for (int column = 0; column < 4; column++)
+                {
+                    var go = new GameObject(finishes[row] + column, typeof(RectTransform));
+                    var rect = (RectTransform)go.transform; rect.SetParent(panel, false);
+                    rect.sizeDelta = new Vector2(62,62); rect.anchoredPosition = new Vector2(-112 + column * 75, 117 - row * 99);
+                    var shape = go.AddComponent<SoftShape>(); shape.kind = row < 2 ? SoftShape.Shape.Disc : SoftShape.Shape.Ring;
+                    shape.color = tints[column]; shape.Finish = finishes[row]; shape.AnimateFinish = false;
+                    shape.raycastTarget = false;
+                }
+            yield return Capture("cosmetics-material-study", 600, 1100);
+        }
+
         [UnityTest, Explicit("Captures actual Unity UI for visual review.")]
         public IEnumerator CapturePlayerScreens()
         {

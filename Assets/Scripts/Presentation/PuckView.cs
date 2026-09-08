@@ -20,6 +20,7 @@ namespace Roloc.Presentation
         public Func<bool> CanDrag;
         public Action<PuckView> Released;
         public Action<PuckView> Moved;
+        public Action<PuckView> DragEnded;
         int pointerId;
         Vector2 grabOffset;
         CanvasGroup group;
@@ -65,6 +66,7 @@ namespace Roloc.Presentation
             IsDragging = true;
             transform.SetAsLastSibling();
             returnVelocityX = returnVelocityY = 0;
+            Moved?.Invoke(this);
         }
 
         public void OnDrag(PointerEventData e)
@@ -91,11 +93,12 @@ namespace Roloc.Presentation
             OnDrag(e);
             if (!IsDragging) return;
             IsDragging = false;
+            DragEnded?.Invoke(this);
             Released?.Invoke(this);
         }
 
         public void OnCancel(BaseEventData e) => CancelDrag();
-        public void CancelDrag() { IsDragging = false; }
+        public void CancelDrag() { IsDragging = false; DragEnded?.Invoke(this); }
         public void SnapHome()
         {
             CancelDrag();
