@@ -1,9 +1,23 @@
 #import <UIKit/UIKit.h>
 #import <Security/Security.h>
+#import <AppTrackingTransparency/AppTrackingTransparency.h>
 #include <stdlib.h>
 #include <string.h>
 
 extern "C" UIViewController* UnityGetGLViewController(void);
+
+typedef void (*RRTrackingCallback)(int status);
+static void RRPresentTrackingRequest(RRTrackingCallback callback) {
+    if (@available(iOS 14, *)) {
+        if (ATTrackingManager.trackingAuthorizationStatus != ATTrackingManagerAuthorizationStatusNotDetermined) {
+            callback((int)ATTrackingManager.trackingAuthorizationStatus);
+            return;
+        }
+        [ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {
+            callback((int)status);
+        }];
+    } else { callback(2); }
+}
 
 static NSMutableDictionary* RRKeychainQuery(const char* key) {
     return [@{(__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
@@ -12,6 +26,27 @@ static NSMutableDictionary* RRKeychainQuery(const char* key) {
 }
 
 extern "C" {
+    int RRTrackingAuthorizationStatus() {
+        if (@available(iOS 14, *)) return (int)ATTrackingManager.trackingAuthorizationStatus;
+        return 2;
+    }
+    void RRRequestTrackingAuthorization(RRTrackingCallback callback) {
+        if (!callback) return;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (UIApplication.sharedApplication.applicationState == UIApplicationStateActive) {
+                RRPresentTrackingRequest(callback);
+                return;
+            }
+            __block id observer = nil;
+            observer = [NSNotificationCenter.defaultCenter addObserverForName:UIApplicationDidBecomeActiveNotification
+                object:nil queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification* notification) {
+                    [NSNotificationCenter.defaultCenter removeObserver:observer];
+                    observer = nil;
+                    RRPresentTrackingRequest(callback);
+                }];
+        });
+    }
+    float RRLogicalScreenWidth() { return (float)UnityGetGLViewController().view.bounds.size.width; }
     const char* RRReadSecret(const char* key) {
         NSMutableDictionary* query = RRKeychainQuery(key);
         query[(__bridge id)kSecReturnData] = @YES;

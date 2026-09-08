@@ -1,10 +1,10 @@
 # Ring Rush — English (US) App Store copy
 
-Local draft. Not saved to App Store Connect.
+Name, subtitle, promotional text, description, keywords and review contact saved in App Store Connect. Six build-8 screenshots uploaded in order. Not submitted for review; manual release selected. Initial release notes are local draft only.
 
 ## Name
 
-Ring Rush
+Ring Rush - Match the colors
 
 ## Subtitle
 
@@ -18,24 +18,24 @@ One bright puck. Four colorful rings. Find your rhythm in Flow, chase your best 
 
 Match the color. Beat the clock.
 
-Drag the bright puck into its matching ring before time runs out. Simple to pick up, satisfying to get right, and always another chance to beat your best.
+Drag the bright puck into its matching ring before time runs out. Find your rhythm, land a Perfect, and go for one more match.
 
 FIND YOUR FLOW
-Settle into the rhythm with three chances, a gentler opening, and opportunities to recover a chance through clean matches.
+Start with three chances, a gentler opening, and opportunities to recover a chance through consecutive matches.
 
 FEEL THE RUSH
-One chance. A ticking clock. See how far your focus can take you in a sharper test of timing and accuracy.
+One chance. A ticking clock. Chase your personal best in a sharper test of timing and accuracy.
 
-KEEP IT LIVELY. OR KEEP IT STILL.
-Choose a lively board with floating pucks, drifting rings, and smooth changes of position. Prefer less motion? Choose a Still board and chase a separate personal best.
+FOLLOW THE MOVEMENT
+Pucks float, rings drift, and both can orbit clockwise or counterclockwise. As your score grows, movement effects can combine, with calm stretches between challenges. Color shifts bring new shades to match, including light and dark versions of the same color.
 
 MAKE EVERY MATCH COUNT
-Build your combo and land centered Perfect matches for extra cosmetic progress. Unlock puck finishes, ring styles, a trail, and a new background as you play.
+Build combos and Perfect streaks. Centered drops earn extra progress toward puck finishes, ring styles, a trail, and a background theme. Collect 21 badges for single-run scores and lifetime matching milestones.
 
 PLAY YOUR WAY
-Matching symbols add another way to read the colors. Adjust sound, music, haptics, and effects to suit you. Flow and Rush work offline, and your progress and preferences are saved on your device.
+Matching symbols add another way to read the board. Adjust music, sound effects, haptics, and decorative effects to suit you. Flow and Rush work offline, with progress and preferences saved on your device.
 
-Four colors. One more try.
+Four pucks. One more try.
 
 ## Keywords
 
@@ -43,4 +43,4 @@ arcade,reflex,timing,drag,puck,rings,combo,precision,offline,casual,focus,flow,s
 
 ## Initial release notes
 
-Meet Ring Rush: color matching with a little more movement. Play Flow or Rush, choose a Lively or Still board, land Perfect matches, and unlock your own look.
+Meet Ring Rush. Find your rhythm in Flow or chase your best in Rush. Match changing shades, follow floating and orbiting boards, build Perfect streaks, and earn cosmetics and milestone badges.

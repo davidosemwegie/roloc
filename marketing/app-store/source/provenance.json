@@ -2,7 +2,7 @@
   "date": "2026-09-06",
   "unityVersion": "6000.6.0f1",
   "capture": "Real Unity renders, real pointer handlers and rules, isolated project and fresh save; no generated gameplay screens.",
-  "captureHarness": "source/StoreCaptureTests.cs",
+  "captureHarness": "source/StoreCaptureTests.cs at ea9f01e718e5b31cc9b46f95f2323512f0983737 (retained September 6 video harness)",
   "captureTiming": "captures/timeline.csv",
   "sourceHashes": {
     "Assets/Audio/playing.wav": "b1d023c6aa96dc3bd02686bb5b04b605e1c8c8b4a857ef5efdde2675d3fe5036",
@@ -20,5 +20,24 @@
     "brief": "Premium portrait pale icy #F0F6FC background, mostly empty center, sculpted electric blue #315DFF and orange #FF781F torus rings cropped near lower-left and upper-right, soft studio shadows, no text or UI."
   },
   "audio": "Source WAV files are byte-identical copies. Only music mix level and boundary fades are applied in the editable composition; no replacement music or effects.",
-  "icon": "Existing Assets/Art/AppIcon.png, resized to 1024 square and flattened opaque."
+  "icon": "Existing Assets/Art/AppIcon.png, resized to 1024 square and flattened opaque.",
+  "screenshotRefresh": {
+    "date": "2026-09-07",
+    "sourceCommit": "ea9f01e718e5b31cc9b46f95f2323512f0983737",
+    "build": 8,
+    "unityVersion": "6000.6.0f1",
+    "harness": "source/StoreCaptureTests.cs",
+    "testResult": "source/capture-results.xml",
+    "captureInfo": "captures/capture-info.txt",
+    "scope": "Screenshot-only refresh. Video, timing CSV and match-events JSON retained unchanged from September 6.",
+    "capture": "Actual UI and pointer handlers in isolated checkout, fresh temporary save, earned scores/cosmetics/badges. Off-camera matching advances through board transitions instantly. Matching seed 17; moving shot score 90, PuckOrbitDrifting, blue palette 5.",
+    "sourceHashes": {
+      "Assets/Scripts/Core/GameSession.cs": "b144a6aa29ea1df779373150568d66beaa46ea31da5820a887d383c81d661fb5",
+      "Assets/Scripts/Core/FlowDirector.cs": "70d3c9d2243e76e6593d7f17659eb24813cf76fa50912d3cb3d1fcc2aaa9e0d5",
+      "Assets/Scripts/Presentation/RolocGame.Results.cs": "9b1a94ef0a334c955d58b87043230ec1d9bd1869ac670b992a62d1a13b40765a",
+      "Assets/Scripts/Presentation/RolocGame.Badges.cs": "160078f6e6303989a0c5b7d1108f74a5a676f88e48b68b29afdb565bf8426027",
+      "Assets/Scripts/Presentation/RolocGame.Variations.cs": "05eedb91b4f4f38f474450233bb86e0c088b192e4c792ffced4686550d07339e",
+      "Assets/Scripts/Presentation/RolocGame.PerfectFeedback.cs": "19de4c2c89d6386356df8298e9a34ead68dd21e23fc691dc12d4b88f6ecd22f2"
+    }
+  }
 }

@@ -27,10 +27,10 @@ function detail(file,box,x,y,w,h) {
 const slides=[
  {id:'01-match',a:'Match the color.',b:'Beat the clock.',sub:'Four colors. One perfectly timed move.',layout:()=>phone('hero',190,690,940,-1.5)},
  {id:'02-modes',a:'Find your Flow.',b:'Feel the Rush.',sub:'Three chances to settle in. One chance to go all out.',layout:()=>label('FLOW · 3 CHANCES',72,770,545)+label('RUSH · 1 CHANCE',703,1080,545,colors.ink)+phone('flow',88,880,530,-2)+phone('rush',706,1190,530,2)+text('Two modes. Two ways to find your best.',660,2710,39,colors.ink,'center')},
- {id:'03-motion',a:'Stay sharp.',b:'Things move.',sub:'Floating pucks. Drifting rings. A fresh rhythm.',layout:()=>phone('moving',192,690,936,1.4)},
- {id:'04-perfect',a:'Make every',b:'match count.',sub:'Build your combo. Land a Perfect.',layout:()=>phone('perfect',340,730,780,1.5)+detail('results',[65,230,1190,2080],90,1850,455,815)},
- {id:'05-collection',a:'Make it',b:'yours.',sub:'Earn new finishes, rings, and a trail as you play.',layout:()=>phone('collection',188,675,944,-1)+detail('still',[80,860,1160,1600],810,2040,430,595)},
- {id:'06-your-pace',a:'Your pace.',b:'Your next best.',sub:'Choose a Still board. Play Flow and Rush offline.',layout:()=>phone('symbols',100,760,780,-1.7)+detail('settings',[75,500,1170,1850],785,1650,450,760)+label('SOUND · SYMBOLS · EFFECTS',270,2680,785,colors.ink)}
+ {id:'03-motion',a:'Stay sharp.',b:'Things move.',sub:'New shades. Moving rings. Find your rhythm.',layout:()=>phone('moving',192,690,936,1.4)},
+ {id:'04-perfect',a:'Make every',b:'match count.',sub:'Build your combo. Land a Perfect.',layout:()=>phone('perfect',340,730,780,1.5)+detail('results',[0,0,1320,2868],90,1850,455,815)},
+ {id:'05-collection',a:'Make it',b:'yours.',sub:'Earn new finishes, rings, and a trail as you play.',layout:()=>phone('collection',188,675,944,-1)+detail('cosmetics',[80,860,1160,1600],810,2040,430,595)},
+ {id:'06-your-pace',a:'Your pace.',b:'Your next best.',sub:'Music, symbols, and effects. Make it your own.',layout:()=>phone('symbols',100,760,780,-1.7)+detail('settings',[75,500,1170,1850],785,1650,450,760)+label('SOUND · SYMBOLS · EFFECTS',270,2680,785,colors.ink)}
 ];
 async function main(){
  fs.mkdirSync(path.join(root,'source/compositions'),{recursive:true});
@@ -43,10 +43,6 @@ async function main(){
  const thumbs=await Promise.all(slides.map(s=>sharp(path.join(root,'screenshots',s.id+'.png')).resize(330,717).toBuffer()));
  await sharp({create:{width:1050,height:1514,channels:3,background:'#E4EBF4'}}).composite(thumbs.map((input,i)=>({input,left:15+(i%3)*345,top:20+Math.floor(i/3)*747}))).png().toFile(path.join(root,'contact-sheet.png'));
  await sharp(path.join(repo,'Assets/Art/AppIcon.png')).resize(1024,1024).flatten({background:colors.paper}).removeAlpha().png().toFile(path.join(root,'app-icon-1024.png'));
- const listing=JSON.parse(fs.readFileSync(path.join(root,'listing.json')));
- listing.description=listing.description.replace('Prefer a steady layout?','Prefer less motion?');
- fs.writeFileSync(path.join(root,'listing.json'),JSON.stringify(listing,null,2)+'\n');
- const human=`# Ring Rush — English (US) App Store copy\n\nLocal draft. Not saved to App Store Connect.\n\n## Name\n\n${listing.name}\n\n## Subtitle\n\n${listing.subtitle}\n\n## Promotional text\n\n${listing.promotionalText}\n\n## Description\n\n${listing.description}\n\n## Keywords\n\n${listing.keywords}\n\n## Initial release notes\n\n${listing.releaseNotes}\n`;
- fs.writeFileSync(path.join(root,'listing.md'),human);
+
 }
 main().catch(e=>{console.error(e);process.exit(1)});

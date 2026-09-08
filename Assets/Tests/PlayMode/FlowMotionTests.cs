@@ -59,7 +59,15 @@ namespace Roloc.Tests
 
         void Reach(FlowMode mode)
         {
-            for (int i = 0; i < 200 && game.Session.FlowMode != mode; i++) Match();
+            for (int i = 0; i < 200 && game.Session.FlowMode != mode; i++)
+            {
+                Match();
+                // Expanded layouts impose a minimum transition even with test durations zero.
+                // Finish intervening transitions, preserving the target animation under test.
+                if (game.Session.State == RoundState.Transition && game.Session.FlowMode != mode)
+                    typeof(RolocGame).GetMethod("CompleteBoardTransition",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(game, null);
+            }
             Assert.That(game.Session.FlowMode, Is.EqualTo(mode), "Seeded play must exercise the requested mode.");
         }
 

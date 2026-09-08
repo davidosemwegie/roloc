@@ -7,10 +7,18 @@ import type { DataModel, Doc, Id } from "./_generated/dataModel";
 import type { QueryCtx, MutationCtx } from "./_generated/server";
 
 export const DAY = 86_400_000;
-export const CLIENT_RULES_REVISION = 2;
+export const CLIENT_RULES_REVISION = 3;
 export const CLIENT_UPDATE_MESSAGE = "Update Ring Rush to play ranked Daily. Progress from this run stays on your device.";
-export function requireClientRulesRevision(revision: number | undefined) {
-  if (revision !== CLIENT_RULES_REVISION) fail("UPDATE_REQUIRED", CLIENT_UPDATE_MESSAGE);
+export function supportsClientRulesRevision(revision: number | undefined, rulesVersion: number) {
+  return rulesVersion === 1 ? revision === 2 || revision === CLIENT_RULES_REVISION
+    : rulesVersion === 2 && revision === CLIENT_RULES_REVISION;
+}
+export function requireClientRulesRevision(revision: number | undefined, rulesVersion: number) {
+  if (!supportsClientRulesRevision(revision, rulesVersion)) fail("UPDATE_REQUIRED", CLIENT_UPDATE_MESSAGE);
+}
+export async function requireAttemptRules(ctx: QueryCtx | MutationCtx, attempt: Doc<"attempts">) {
+  const challenge = await ctx.db.get(attempt.challengeId);
+  requireClientRulesRevision(attempt.clientRulesRevision, challenge?.rulesVersion ?? 0);
 }
 export const MAX_CHUNK_EVENTS = 128;
 export const MAX_CHUNKS = 512;

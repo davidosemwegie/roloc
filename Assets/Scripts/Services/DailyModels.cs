@@ -17,7 +17,7 @@ namespace Roloc.Services
         public long serverNow;
         public bool rankedEnabled;
         public bool publicCompetitionEnabled;
-        public bool Supported => rulesVersion == 1 && (variant == "lively" || variant == "still");
+        public bool Supported => (rulesVersion == 1 || rulesVersion == 2) && (variant == "lively" || variant == "still");
     }
 
     [Serializable]

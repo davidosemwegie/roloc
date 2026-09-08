@@ -71,6 +71,7 @@ namespace Roloc.Presentation
             audioPlayer = gameObject.AddComponent<GameAudio>();
             audioPlayer.Initialize(backgroundMusic, matchSound, gameOverSound, Saves.Data);
             BuildUI();
+            InitializeAdvertising();
             ShowMenu();
         }
 
@@ -205,6 +206,11 @@ namespace Roloc.Presentation
 
         public void BeginRun()
         {
+            RequestGameStart(BeginRunNow);
+        }
+
+        void BeginRunNow()
+        {
             if (ReplayDailyIfNeeded()) return;
             if (!Saves.Data.TutorialCompleted) { BeginTutorial(); return; }
             CreateRegularSession();
@@ -230,7 +236,9 @@ namespace Roloc.Presentation
 
         public void ShowMenu()
         {
+            if (fullScreenAdShowing || startingAfterAd) return;
             AbandonDailyIfNeeded();
+            InvalidateRevive();
             CancelAllTouches(); Session.ReturnToMenu();
             ResetVariations();
             dailyRun = false;
@@ -245,10 +253,13 @@ namespace Roloc.Presentation
             menu.gameObject.SetActive(active == menu); game.gameObject.SetActive(active == game);
             results.gameObject.SetActive(active == results); overlay.gameObject.SetActive(false);
             board.gameObject.SetActive(true);
+            RefreshAdVisibility();
         }
 
         void ResetBoard()
         {
+            InvalidateRevive();
+            ReserveBannerSpace();
             CancelAllTouches();
             transitionLeft = 0; rippleTime = 0; ripple.gameObject.SetActive(false);
             motionTime = motionBlend = 0;
@@ -279,7 +290,7 @@ namespace Roloc.Presentation
             bool inactive = c != Session.ActiveColor;
             // v1 traces already support voluntarily ending an attempt without awarding a match.
             // Use that terminal event for an inactive-puck mistake in the shared Daily.
-            if (inactive) RecordDailyEvent("abandon");
+            if (inactive && Session.DailyRulesVersion == 1) RecordDailyEvent("abandon");
             else RecordDailyEvent("drop", c, puck.Rect.anchoredPosition);
             var failure = DropFailure.MissedRing;
             if (!inside) for (int other = 0; other < 4; other++)
@@ -297,7 +308,7 @@ namespace Roloc.Presentation
                     previousRings != Session.RingOrder && previousPucks != Session.PuckOrder);
             }
             else if (result == MatchResult.ChanceLost) RetryChance();
-            else if (result == MatchResult.Failed) FinishRun();
+            else if (result == MatchResult.Failed) HandleRunFailure();
             else if (result == MatchResult.TutorialCompleted)
             {
                 audioPlayer.PlayMatch(); audioPlayer.StopMusic();
@@ -318,7 +329,11 @@ namespace Roloc.Presentation
         void FinishRun()
         {
             if (gameRecorded) return;
+            InvalidateRevive();
+            if (Session.State == RoundState.AwaitingRevive) RecordDailyEvent("abandon");
+            Session.EndRun();
             gameRecorded = true;
+            interstitialPending = !Session.WasTutorial && Session.RevivesAvailable == 0;
             bool record = Session.Score > startingBest;
             Saves.FinalizeRun(new LocalRunSummary { RunId = localRunId, Score = Session.Score,
                 LongestCombo = Session.BestCombo, LongestPerfectStreak = Session.BestPerfectStreak, PerfectCount = Session.PerfectCount });
@@ -336,6 +351,7 @@ namespace Roloc.Presentation
 
         public void PauseRun()
         {
+            if (fullScreenAdShowing) return;
             if (Session.State != RoundState.Playing && Session.State != RoundState.Tutorial && Session.State != RoundState.Transition) return;
             RecordDailyEvent("pause");
             Session.Pause(); CancelAllTouches(); audioPlayer.PauseMusic();
@@ -361,12 +377,13 @@ namespace Roloc.Presentation
             board.gameObject.SetActive(true);
             if (daily.IsConfigured) StartCoroutine(daily.RetryPending());
             foreach (var puck in pucks) puck.MotionPaused = false;
+            RefreshAdVisibility();
         }
 
         void ShowSettings(bool fromPause)
         {
             settingsFromPause = fromPause;
-            var panel = NewOverlay("Make it yours", "Sound, touch, and readability.", 620);
+            var panel = NewOverlay("Make it yours", "Sound, touch, and readability.", 670);
             SoundToggle(panel, "Background music", 120, () => Saves.Data.MusicEnabled,
                 () => Saves.Data.MusicEnabled = !Saves.Data.MusicEnabled);
             SoundToggle(panel, "Match sound", 62, () => Saves.Data.MatchEnabled,
@@ -376,7 +393,13 @@ namespace Roloc.Presentation
             SoundToggle(panel, "Gentle haptics", -54, () => Saves.Data.HapticsEnabled, () => Saves.Data.HapticsEnabled = !Saves.Data.HapticsEnabled);
             SoundToggle(panel, "Matching symbols", -112, () => Saves.Data.SymbolsEnabled, () => Saves.Data.SymbolsEnabled = !Saves.Data.SymbolsEnabled);
             SoundToggle(panel, "Reduce effects", -170, () => Saves.Data.ReduceEffects, () => Saves.Data.ReduceEffects = !Saves.Data.ReduceEffects);
-            Button(panel, "Done", new Vector2(0, -244), new Vector2(270, 49), new Vector2(.5f, .5f), Palette[0], Color.white,
+            if (HasPrivacyPolicy())
+                Button(panel, "Privacy policy", new Vector2(-72, -225), new Vector2(140, 44), new Vector2(.5f, .5f), Color.clear, Ink,
+                    () => Application.OpenURL(adsConfiguration.PrivacyPolicyUrl));
+            if (adConsent != null && adConsent.PrivacyOptionsRequired)
+                Button(panel, "Privacy choices", new Vector2(72, -225), new Vector2(140, 44), new Vector2(.5f, .5f), Color.clear, Ink,
+                    () => ShowAdPrivacy(() => ShowSettings(fromPause)));
+            Button(panel, "Done", new Vector2(0, -288), new Vector2(270, 49), new Vector2(.5f, .5f), Palette[0], Color.white,
                 () => { if (settingsFromPause) ShowPausePanel(); else overlay.gameObject.SetActive(false); });
         }
 
@@ -398,6 +421,7 @@ namespace Roloc.Presentation
 
         RectTransform NewOverlay(string title, string subtitle, float height)
         {
+            ads?.SetBannerVisible(false);
             for (int i = overlay.childCount - 1; i >= 0; i--) Destroy(overlay.GetChild(i).gameObject);
             overlay.gameObject.SetActive(true); overlay.SetAsLastSibling();
             var scrim = Box(overlay, "Scrim", new Color(.16f, .21f, .27f, .2f), Vector2.zero, Vector2.zero);
@@ -416,6 +440,7 @@ namespace Roloc.Presentation
         void Update()
         {
             if (Session == null) return;
+            UpdateAdvertising();
             if (menu.gameObject.activeSelf)
                 sculpture.localScale = Vector3.one * Mathf.Clamp(Mathf.Min((safe.rect.width - 22) / 350, (safe.rect.height - 540) / 350), .28f, .65f);
             MatchResult tick;
@@ -427,7 +452,7 @@ namespace Roloc.Presentation
                 tick = Session.TickMilliseconds(elapsed);
             }
             else tick = Session.TickResult(Time.unscaledDeltaTime);
-            if (tick == MatchResult.Failed) { RecordDailyEvent("timeout"); FinishRun(); }
+            if (tick == MatchResult.Failed) { RecordDailyEvent("timeout"); HandleRunFailure(); }
             else if (tick == MatchResult.ChanceLost) RetryChance();
             UpdateExperience();
             if (Session.State == RoundState.Transition)
@@ -452,6 +477,7 @@ namespace Roloc.Presentation
             transitionRotation = Session.RotationSteps;
             transitionBothBoards = bothBoards && transitionRotation == 0;
             transitionDuration = Mathf.Max(0, difficulty.TransitionSeconds);
+            if (reviveCountingDown) transitionDuration = 3;
             if (changed) transitionDuration = Mathf.Max(transitionDuration, Mathf.Clamp(difficulty.FlowTransitionSeconds, 0, 1));
             if (transitionBothBoards) transitionDuration = Mathf.Max(transitionDuration, Mathf.Clamp(difficulty.FlowTransitionSeconds * 1.5f, 0, 1.5f));
             if (transitionRotation != 0) transitionDuration = Mathf.Max(transitionDuration, Mathf.Clamp(difficulty.RotationSeconds, 0, 1.5f));
@@ -515,6 +541,8 @@ namespace Roloc.Presentation
             FinishVariationTransition();
             Session.CompleteTransition();
             dailyTickAt = Time.realtimeSinceStartupAsDouble;
+            reviveCountingDown = false;
+            if (reviveCountdownLabel) reviveCountdownLabel.gameObject.SetActive(false);
         }
 
         Vector2 FloatOffset(int color)
@@ -535,7 +563,7 @@ namespace Roloc.Presentation
 
         void RefreshBoard(float dt)
         {
-            if (Session.State == RoundState.Menu || Session.State == RoundState.GameOver) return;
+            if (Session.State == RoundState.Menu || Session.State == RoundState.GameOver || Session.State == RoundState.AwaitingRevive) return;
             FitVariationBoard();
             bool tutorial = Session.State == RoundState.Tutorial || Session.State == RoundState.Paused && Session.WasTutorial;
             if (Session.State == RoundState.Playing)
@@ -588,9 +616,9 @@ namespace Roloc.Presentation
         }
 
         void CancelAllTouches() { foreach (var puck in pucks) if (puck) puck.CancelDrag(); }
-        void OnApplicationPause(bool paused) { if (paused && Session != null) { PauseRun(); Saves.Save(); } }
-        void OnApplicationFocus(bool focused) { if (!focused && Session != null) PauseRun(); }
-        void OnDestroy() { Saves?.Save(); }
+        void OnApplicationPause(bool paused) { applicationPaused = paused; if (paused && Session != null) { PauseRun(); Saves.Save(); } }
+        void OnApplicationFocus(bool focused) { applicationFocused = focused; if (!focused && Session != null) PauseRun(); }
+        void OnDestroy() { InvalidateRevive(); ads?.Dispose(); Saves?.Save(); }
 
         static RectTransform Container(Transform parent, string name)
         {

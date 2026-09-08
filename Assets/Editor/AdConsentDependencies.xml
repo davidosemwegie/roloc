@@ -1,0 +1,10 @@
+<dependencies>
+  <iosPods>
+    <!-- Consent UI only: this does not add the Google Mobile Ads SDK or an ad network. -->
+    <iosPod name="GoogleUserMessagingPlatform" version="3.1.0">
+      <sources>
+        <source>https://cdn.cocoapods.org/</source>
+      </sources>
+    </iosPod>
+  </iosPods>
+</dependencies>

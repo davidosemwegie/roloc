@@ -14,6 +14,9 @@ namespace Roloc.Editor
     public static class ProjectBuilder
     {
         public const string ScenePath = "Assets/Scenes/Roloc.unity";
+        public const string DevelopmentApplicationIdentifier = "com.clearjar.ringrush.dev";
+        public const string StoreApplicationIdentifier = "com.clearjar.ringrush";
+        public const string AppleDeveloperTeam = "BK7TPQ53FF";
 
         [MenuItem("Ring Rush/Set up game")]
         public static void Setup()
@@ -92,15 +95,13 @@ namespace Roloc.Editor
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
             PlayerSettings.allowedAutorotateToLandscapeLeft = false;
             PlayerSettings.allowedAutorotateToLandscapeRight = false;
-            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS, "com.osazi.roloc.unitydev");
-            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Standalone, "com.osazi.roloc.unitydev");
+            ConfigureBuildIdentity(DevelopmentApplicationIdentifier);
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.iOS, ScriptingImplementation.IL2CPP);
             PlayerSettings.iOS.targetOSVersionString = "15.0";
             PlayerSettings.iOS.simulatorSdkArchitecture = AppleMobileArchitectureSimulator.ARM64;
             PlayerSettings.iOS.targetDevice = iOSTargetDevice.iPhoneOnly;
             PlayerSettings.iOS.appleEnableAutomaticSigning = true;
             PlayerSettings.iOS.buildNumber = Environment.GetEnvironmentVariable("RING_RUSH_BUILD_NUMBER") ?? PlayerSettings.iOS.buildNumber;
-            PlayerSettings.iOS.appleDeveloperTeamID = "TYU4JMX349";
             ConfigureDaily();
             var settings = AssetDatabase.LoadAssetAtPath<DifficultySettings>("Assets/Settings/Difficulty.asset");
             if (settings)
@@ -146,9 +147,25 @@ namespace Roloc.Editor
         {
             if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("RING_RUSH_BUILD_NUMBER")))
                 throw new InvalidOperationException("Set a unique RING_RUSH_BUILD_NUMBER for TestFlight.");
-            Configure();
-            PlayerSettings.iOS.sdkVersion = iOSSdkVersion.DeviceSDK;
-            Build(BuildTarget.iOS, Argument("-buildOutput") ?? "Builds/iOS", BuildOptions.None);
+            try
+            {
+                Configure();
+                PlayerSettings.iOS.sdkVersion = iOSSdkVersion.DeviceSDK;
+                Build(BuildTarget.iOS, Argument("-buildOutput") ?? "Builds/iOS", BuildOptions.None,
+                    StoreApplicationIdentifier);
+            }
+            finally
+            {
+                ConfigureBuildIdentity(DevelopmentApplicationIdentifier);
+                AssetDatabase.SaveAssets();
+            }
+        }
+
+        static void ConfigureBuildIdentity(string iosIdentifier)
+        {
+            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS, iosIdentifier);
+            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Standalone, DevelopmentApplicationIdentifier);
+            PlayerSettings.iOS.appleDeveloperTeamID = AppleDeveloperTeam;
         }
 
         static void ConfigureBrandAssets()
@@ -216,9 +233,12 @@ namespace Roloc.Editor
             Build(BuildTarget.StandaloneOSX, Argument("-buildOutput") ?? "Builds/Mac/Ring Rush.app", BuildOptions.Development);
         }
 
-        static void Build(BuildTarget target, string output, BuildOptions options)
+        static void Build(BuildTarget target, string output, BuildOptions options,
+            string iosIdentifier = DevelopmentApplicationIdentifier)
         {
             if (!File.Exists(ScenePath)) Setup();
+            // Setup configures development defaults, so select the export identity afterward.
+            ConfigureBuildIdentity(iosIdentifier);
             Directory.CreateDirectory(Path.GetDirectoryName(output) ?? "Builds");
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions {
                 scenes = new[] { ScenePath }, target = target, locationPathName = output, options = options

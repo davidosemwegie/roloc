@@ -68,7 +68,7 @@ namespace Roloc.Presentation
                 new Vector2(0, 10), new Vector2(294, 65));
             Button(panel, ranked ? "PLAY RANKED" : "PLAY PRACTICE", new Vector2(0, -76), new Vector2(270, 54), new Vector2(.5f, .5f), Palette[1], Color.white, () => {
                 if (!Saves.Data.TutorialCompleted) { overlay.gameObject.SetActive(false); BeginTutorial(); return; }
-                if (ranked) StartDailyRanked(); else LaunchDaily(null);
+                RequestGameStart(() => { if (ranked) StartDailyRanked(); else LaunchDaily(null); });
             });
             Button(panel, "Back", new Vector2(0, -145), new Vector2(270, 44), new Vector2(.5f, .5f), Color.clear, Ink,
                 () => overlay.gameObject.SetActive(false));
@@ -89,7 +89,7 @@ namespace Roloc.Presentation
             dailyRun = selectedDaily = true; dailySubmitted = false; dailyAttempt = attempt;
             dailyTrace.Clear(); standing = null;
             rankingCaption = attempt == null ? "PRACTICE · local progress counts" : "RANKED DAILY · best attempt counts";
-            Session = GameSession.CreateDaily((uint)challenge.seed, challenge.variant == "still" ? BoardStyle.Still : BoardStyle.Lively);
+            Session = GameSession.CreateDaily((uint)challenge.seed, challenge.variant == "still" ? BoardStyle.Still : BoardStyle.Lively, challenge.rulesVersion);
             Session.StartGame(); StartLocalCredit(); gameRecorded = false;
             SetScreen(game); ResetBoard(); audioPlayer.StartMusic();
             dailyStartedAt = dailyTickAt = Time.realtimeSinceStartupAsDouble;
