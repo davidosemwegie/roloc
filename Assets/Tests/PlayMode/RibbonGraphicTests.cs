@@ -21,21 +21,18 @@ namespace Roloc.Tests
             child.transform.SetParent(root.transform, false);
             child.GetComponent<RectTransform>().sizeDelta = new Vector2(100, 100);
             ribbon = child.AddComponent<RibbonGraphic>();
-            mesh = new Mesh();
         }
 
         [TearDown]
         public void TearDown()
         {
             Object.DestroyImmediate(root);
-            Object.DestroyImmediate(mesh);
         }
 
         void ReadMesh()
         {
             Canvas.ForceUpdateCanvases();
-            mesh.Clear();
-            ribbon.canvasRenderer.GetMesh(mesh);
+            mesh = ribbon.canvasRenderer.GetMesh();
         }
 
         void AssertFiniteMesh()
