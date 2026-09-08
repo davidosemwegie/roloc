@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "com.google.external-dependency-manager": "https://github.com/googlesamples/unity-jar-resolver.git?path=upm#8cf54b63e37dceaf1630135f9abddf08167500a1",
+    "com.unity.services.levelplay": "9.5.0",
     "com.unity.inputsystem": "1.20.0",
     "com.unity.test-framework": "1.4.5",
     "com.unity.ugui": "2.0.0",

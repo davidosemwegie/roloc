@@ -12,7 +12,7 @@ export const ensureUpcoming = internalMutation({
       const date = utcDate(opensAt);
       const found = await ctx.db.query("challenges").withIndex("by_date", q => q.eq("date", date)).unique();
       if (found) continue; // Published rules and seeds never change.
-      await ctx.db.insert("challenges", { date, seed: Math.floor(Math.random() * 4294967296), rulesVersion: 1,
+      await ctx.db.insert("challenges", { date, seed: Math.floor(Math.random() * 4294967296), rulesVersion: 2,
         variant: Math.floor(opensAt / DAY) % 2 === 0 ? "lively" : "still", opensAt, closesAt: opensAt + DAY,
         uploadDeadline: opensAt + DAY + 3_600_000, expiresAt: opensAt + 367 * DAY });
       created++;

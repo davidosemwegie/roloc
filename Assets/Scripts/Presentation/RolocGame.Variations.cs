@@ -164,12 +164,12 @@ namespace Roloc.Presentation
             {
                 board.anchorMin = board.anchorMax = new Vector2(.5f, .43f);
                 board.anchoredPosition = Vector2.zero;
-                float originalScale = Mathf.Min(1, Mathf.Min((safe.rect.width - 16) / 350, (safe.rect.height - 275) / 440));
+                float originalScale = Mathf.Min(1, Mathf.Min((game.rect.width - 16) / 350, (game.rect.height - 275) / 440));
                 board.localScale = Vector3.one * Mathf.Max(.4f, originalScale);
                 return;
             }
             // The playable rectangle excludes the HUD and bottom instructions.
-            float available = Mathf.Max(60, safe.rect.height - 353);
+            float available = Mathf.Max(60, game.rect.height - 353);
             float width = Mathf.Lerp(350, 600, layoutBlend), height = Mathf.Lerp(440, 600, layoutBlend);
             float scale = Mathf.Min(1, Mathf.Min((safe.rect.width - 20) / width, available / height));
             board.anchorMin = board.anchorMax = new Vector2(.5f, 0);

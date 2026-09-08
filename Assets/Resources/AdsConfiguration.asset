@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04e0b1f4429f45cbbbc6385e22d23802, type: 3}
+  m_Name: AdsConfiguration
+  m_EditorClassIdentifier: Roloc.Services::Roloc.Services.AdsConfiguration
+  PrivacyPolicyUrl: ''
+  IosAppKey: 27fdef9ad
+  IosBannerAdUnitId: sc23sll38nkxeete
+  IosRewardedAdUnitId: k62ws729b3wloc8c
+  IosInterstitialAdUnitId: 7ehidbf3tz1elcyf
+  IosConsentAppId: ca-app-pub-6400654457067913~9383583266
+  ConsentMessagesPublished: 0

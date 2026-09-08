@@ -422,8 +422,8 @@ namespace Roloc.Services
 
         [Serializable] private sealed class EmptyArgs { }
         [Serializable] private sealed class ChallengeArgs { public string challengeId; }
-        // Revision 2 requires inactive-puck releases to end a ranked run.
-        [Serializable] private sealed class StartArgs { public string challengeId; public string requestId; public int clientRulesRevision = 2; }
+        // Revision 3 supports the v2 revive protocol and the immutable v1 challenges.
+        [Serializable] private sealed class StartArgs { public string challengeId; public string requestId; public int clientRulesRevision = 3; }
         [Serializable] private sealed class AttemptArgs { public string attemptId; }
         [Serializable] private sealed class ChunkArgs { public string attemptId; public int index; public DailyTraceEvent[] events; }
         [Serializable] private sealed class FinalizeArgs { public string attemptId; public int chunkCount; }

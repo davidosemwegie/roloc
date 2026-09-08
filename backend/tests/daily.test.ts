@@ -19,7 +19,13 @@ async function guest(t: Test) {
   const id = await t.run(ctx => ctx.db.insert("users", { isAnonymous: true, closedTestEpoch: "1" }));
   return { id, client: t.withIdentity({ subject: `${id}|session` }) };
 }
-async function ready(t: Test) { await t.mutation(internal.publication.ensureUpcoming, {}); return (await t.query(api.daily.current, {}))!; }
+async function ready(t: Test, rulesVersion = 1) {
+  await t.mutation(internal.publication.ensureUpcoming, {});
+  const challenge = (await t.query(api.daily.current, {}))!;
+  // Existing suites exercise a challenge published before the v2 rollout.
+  await t.run(ctx => ctx.db.patch(challenge.id, { rulesVersion }));
+  return { ...challenge, rulesVersion };
+}
 async function record(t: Test, client: ReturnType<Test["withIdentity"]>, challenge: NonNullable<Awaited<ReturnType<typeof ready>>>, score: number, requestId: string) {
   const attempt = await client.mutation(api.daily.createAttempt, { challengeId: challenge.id, requestId, clientRulesRevision: 2 });
   const checkpoint = initialReplay(challenge.seed,challenge.variant), events: TraceEvent[] = [];
@@ -55,14 +61,14 @@ describe("Publication and access",()=>{
     const created=await Promise.all([t.mutation(internal.publication.ensureUpcoming,{}),t.mutation(internal.publication.ensureUpcoming,{})]);
     expect(created.reduce((a,b)=>a+b,0)).toBe(8);
     const challenge=(await t.query(api.daily.current,{}))!,{client}=await guest(t);
-    const attempt=await client.mutation(api.daily.createAttempt,{clientRulesRevision:2,challengeId:challenge.id,requestId:"health-0001"});
+    const attempt=await client.mutation(api.daily.createAttempt,{clientRulesRevision:3,challengeId:challenge.id,requestId:"health-0001"});
     expect((await t.query(internal.operations.health,{})).ready).toBe(true);
     await t.run(ctx=>ctx.db.patch(attempt.attemptId,{status:"validating",submittedAt:Date.now()-300001}));
     const health=await t.query(internal.operations.health,{});expect(health.validationStalled).toBe(true);expect(health.ready).toBe(false);
   });
   it("publishes today and seven upcoming days once without revealing future seeds",async()=>{
     const t=setup(); expect(await t.mutation(internal.publication.ensureUpcoming,{})).toBe(8);
-    const first=await t.query(api.daily.current,{}); expect(first?.date).toBe("2026-09-06");
+    const first=await t.query(api.daily.current,{}); expect(first?.date).toBe("2026-09-06"); expect(first?.rulesVersion).toBe(2);
     expect(await t.mutation(internal.publication.ensureUpcoming,{})).toBe(0); expect(await t.query(api.daily.current,{})).toEqual(first);
     const rows=await t.run(ctx=>ctx.db.query("challenges").take(9)); expect(rows).toHaveLength(8);
     expect(rows.map(x=>x.seed)).toHaveLength(8);
@@ -80,22 +86,23 @@ describe("Publication and access",()=>{
     const args={clientRulesRevision:2,challengeId:challenge.id,requestId:"request-0001"};
     expect(await client.mutation(api.daily.createAttempt,args)).toEqual(await client.mutation(api.daily.createAttempt,args));
     const future=await t.run(ctx=>ctx.db.query("challenges").withIndex("by_date",q=>q.eq("date","2026-09-07")).unique());
-    await expect(client.mutation(api.daily.createAttempt,{...args,challengeId:future!._id,requestId:"request-0002"})).rejects.toThrow("not open");
+    await expect(client.mutation(api.daily.createAttempt,{...args,clientRulesRevision:3,challengeId:future!._id,requestId:"request-0002"})).rejects.toThrow("not open");
     await t.mutation(internal.operations.setRankedEnabled,{enabled:false});
     await expect(client.mutation(api.daily.createAttempt,{...args,requestId:"request-0003"})).rejects.toThrow("temporarily paused");
     expect((await t.query(api.daily.current,{}))?.publicCompetitionEnabled).toBe(false);
   });
 });
 describe("Client rules revision gate",()=>{
-  it("requires exactly revision 2, including when retrying an existing request",async()=>{
+  it("accepts revisions 2 and 3 for v1 while rejecting obsolete and unknown clients",async()=>{
     const t=setup(),challenge=await ready(t),{client}=await guest(t);
     const args={challengeId:challenge.id,requestId:"revision-0001"};
-    for(const clientRulesRevision of [undefined,1,3,2.5])
+    for(const clientRulesRevision of [undefined,1,4,2.5])
       await expect(client.mutation(api.daily.createAttempt,{...args,clientRulesRevision})).rejects.toThrow("UPDATE_REQUIRED");
     expect(await t.run(ctx=>ctx.db.query("attempts").take(1))).toHaveLength(0);
     const started=await client.mutation(api.daily.createAttempt,{...args,clientRulesRevision:2});
     expect((await t.run(ctx=>ctx.db.get(started.attemptId)))?.clientRulesRevision).toBe(2);
     expect(await client.mutation(api.daily.createAttempt,{...args,clientRulesRevision:2})).toEqual(started);
+    expect(await client.mutation(api.daily.createAttempt,{...args,clientRulesRevision:3})).toEqual(started);
     await expect(client.mutation(api.daily.createAttempt,args)).rejects.toThrow("UPDATE_REQUIRED");
     // Existing rows stay schema-valid, but updating the app cannot relabel a legacy attempt.
     await t.run(ctx=>ctx.db.patch(started.attemptId,{clientRulesRevision:undefined}));
@@ -211,5 +218,61 @@ describe("Personal best and tie-aware standings",()=>{
   });
   it("uses the midpoint of ties and flags early cohorts",()=>{
     expect(standingNumbers(10,4,20)).toEqual({percentile:60,topPercent:40,early:false,waiting:false});
+  });
+});
+
+describe("Daily v2 rollout", () => {
+  it("leaves a published v1 challenge immutable while publishing only new dates as v2", async () => {
+    const t = setup(), old = await ready(t);
+    vi.setSystemTime(new Date("2026-09-07T12:00:00Z"));
+    expect(await t.mutation(internal.publication.ensureUpcoming, {})).toBe(1);
+    expect((await t.run(ctx => ctx.db.get(old.id)))?.rulesVersion).toBe(1);
+    const newest = await t.run(ctx => ctx.db.query("challenges").withIndex("by_date", q => q.eq("date", "2026-09-14")).unique());
+    expect(newest?.rulesVersion).toBe(2);
+  });
+  it("requires revision 3 for v2 across start, retries, upload, finalize, status and validation", async () => {
+    const t = setup(), challenge = await ready(t, 2), { client } = await guest(t);
+    const args = { challengeId: challenge.id, requestId: "revives-v2-0001", clientRulesRevision: 3 };
+    await expect(client.mutation(api.daily.createAttempt, {...args, clientRulesRevision:2})).rejects.toThrow("UPDATE_REQUIRED");
+    const attempt = await client.mutation(api.daily.createAttempt, args);
+    expect(await client.mutation(api.daily.createAttempt, args)).toEqual(attempt);
+    const terminal: TraceEvent = {kind:"abandon", round:0, tMs:0, elapsedMs:0, color:-1, xQ:0, yQ:0};
+    const chunk = {attemptId:attempt.attemptId, index:0, events:[terminal]};
+    await client.mutation(api.daily.appendChunk, chunk);
+    await t.run(ctx => ctx.db.patch(attempt.attemptId, {clientRulesRevision:2}));
+    await expect(client.mutation(api.daily.createAttempt, args)).rejects.toThrow("UPDATE_REQUIRED");
+    await expect(client.mutation(api.daily.appendChunk, chunk)).rejects.toThrow("UPDATE_REQUIRED");
+    await expect(client.mutation(api.daily.finalize, {attemptId:attempt.attemptId, chunkCount:1})).rejects.toThrow("UPDATE_REQUIRED");
+    expect((await client.query(api.daily.attemptStatus, {attemptId:attempt.attemptId})).status).toBe("rejected");
+    const checkpoint = initialReplay(challenge.seed, challenge.variant, 2); replayEvents(checkpoint, [terminal]);
+    await t.run(ctx => ctx.db.patch(attempt.attemptId, {status:"validating", submittedAt:Date.now()}));
+    await t.mutation(internal.validation.recordResult, {attemptId:attempt.attemptId, checkpoint, error:null});
+    expect((await client.query(api.daily.attemptStatus, {attemptId:attempt.attemptId})).status).toBe("rejected");
+    expect((await client.query(api.daily.myStanding, {challengeId:challenge.id})).participants).toBe(0);
+  });
+  it("validates revive trace chunks across checkpoints and publishes the continued score", async () => {
+    const t = setup(), challenge = await ready(t, 2), { client } = await guest(t);
+    const attempt = await client.mutation(api.daily.createAttempt, {challengeId:challenge.id,requestId:"revives-v2-0002",clientRulesRevision:3});
+    const local = initialReplay(challenge.seed, challenge.variant, 2), first: TraceEvent[] = [];
+    for (let i = 0; i < 20; i++) {
+      const [xQ,yQ] = ringCenter(local.rules, local.rules.active, 100);
+      const event: TraceEvent = {kind:"drop",round:i,tMs:local.roundStartTMs+100,elapsedMs:100,color:local.rules.active,xQ,yQ};
+      first.push(event); expect(replayEvents(local,[event])).toBeNull();
+    }
+    const failure: TraceEvent = {kind:"drop",round:20,tMs:local.roundStartTMs+100,elapsedMs:100,color:local.rules.active,xQ:0,yQ:0};
+    first.push(failure); replayEvents(local,[failure]);
+    const revive: TraceEvent = {kind:"revive",round:20,tMs:local.lastTMs+30000,elapsedMs:0,color:-1,xQ:0,yQ:0};
+    replayEvents(local,[revive]);
+    const end: TraceEvent = {kind:"abandon",round:20,tMs:local.roundStartTMs,elapsedMs:0,color:-1,xQ:0,yQ:0};
+    await client.mutation(api.daily.appendChunk,{attemptId:attempt.attemptId,index:0,events:first});
+    await client.mutation(api.daily.appendChunk,{attemptId:attempt.attemptId,index:1,events:[revive,end]});
+    await t.run(ctx=>ctx.db.patch(attempt.attemptId,{status:"validating",submittedAt:Date.now()+end.tMs}));
+    const start = await t.query(internal.validation.beginReplay,{attemptId:attempt.attemptId});
+    const failed = await t.query(internal.validation.validateChunk,{attemptId:attempt.attemptId,index:0,checkpoint:start});
+    expect(failed.error).toBeNull(); expect(failed.checkpoint.awaitingRevive).toBe(true); expect(failed.checkpoint.terminal).toBe(false);
+    const result = await t.query(internal.validation.validateChunk,{attemptId:attempt.attemptId,index:1,checkpoint:failed.checkpoint});
+    expect(result.error).toBeNull(); expect(result.checkpoint.revivesAvailable).toBe(0);
+    await t.mutation(internal.validation.recordResult,{attemptId:attempt.attemptId,...result});
+    expect((await client.query(api.daily.myStanding,{challengeId:challenge.id})).bestScore).toBe(20);
   });
 });

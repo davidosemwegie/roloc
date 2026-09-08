@@ -41,4 +41,4 @@ To configure Daily in a local build, set `RING_RUSH_CONVEX_URL` and `RING_RUSH_C
 - [Daily operations](docs/DAILY_OPERATIONS.md): publication, health checks, kill switch, retention, and release gates.
 - [Privacy disclosure draft](docs/PRIVACY.md): data used for anonymous rankings.
 
-The React Native runtime, Firebase, and Mixpanel integrations have been removed. No historical users or backend data are imported. Analytics, advertising, purchases, accounts, and cross-device progression are deferred.
+The React Native runtime, Firebase, and Mixpanel integrations have been removed. No historical users or backend data are imported. Unity Ads monetization uses LevelPlay for banners, milestone-based rewarded revives, and optional interstitials. See `docs/ADS.md` for configuration and device validation. Separate analytics, purchases, named accounts, and cross-device progression remain deferred.

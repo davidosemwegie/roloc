@@ -84,3 +84,77 @@ describe("Trace legality", () => {
     expect(replayEvents(paused,[{...pause,round:0}, {...pause,round:0,kind:"abandon",tMs:500}])).toBeNull(); expect(paused.terminal).toBe(true);
   });
 });
+
+describe("Daily v2 rewarded revives", () => {
+  function playTo(state: ReturnType<typeof initialReplay>, score: number) {
+    while (state.rules.score < score) expect(replayEvents(state, [drop(state)])).toBeNull();
+  }
+  function fail(state: ReturnType<typeof initialReplay>): TraceEvent {
+    return { ...drop(state), xQ: 0, yQ: 0 };
+  }
+  function revive(state: ReturnType<typeof initialReplay>): TraceEvent {
+    return { kind: "revive", round: state.rules.score, tMs: state.lastTMs + 30000, elapsedMs: 0, color: -1, xQ: 0, yQ: 0 };
+  }
+  it("earns only at milestones, caps at three, discards overflow and replenishes later", () => {
+    const state = initialReplay(42, "still", 2);
+    for (const [score, bank] of [[19,0],[20,1],[49,1],[50,2],[99,2],[100,3],[150,3]]) {
+      playTo(state, score); expect(state.revivesAvailable).toBe(bank);
+    }
+    for (const remaining of [2,1,0]) {
+      expect(replayEvents(state, [fail(state)])).toBeNull();
+      expect(state.awaitingRevive).toBe(true);
+      expect(replayEvents(state, [revive(state)])).toBeNull();
+      expect(state.revivesAvailable).toBe(remaining);
+    }
+    playTo(state, 199); expect(state.revivesAvailable).toBe(0);
+    playTo(state, 200); expect(state.revivesAvailable).toBe(1);
+  });
+  it("retries exactly the same board and RNG with full timer after a three-second countdown", () => {
+    const state = initialReplay(42, "lively", 2); playTo(state, 50);
+    const rules = structuredClone(state.rules), perfects = state.perfects;
+    expect(replayEvents(state, [fail(state)])).toBeNull();
+    const continuation = revive(state);
+    expect(replayEvents(state, [continuation])).toBeNull();
+    expect(state.rules).toEqual(rules); expect(state.perfects).toBe(perfects);
+    expect(state.lastElapsedMs).toBe(0); expect(state.roundStartTMs).toBe(continuation.tMs + 3000);
+    expect(replayEvents(structuredClone(state), [{...drop(state), tMs: continuation.tMs + 400}])).toContain("faster");
+    expect(replayEvents(state, [drop(state)])).toBeNull(); expect(state.rules.score).toBe(51);
+  });
+  it("handles timeout and inactive-puck failure while leaving v1 strict", () => {
+    for (const kind of ["timeout", "inactive"] as const) {
+      const state = initialReplay(42, "still", 2); playTo(state, 20);
+      const event = kind === "timeout" ? { ...drop(state, state.rules.durationMs), kind: "timeout" as const }
+        : { ...drop(state), color: (state.rules.active + 1) % 4 };
+      expect(replayEvents(state, [event])).toBeNull(); expect(state.awaitingRevive).toBe(true);
+      expect(replayEvents(state, [revive(state)])).toBeNull();
+    }
+    const legacy = initialReplay(42, "still"); playTo(legacy, 20);
+    expect(replayEvents(legacy, [fail(legacy)])).toBeNull(); expect(legacy.terminal).toBe(true);
+    expect(replayEvents(legacy, [revive(legacy)])).toContain("after the run ended");
+  });
+  it("rejects unearned, premature, duplicate and malformed revives or play before choosing", () => {
+    const state = initialReplay(42, "still", 2);
+    expect(replayEvents(state, [revive(state)])).toContain("not available");
+    playTo(state, 20);
+    expect(replayEvents(state, [revive(state)])).toContain("not available");
+    expect(replayEvents(state, [fail(state)])).toBeNull();
+    expect(replayEvents(structuredClone(state), [drop(state)])).toContain("Choose");
+    expect(replayEvents(structuredClone(state), [{...revive(state), elapsedMs: 1}])).toContain("invalid");
+    expect(replayEvents(state, [revive(state)])).toBeNull();
+    expect(replayEvents(state, [revive(state)])).toContain("not available");
+    expect(replayEvents(state, [fail(state)])).toBeNull(); expect(state.terminal).toBe(true);
+  });
+  it("can abandon a pending failure and survives checkpoint boundaries", () => {
+    const state = initialReplay(42, "still", 2); playTo(state, 20);
+    const failure = fail(state); expect(replayEvents(state, [failure])).toBeNull();
+    const checkpoint = JSON.parse(JSON.stringify(state));
+    const continuation = revive(state);
+    expect(replayEvents(state, [continuation])).toBeNull();
+    expect(replayEvents(checkpoint, [continuation])).toBeNull(); expect(checkpoint).toEqual(state);
+    const declined = initialReplay(42, "still", 2); playTo(declined, 20);
+    const failed = fail(declined); replayEvents(declined, [failed]);
+    expect(replayEvents(declined, [{...failed, kind:"abandon", tMs:failed.tMs + 1000, color:-1}])).toBeNull();
+    expect(declined.terminal).toBe(true); expect(declined.awaitingRevive).toBe(false);
+    expect(replayEvents(declined, [revive(declined)])).toContain("after the run ended");
+  });
+});

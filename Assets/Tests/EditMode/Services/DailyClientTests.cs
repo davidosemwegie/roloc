@@ -30,14 +30,14 @@ namespace Roloc.Services.Tests
         }
 
         [Test]
-        public void RankedStartWirePayloadDeclaresTheRequiredFailureRulesRevision()
+        public void RankedStartWirePayloadDeclaresTheReviveRulesRevision()
         {
             var argsType = typeof(DailyClient).GetNestedType("StartArgs", BindingFlags.NonPublic);
             var args = Activator.CreateInstance(argsType, true);
             argsType.GetField("challengeId").SetValue(args, "challenge");
             argsType.GetField("requestId").SetValue(args, "retry-stable-id");
             string json = JsonUtility.ToJson(args);
-            Assert.That(json, Does.Contain("\"clientRulesRevision\":2"));
+            Assert.That(json, Does.Contain("\"clientRulesRevision\":3"));
             Assert.That(json, Does.Contain("\"requestId\":\"retry-stable-id\""));
         }
 
@@ -51,6 +51,8 @@ namespace Roloc.Services.Tests
             Assert.That(restored.uploadDeadline, Is.EqualTo(1788742800000L));
             Assert.That(restored.Supported, Is.True);
             restored.rulesVersion = 2;
+            Assert.That(restored.Supported, Is.True);
+            restored.rulesVersion = 3;
             Assert.That(restored.Supported, Is.False);
         }
 
@@ -146,6 +148,27 @@ namespace Roloc.Services.Tests
             var isolated = new DailyClient(connection, directory);
             Assert.That(isolated.CachedChallenge, Is.Null);
             Assert.That(isolated.PendingCount, Is.Zero);
+        }
+
+        [Test]
+        public void ReviveTraceIsSnapshottedBeforeUploadAndSurvivesRelaunch()
+        {
+            var client = new DailyClient(connection, directory);
+            string path = (string)typeof(DailyClient).GetField("cachePath", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(client);
+            File.WriteAllText(path, "{\"version\":1,\"pending\":[{\"ready\":false,\"attempt\":{\"attemptId\":\"issued\",\"challengeId\":\"today\",\"status\":\"open\"},\"events\":[]}]}");
+            client = new DailyClient(connection, directory);
+            var revive = new DailyTraceEvent { kind = "revive", round = 20, tMs = 40000, elapsedMs = 0 };
+            var upload = client.SubmitRun(new DailyAttempt { attemptId = "issued", challengeId = "today" },
+                new[] { revive }, _ => { });
+            Assert.That(upload.MoveNext(), Is.True); // Snapshot/persist completes before the nested network coroutine starts.
+            revive.kind = "abandon";
+            revive.tMs = 1;
+            string saved = File.ReadAllText(path);
+            Assert.That(saved, Does.Contain("\"kind\":\"revive\""));
+            Assert.That(saved, Does.Contain("\"tMs\":40000"));
+            var restored = new DailyClient(connection, directory);
+            Assert.That(restored.PendingCount, Is.EqualTo(1));
+            (upload as IDisposable)?.Dispose();
         }
 
         // Explicitly selected only for the configured development deployment; never a production CI test.

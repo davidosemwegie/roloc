@@ -102,7 +102,7 @@ namespace Roloc.Tests
                 game.Session.Drop(game.Session.ActiveColor, true, i >= matches - perfects);
                 Invoke("CreditMatch"); game.Session.CompleteTransition();
             }
-            while (game.Session.State != RoundState.GameOver)
+            while (game.Session.State == RoundState.Playing || game.Session.State == RoundState.Transition)
             {
                 game.Session.Drop(game.Session.ActiveColor, false);
                 if (game.Session.State == RoundState.Transition) game.Session.CompleteTransition();

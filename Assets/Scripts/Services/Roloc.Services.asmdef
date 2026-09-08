@@ -1,6 +1,6 @@
 {
   "name": "Roloc.Services",
   "rootNamespace": "Roloc.Services",
-  "references": [],
+  "references": ["Unity.LevelPlay"],
   "autoReferenced": true
 }

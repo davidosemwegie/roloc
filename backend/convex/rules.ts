@@ -1,13 +1,15 @@
-/** Daily protocol v1. Keep synchronized with Assets/Scripts/Core/DailyRules.cs. */
+/** Daily protocols v1/v2. Keep synchronized with Assets/Scripts/Core/DailyRules.cs. */
 export type Variant = "lively" | "still";
 export type FlowMode = "Steady" | "Floating" | "Drifting" | "Breather" | "Rotation";
-export type TraceEvent = { kind: "drop" | "timeout" | "pause" | "resume" | "abandon"; round: number; tMs: number; elapsedMs: number; color: number; xQ: number; yQ: number };
+export type TraceEvent = { kind: "drop" | "timeout" | "pause" | "resume" | "abandon" | "revive"; round: number; tMs: number; elapsedMs: number; color: number; xQ: number; yQ: number };
 export type RulesState = {
   seed: number; rng: number; variant: Variant; rings: number[]; pucks: number[]; active: number; score: number;
   phase: "Calm" | "Challenge" | "Recovery"; mode: FlowMode; previousChallenge: FlowMode; remaining: number;
   rotationSteps: number; durationMs: number; transitionMs: number;
 };
 export type ReplayState = {
+  // Optional for workflow checkpoints journaled before v2 deployment.
+  rulesVersion?: number; revivesAvailable?: number; awaitingRevive?: boolean;
   rules: RulesState; lastTMs: number; roundStartTMs: number; lastElapsedMs: number;
   pausedAt: number; roundPausedMs: number; terminal: boolean; perfects: number; events: number;
 };
@@ -87,8 +89,17 @@ export function within(x: number, y: number, center: [number, number], radius: n
   const dx = x - center[0], dy = y - center[1];
   return dx * dx + dy * dy <= radius * radius;
 }
-export function initialReplay(seed: number, variant: Variant): ReplayState {
-  return { rules: initialRules(seed, variant), lastTMs: 0, roundStartTMs: 0, lastElapsedMs: 0, pausedAt: -1, roundPausedMs: 0, terminal: false, perfects: 0, events: 0 };
+export function initialReplay(seed: number, variant: Variant, rulesVersion = 1): ReplayState {
+  return { rulesVersion, revivesAvailable: 0, awaitingRevive: false, rules: initialRules(seed, variant), lastTMs: 0, roundStartTMs: 0, lastElapsedMs: 0, pausedAt: -1, roundPausedMs: 0, terminal: false, perfects: 0, events: 0 };
+}
+function loseChance(state: ReplayState) {
+  state.awaitingRevive = state.rulesVersion === 2 && (state.revivesAvailable ?? 0) > 0;
+  state.terminal = !state.awaitingRevive;
+}
+function earnRevive(state: ReplayState) {
+  const score = state.rules.score;
+  if (state.rulesVersion === 2 && (score === 20 || score === 50 || (score >= 100 && score % 50 === 0)))
+    state.revivesAvailable = Math.min(3, (state.revivesAvailable ?? 0) + 1);
 }
 function int(value: number, min: number, max: number) { return Number.isSafeInteger(value) && value >= min && value <= max; }
 /** Returns a player-facing rejection reason, or null. Mutates only the supplied checkpoint. */
@@ -96,6 +107,21 @@ export function replayEvents(state: ReplayState, events: TraceEvent[]): string |
   for (const event of events) {
     const s = state.rules;
     if (state.terminal) return "Events were submitted after the run ended.";
+    if (event.kind === "revive") {
+      if (state.rulesVersion !== 2 || !state.awaitingRevive || (state.revivesAvailable ?? 0) < 1)
+        return "A revive was not available for this failure.";
+      if (event.round !== s.score || !int(event.tMs, 0, MAX_TRACE_TIME_MS) || event.tMs < state.lastTMs
+        || event.elapsedMs !== 0 || event.color !== -1 || event.xQ !== 0 || event.yQ !== 0)
+        return "The revive trace contains invalid timing or coordinates.";
+      state.revivesAvailable = (state.revivesAvailable ?? 0) - 1;
+      state.awaitingRevive = false;
+      state.roundStartTMs = event.tMs + 3000;
+      state.lastElapsedMs = state.roundPausedMs = 0;
+      state.pausedAt = -1;
+      state.lastTMs = event.tMs; state.events++;
+      continue;
+    }
+    if (state.awaitingRevive && event.kind !== "abandon") return "Choose whether to revive before continuing the run.";
     if (!int(event.round, 0, 65536) || event.round !== s.score || !int(event.tMs, 0, MAX_TRACE_TIME_MS) || event.tMs < state.lastTMs
       || !int(event.elapsedMs, 0, s.durationMs) || event.elapsedMs < state.lastElapsedMs
       || !int(event.color, -1, 3) || !int(event.xQ, -1000000, 1000000) || !int(event.yQ, -1000000, 1000000))
@@ -113,19 +139,19 @@ export function replayEvents(state: ReplayState, events: TraceEvent[]): string |
       if (event.kind !== "abandon" && event.tMs + 2 < state.roundStartTMs + state.roundPausedMs + event.elapsedMs)
         return "The round ran faster than its trace permits.";
       if (event.kind === "drop") {
-        if (event.color !== s.active || event.elapsedMs >= s.durationMs) return "The move used an inactive puck or expired timer.";
+        if ((event.color !== s.active && state.rulesVersion !== 2) || event.color < 0 || event.elapsedMs >= s.durationMs) return "The move used an inactive puck or expired timer.";
         const center = ringCenter(s, s.active, event.elapsedMs);
-        if (!within(event.xQ, event.yQ, center, RING_RADIUS)) state.terminal = true;
+        if (event.color !== s.active || !within(event.xQ, event.yQ, center, RING_RADIUS)) loseChance(state);
         else {
           if (within(event.xQ, event.yQ, center, PERFECT_RADIUS)) state.perfects++;
-          advance(s); state.roundStartTMs = event.tMs + s.transitionMs;
+          advance(s); earnRevive(state); state.roundStartTMs = event.tMs + s.transitionMs;
           state.roundPausedMs = 0; state.lastElapsedMs = 0;
           state.lastTMs = event.tMs; state.events++; continue;
         }
       } else if (event.kind === "timeout") {
         if (event.elapsedMs !== s.durationMs) return "A timeout was recorded before the timer expired.";
-        state.terminal = true;
-      } else if (event.kind === "abandon") state.terminal = true;
+        loseChance(state);
+      } else if (event.kind === "abandon") { state.terminal = true; state.awaitingRevive = false; }
       else return "The run trace contains an unsupported event.";
     }
     state.lastTMs = event.tMs; state.lastElapsedMs = event.elapsedMs; state.events++;

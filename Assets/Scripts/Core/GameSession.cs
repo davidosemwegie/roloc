@@ -2,7 +2,7 @@ using System;
 
 namespace Roloc.Core
 {
-    public enum RoundState { Menu, Tutorial, Playing, Transition, Paused, GameOver }
+    public enum RoundState { Menu, Tutorial, Playing, Transition, Paused, GameOver, AwaitingRevive }
     public enum MatchResult { Ignored, Matched, Failed, TutorialCompleted, ChanceLost }
 
     /// <summary>Frame-independent rules. Rendering and input consume run events and canonical geometry.</summary>
@@ -25,6 +25,10 @@ namespace Roloc.Core
         public BoardStyle BoardStyle { get; private set; } = BoardStyle.Lively;
         public bool IsDaily => Mode == GameMode.Daily;
         public uint DailySeed => dailySeed;
+        public int DailyRulesVersion { get; private set; } = 1;
+        public bool RevivesEnabled => !WasTutorial && (!IsDaily || DailyRulesVersion == 2);
+        public int RevivesAvailable { get; private set; }
+        public int ComboBeforeFailure { get; private set; }
         public int Score { get; private set; }
         public int ActiveColor { get; private set; }
         public int PaletteIndex { get; private set; } = -1;
@@ -83,15 +87,19 @@ namespace Roloc.Core
             if (variationsEnabled) rhythm = new RhythmDirector(this.random, mode, boardStyle, variationSettings);
         }
 
-        GameSession(uint seed, BoardStyle boardStyle) : this(new DailyRandom(seed))
+        GameSession(uint seed, BoardStyle boardStyle, int rulesVersion) : this(new DailyRandom(seed))
         {
+            if (rulesVersion != 1 && rulesVersion != 2)
+                throw new ArgumentOutOfRangeException(nameof(rulesVersion), "Supported Daily rules versions are 1 and 2.");
             Mode = GameMode.Daily;
+            DailyRulesVersion = rulesVersion;
             BoardStyle = boardStyle;
             dailySeed = seed;
             rhythm = new RhythmDirector(random, Mode);
         }
 
-        public static GameSession CreateDaily(uint seed, BoardStyle boardStyle) => new GameSession(seed, boardStyle);
+        public static GameSession CreateDaily(uint seed, BoardStyle boardStyle, int rulesVersion = 1)
+            => new GameSession(seed, boardStyle, rulesVersion);
         public void StartGame() => Start(false);
         public void StartTutorial() => Start(true);
 
@@ -100,6 +108,7 @@ namespace Roloc.Core
             if (IsDaily && random is DailyRandom seeded) seeded.Reset(dailySeed);
             Score = Combo = BestCombo = PerfectCount = PerfectStreak = BestPerfectStreak = 0;
             RecoveriesUsed = cleanMatchesSinceRecovery = RotationSteps = RequiredTransitionMilliseconds = 0;
+            RevivesAvailable = ComboBeforeFailure = 0;
             Chances = Mode == GameMode.Flow ? 3 : 1;
             ClearEvent();
             flowDirector?.Reset();
@@ -165,6 +174,8 @@ namespace Roloc.Core
             if (!inside) return LoseChance(failure);
 
             Score++;
+            if (RevivesEnabled && ReviveRules.IsMilestone(Score))
+                RevivesAvailable = Math.Min(ReviveRules.MaxBank, RevivesAvailable + 1);
             Combo++;
             BestCombo = Math.Max(Combo, BestCombo);
             LastDropPerfect = perfect;
@@ -257,10 +268,11 @@ namespace Roloc.Core
         {
             LastFailure = failure;
             Chances = Math.Max(0, Chances - 1);
+            ComboBeforeFailure = Combo;
             Combo = PerfectStreak = cleanMatchesSinceRecovery = RotationSteps = 0;
             if (Chances == 0)
             {
-                State = RoundState.GameOver;
+                State = RevivesEnabled && RevivesAvailable > 0 ? RoundState.AwaitingRevive : RoundState.GameOver;
                 return LastResult = MatchResult.Failed;
             }
             // A retry neither consumes randomness nor changes its target, layout or variation.
@@ -268,6 +280,26 @@ namespace Roloc.Core
             RequiredTransitionMilliseconds = 450;
             State = RoundState.Transition;
             return LastResult = MatchResult.ChanceLost;
+        }
+
+        /// <summary>Apply one completed ad reward. Callbacks must also be bound to the current run and ad attempt.</summary>
+        public bool ApplyRewardedRevive()
+        {
+            if (State != RoundState.AwaitingRevive || !RevivesEnabled || RevivesAvailable <= 0) return false;
+            RevivesAvailable--;
+            Chances = 1;
+            Combo = ComboBeforeFailure;
+            ClearEvent();
+            ResetTimer();
+            RequiredTransitionMilliseconds = 3000;
+            State = RoundState.Transition;
+            return true;
+        }
+
+        /// <summary>Finalize a pending failure without consuming its earned revives.</summary>
+        public void EndRun()
+        {
+            if (State == RoundState.AwaitingRevive) State = RoundState.GameOver;
         }
 
         void ClearEvent()
@@ -306,7 +338,7 @@ namespace Roloc.Core
             flowDirector?.Reset();
             rhythm?.Reset();
             State = RoundState.Menu;
-            Score = RotationSteps = 0;
+            Score = RotationSteps = RevivesAvailable = ComboBeforeFailure = 0;
             PaletteIndex = previousPalette = -1;
             PuckOrbitDirection = RingOrbitDirection = 0;
             RemainingSeconds = DurationSeconds = 0f;

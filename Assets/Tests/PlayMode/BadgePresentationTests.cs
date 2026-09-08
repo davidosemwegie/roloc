@@ -37,7 +37,7 @@ namespace Roloc.Tests
             game.Saves.Data.TotalScore = 80; game.BeginRun();
             for (int i = 0; i < 20; i++)
             { game.Session.Drop(game.Session.ActiveColor, true); Invoke("CreditMatch"); game.Session.CompleteTransition(); }
-            while (game.Session.State != RoundState.GameOver)
+            while (game.Session.State == RoundState.Playing || game.Session.State == RoundState.Transition)
             { game.Session.Drop(game.Session.ActiveColor, false); game.Session.CompleteTransition(); }
             Invoke("FinishRun");
             Assert.That(Field<RectTransform>("resultBadgeRow").gameObject.activeSelf, Is.True);

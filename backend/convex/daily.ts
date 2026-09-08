@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { attemptPublic, challengePublic, standingPublic, traceEvent } from "./validators";
-import { attemptDto, CLIENT_RULES_REVISION, CLIENT_UPDATE_MESSAGE, DAY, fail, integer, limits, MAX_CHUNK_EVENTS, MAX_CHUNKS, ownedAttempt, rankedEnabled, requireClientRulesRevision, requireGuest, scores, standingNumbers, utcDate } from "./model";
+import { attemptDto, CLIENT_UPDATE_MESSAGE, DAY, fail, integer, limits, MAX_CHUNK_EVENTS, MAX_CHUNKS, ownedAttempt, rankedEnabled, requireAttemptRules, requireClientRulesRevision, supportsClientRulesRevision, requireGuest, scores, standingNumbers, utcDate } from "./model";
 import { workflow } from "./validation";
 import type { Infer } from "convex/values";
 
@@ -21,21 +21,21 @@ export const createAttempt = mutation({
   args: { challengeId: v.id("challenges"), requestId: v.string(), clientRulesRevision: v.optional(v.number()) }, returns: attemptPublic,
   handler: async (ctx, args) => {
     const userId = await requireGuest(ctx);
-    requireClientRulesRevision(args.clientRulesRevision);
+    const challenge = await ctx.db.get(args.challengeId);
+    requireClientRulesRevision(args.clientRulesRevision, challenge?.rulesVersion ?? 0);
     if (!/^[A-Za-z0-9_-]{8,80}$/.test(args.requestId)) fail("INVALID_ARGUMENT", "Supply a unique request ID.");
     const existing = await ctx.db.query("attempts").withIndex("by_userId_and_requestId", q => q.eq("userId", userId).eq("requestId", args.requestId)).unique();
     if (existing) {
-      requireClientRulesRevision(existing.clientRulesRevision);
+      await requireAttemptRules(ctx, existing);
       if (existing.challengeId !== args.challengeId) fail("IDEMPOTENCY_CONFLICT", "This request ID belongs to another challenge.");
       return attemptDto(existing);
     }
     if (!(await rankedEnabled(ctx))) fail("RANKED_PAUSED", "Ranked submissions are temporarily paused. You can play offline practice.");
-    const challenge = await ctx.db.get(args.challengeId), now = Date.now();
+    const now = Date.now();
     if (!challenge || now < challenge.opensAt || now >= challenge.closesAt) fail("CHALLENGE_CLOSED", "This challenge is not open for new attempts.");
-    if (challenge.rulesVersion !== 1) fail("UPDATE_REQUIRED", "Update Ring Rush to play this Daily.");
     await limits.limit(ctx, "starts", { key: userId, throws: true });
     const id = await ctx.db.insert("attempts", { userId, challengeId: args.challengeId, requestId: args.requestId,
-      clientRulesRevision: CLIENT_RULES_REVISION, status: "open", startedAt: now, uploadDeadline: challenge.uploadDeadline, nextChunkIndex: 0, eventCount: 0,
+      clientRulesRevision: args.clientRulesRevision, status: "open", startedAt: now, uploadDeadline: challenge.uploadDeadline, nextChunkIndex: 0, eventCount: 0,
       purgeAt: challenge.uploadDeadline + 7 * DAY });
     return attemptDto((await ctx.db.get(id))!);
   },
@@ -44,7 +44,7 @@ export const appendChunk = mutation({
   args: { attemptId: v.id("attempts"), index: v.number(), events: v.array(traceEvent) }, returns: attemptPublic,
   handler: async (ctx, args) => {
     const attempt = await ownedAttempt(ctx, args.attemptId);
-    requireClientRulesRevision(attempt.clientRulesRevision);
+    await requireAttemptRules(ctx, attempt);
     integer(args.index, 0, MAX_CHUNKS - 1, "chunk index");
     if (args.events.length < 1 || args.events.length > MAX_CHUNK_EVENTS) fail("INVALID_ARGUMENT", `Each chunk must contain 1–${MAX_CHUNK_EVENTS} events.`);
     // Reject malformed/oversized numeric payloads before storing, then replay semantics in the workflow.
@@ -75,7 +75,7 @@ export const finalize = mutation({
   args: { attemptId: v.id("attempts"), chunkCount: v.number() }, returns: attemptPublic,
   handler: async (ctx, args): Promise<Infer<typeof attemptPublic>> => {
     const attempt = await ownedAttempt(ctx, args.attemptId);
-    requireClientRulesRevision(attempt.clientRulesRevision);
+    await requireAttemptRules(ctx, attempt);
     integer(args.chunkCount, 1, MAX_CHUNKS, "chunk count");
     if (args.chunkCount !== attempt.nextChunkIndex) fail("MISSING_CHUNKS", "Upload all chunks before finishing the attempt.");
     if (attempt.status !== "open") return attemptDto(attempt);
@@ -97,7 +97,8 @@ export const attemptStatus = query({
   handler: async (ctx, args) => {
     const attempt = await ownedAttempt(ctx, args.attemptId);
     // Let upgraded clients drain obsolete queued uploads without changing rows from a query.
-    if (attempt.clientRulesRevision !== CLIENT_RULES_REVISION && (attempt.status === "open" || attempt.status === "validating"))
+    const challenge = await ctx.db.get(attempt.challengeId);
+    if (!supportsClientRulesRevision(attempt.clientRulesRevision, challenge?.rulesVersion ?? 0) && (attempt.status === "open" || attempt.status === "validating"))
       return { ...attemptDto(attempt), status: "rejected" as const, reason: CLIENT_UPDATE_MESSAGE };
     return attemptDto(attempt);
   },

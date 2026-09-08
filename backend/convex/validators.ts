@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 export const boardVariant = v.union(v.literal("lively"), v.literal("still"));
 export const traceEvent = v.object({
-  kind: v.union(v.literal("drop"), v.literal("timeout"), v.literal("pause"), v.literal("resume"), v.literal("abandon")),
+  kind: v.union(v.literal("drop"), v.literal("timeout"), v.literal("pause"), v.literal("resume"), v.literal("abandon"), v.literal("revive")),
   round: v.number(), tMs: v.number(), elapsedMs: v.number(), color: v.number(), xQ: v.number(), yQ: v.number(),
 });
 export const challengePublic = v.object({

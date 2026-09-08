@@ -31,3 +31,7 @@ coverage/
 # Local invited-test connection (never commit the access code)
 Assets/Resources/DailyConnection.asset
 Assets/Resources/DailyConnection.asset.meta
+
+# LevelPlay downloads the network version catalog; dependency XMLs remain pinned.
+Assets/LevelPlay/Editor/LevelPlayVersions.json
+Assets/LevelPlay/Editor/LevelPlayVersions.json.meta
