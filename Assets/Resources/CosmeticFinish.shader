@@ -97,11 +97,11 @@ Shader "ROLOC/Cosmetic Finish"
                 }
                 else if (_Finish < 1.5) // Pearl: broad nacre sheen rather than nested flat circles.
                 {
-                    float wave = p.x * 3 + p.y * 4 + z * 5 + sin(time * .45) * .16;
+                    float wave = p.x * 1.8 + p.y * 2 + z * 2.5 + sin(time * .45) * .16;
                     float3 nacre = .5 + .5 * cos(wave + float3(0,2.1,4.2));
                     rgb = baseColor * (.76 + .24 * diffuse);
                     rgb = lerp(rgb, lerp(baseColor, float3(1,.96,.93), .62), pow(diffuse, 5) * .6);
-                    rgb += (nacre - .4) * .14 * smoothstep(.2,.95,radius);
+                    rgb += (nacre - .4) * .07 * smoothstep(.2,.95,radius);
                     rgb = lerp(rgb, float3(1,.97,.94), spec * .22);
                     rgb += bell(radius - .94,.001) * .055;
                 }
@@ -115,13 +115,16 @@ Shader "ROLOC/Cosmetic Finish"
                 }
                 else // Orbit: concentric machined bands and small orbiting glints.
                 {
-                    float groove = bell(band - .33,.0016) + bell(band - .69,.0016);
+                    // Filter subpixel bands at collection-icon sizes as well as on the board.
+                    float bandAA = aa / max(1 - inner, .01);
+                    float grooveWidth = max(.0016, bandAA * bandAA);
+                    float groove = max(bell(band - .33,grooveWidth), bell(band - .69,grooveWidth));
                     rgb = baseColor * (.65 + .35 * diffuse) * (1 - groove * .58);
-                    rgb += (bell(band - .41,.001) + bell(band - .77,.001)) * .23;
+                    rgb += max(bell(band - .44,grooveWidth), bell(band - .80,grooveWidth)) * .23;
                     float angle = atan2(p.y,p.x);
                     float glint = pow(saturate(cos(angle - time * .38 - 2.2)), 42);
                     rgb = lerp(rgb, float3(.9,.95,1), glint * .7 * bell(band - .52,.075));
-                    rgb += bell(band - .96,.001) * .22;
+                    rgb += bell(band - .96,grooveWidth) * .16;
                 }
                 rgb = lerp(baseColor, saturate(rgb), shaded);
                 float body = max(face, side);

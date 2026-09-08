@@ -66,6 +66,7 @@ namespace Roloc.Presentation
             IsDragging = true;
             transform.SetAsLastSibling();
             returnVelocityX = returnVelocityY = 0;
+            Moved?.Invoke(this);
         }
 
         public void OnDrag(PointerEventData e)
