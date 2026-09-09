@@ -130,6 +130,7 @@ namespace Roloc.Tests
             input.ProcessEvent(Event.KeyboardEvent("b"));
             input.ProcessEvent(Event.KeyboardEvent("c"));
             input.ProcessEvent(new Event { type = EventType.KeyDown, character = 'é' });
+            input.ForceLabelUpdate(); // ProcessEvent bypasses OnUpdateSelected's final label refresh.
             Assert.That(input.text, Is.EqualTo("abc"));
             Assert.That(input.placeholder.gameObject.activeSelf, Is.False);
             Assert.That(input.keyboardType, Is.EqualTo(TouchScreenKeyboardType.ASCIICapable));
