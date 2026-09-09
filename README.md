@@ -12,6 +12,8 @@ Regular challenge episodes can change colors from 20 matches, orbit either pucks
 
 Daily uses the isolated [Convex backend](backend/README.md). Invited ranked attempts require an online start; gameplay then runs locally and finished traces queue for upload. Cached challenges are available as practice. Development and production must use separate deployments and invitation codes. Public competition stays disabled until App Attest and suspicious-submission review are ready.
 
+Flow and Rush also offer opt-in public casual leaderboards: choose a unique nickname, then online starts can submit your best match score for each UTC day. Rewarded revives count. The board shows the top 100 and your rank for today and yesterday. Offline starts and expired uploads keep local progress. These scores receive plausibility checks, not full gameplay replay; see [leaderboard operations](docs/LEADERBOARDS.md). Public submissions default to disabled until deployment validation is complete. Daily remains separately invitation-gated.
+
 ## Develop
 
 ```sh
@@ -32,7 +34,7 @@ unity build . --target iOS --execute-method Roloc.Editor.ProjectBuilder.BuildIOS
 
 Always export freshly from Unity before an Xcode build. `ProjectBuilder.Configure` selects the development identity. `BuildTestFlight` exports with the store identity, requires a unique `RING_RUSH_BUILD_NUMBER`, and restores development settings afterward, including on failure. See [closed-test delivery](docs/TESTFLIGHT.md).
 
-To configure Daily in a local build, set `RING_RUSH_CONVEX_URL` and `RING_RUSH_CLOSED_TEST_CODE` in the build process environment. The builder creates the ignored `Assets/Resources/DailyConnection.asset`. It contains a tester invitation code, never a Convex administrative key. Guest tokens use iOS Keychain; Editor tokens remain in memory. Offline Flow and Rush work without this asset.
+To configure leaderboard connectivity, set `RING_RUSH_CONVEX_URL`; no invitation code is needed for public Flow/Rush. To also configure invited Daily in a local build, set `RING_RUSH_CONVEX_URL` and `RING_RUSH_CLOSED_TEST_CODE` in the build process environment. The builder creates the ignored `Assets/Resources/DailyConnection.asset`. It contains a tester invitation code, never a Convex administrative key. Guest tokens use iOS Keychain; Editor tokens remain in memory. Offline Flow and Rush work without this asset.
 
 ## Reference and operations
 
@@ -41,4 +43,4 @@ To configure Daily in a local build, set `RING_RUSH_CONVEX_URL` and `RING_RUSH_C
 - [Daily operations](docs/DAILY_OPERATIONS.md): publication, health checks, kill switch, retention, and release gates.
 - [Privacy disclosure draft](docs/PRIVACY.md): data used for anonymous rankings.
 
-The React Native runtime, Firebase, and Mixpanel integrations have been removed. No historical users or backend data are imported. Unity Ads monetization uses LevelPlay for banners, milestone-based rewarded revives, and optional interstitials. See `docs/ADS.md` for configuration and device validation. Separate analytics, purchases, named accounts, and cross-device progression remain deferred.
+The React Native runtime, Firebase, and Mixpanel integrations have been removed. No historical users or backend data are imported. Unity Ads monetization uses LevelPlay for banners, milestone-based rewarded revives, and optional interstitials. See `docs/ADS.md` for configuration and device validation. Separate analytics, purchases, recoverable accounts, and cross-device progression remain deferred.

@@ -97,7 +97,7 @@ namespace Roloc.Presentation
             results = Container(safe, "Results"); Stretch(results);
             // Modal backdrops extend behind the notch and home indicator.
             overlay = Container(canvasRect, "Overlay"); Stretch(overlay);
-            BuildMenu(); BuildBoard(); BuildResults(); BuildExperienceUI();
+            BuildMenu(); BuildBoard(); BuildResults(); BuildExperienceUI(); BuildLeaderboardUI();
             if (!FindAnyObjectByType<EventSystem>())
             {
                 var events = new GameObject("Event system", typeof(EventSystem), typeof(InputSystemUIInputModule));
@@ -136,7 +136,7 @@ namespace Roloc.Presentation
                 dash.transform.localRotation = Quaternion.Euler(0, 0, 40);
             }
             PrimaryButton(menu, "PLAY", new Vector2(0, 176), new Vector2(286, 60), new Vector2(.5f, 0), BeginRun);
-            Button(menu, "How to play", new Vector2(82, 57), new Vector2(145, 44), new Vector2(.5f, 0), Color.clear, Ink, BeginTutorial);
+            Button(menu, "How to play", new Vector2(112, 57), new Vector2(108, 44), new Vector2(.5f, 0), Color.clear, Ink, BeginTutorial);
             ColorMarks(menu);
         }
 
@@ -213,6 +213,11 @@ namespace Roloc.Presentation
         {
             if (ReplayDailyIfNeeded()) return;
             if (!Saves.Data.TutorialCompleted) { BeginTutorial(); return; }
+            StartRegularLeaderboardRun();
+        }
+
+        void LaunchRegularRun()
+        {
             CreateRegularSession();
             Session.StartGame();
             StartLocalCredit();
@@ -221,10 +226,13 @@ namespace Roloc.Presentation
             ResetBoard();
             audioPlayer.StartMusic();
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
+            RegularLeaderboardStarted();
         }
 
         public void BeginTutorial()
         {
+            CancelRegularLeaderboardStart();
+            regularTicket = null;
             dailyRun = false;
             CreateRegularSession();
             Session.StartTutorial();
@@ -237,6 +245,8 @@ namespace Roloc.Presentation
         public void ShowMenu()
         {
             if (fullScreenAdShowing || startingAfterAd) return;
+            CancelRegularLeaderboardStart();
+            regularTicket = null;
             AbandonDailyIfNeeded();
             InvalidateRevive();
             CancelAllTouches(); Session.ReturnToMenu();
@@ -345,6 +355,7 @@ namespace Roloc.Presentation
             resultBest.text = record ? "A little better, one color at a time." : "Your best: " + CurrentRecord().HighScore;
             ShowResultExperience();
             SubmitDailyIfNeeded();
+            SubmitRegularLeaderboard();
             LayoutResults();
             Screen.sleepTimeout = SleepTimeout.SystemSetting;
         }
@@ -383,23 +394,25 @@ namespace Roloc.Presentation
         void ShowSettings(bool fromPause)
         {
             settingsFromPause = fromPause;
-            var panel = NewOverlay("Make it yours", "Sound, touch, and readability.", 670);
-            SoundToggle(panel, "Background music", 120, () => Saves.Data.MusicEnabled,
+            var panel = NewOverlay("Make it yours", "Sound, touch, and readability.", 600);
+            SoundToggle(panel, "Background music", 145, () => Saves.Data.MusicEnabled,
                 () => Saves.Data.MusicEnabled = !Saves.Data.MusicEnabled);
-            SoundToggle(panel, "Match sound", 62, () => Saves.Data.MatchEnabled,
+            SoundToggle(panel, "Match sound", 97, () => Saves.Data.MatchEnabled,
                 () => Saves.Data.MatchEnabled = !Saves.Data.MatchEnabled);
-            SoundToggle(panel, "Game-over sound", 4, () => Saves.Data.GameOverEnabled,
+            SoundToggle(panel, "Game-over sound", 49, () => Saves.Data.GameOverEnabled,
                 () => Saves.Data.GameOverEnabled = !Saves.Data.GameOverEnabled);
-            SoundToggle(panel, "Gentle haptics", -54, () => Saves.Data.HapticsEnabled, () => Saves.Data.HapticsEnabled = !Saves.Data.HapticsEnabled);
-            SoundToggle(panel, "Matching symbols", -112, () => Saves.Data.SymbolsEnabled, () => Saves.Data.SymbolsEnabled = !Saves.Data.SymbolsEnabled);
-            SoundToggle(panel, "Reduce effects", -170, () => Saves.Data.ReduceEffects, () => Saves.Data.ReduceEffects = !Saves.Data.ReduceEffects);
+            SoundToggle(panel, "Gentle haptics", 1, () => Saves.Data.HapticsEnabled, () => Saves.Data.HapticsEnabled = !Saves.Data.HapticsEnabled);
+            SoundToggle(panel, "Matching symbols", -47, () => Saves.Data.SymbolsEnabled, () => Saves.Data.SymbolsEnabled = !Saves.Data.SymbolsEnabled);
+            SoundToggle(panel, "Reduce effects", -95, () => Saves.Data.ReduceEffects, () => Saves.Data.ReduceEffects = !Saves.Data.ReduceEffects);
+            Button(panel, "Leaderboard profile", new Vector2(0, -150), new Vector2(270, 44), new Vector2(.5f, .5f), Color.clear, Ink,
+                () => OpenLeaderboardProfile(() => ShowSettings(fromPause)));
             if (HasPrivacyPolicy())
-                Button(panel, "Privacy policy", new Vector2(-72, -225), new Vector2(140, 44), new Vector2(.5f, .5f), Color.clear, Ink,
+                Button(panel, "Privacy policy", new Vector2(-72, -208), new Vector2(140, 44), new Vector2(.5f, .5f), Color.clear, Ink,
                     () => Application.OpenURL(adsConfiguration.PrivacyPolicyUrl));
             if (adConsent != null && adConsent.PrivacyOptionsRequired)
-                Button(panel, "Privacy choices", new Vector2(72, -225), new Vector2(140, 44), new Vector2(.5f, .5f), Color.clear, Ink,
+                Button(panel, "Privacy choices", new Vector2(72, -208), new Vector2(140, 44), new Vector2(.5f, .5f), Color.clear, Ink,
                     () => ShowAdPrivacy(() => ShowSettings(fromPause)));
-            Button(panel, "Done", new Vector2(0, -288), new Vector2(270, 49), new Vector2(.5f, .5f), Palette[0], Color.white,
+            Button(panel, "Done", new Vector2(0, -268), new Vector2(270, 49), new Vector2(.5f, .5f), Palette[0], Color.white,
                 () => { if (settingsFromPause) ShowPausePanel(); else overlay.gameObject.SetActive(false); });
         }
 
@@ -421,6 +434,8 @@ namespace Roloc.Presentation
 
         RectTransform NewOverlay(string title, string subtitle, float height)
         {
+            leaderboardViewGeneration++;
+            leaderboardVisible = false;
             ads?.SetBannerVisible(false);
             for (int i = overlay.childCount - 1; i >= 0; i--) Destroy(overlay.GetChild(i).gameObject);
             overlay.gameObject.SetActive(true); overlay.SetAsLastSibling();
@@ -616,9 +631,9 @@ namespace Roloc.Presentation
         }
 
         void CancelAllTouches() { foreach (var puck in pucks) if (puck) puck.CancelDrag(); }
-        void OnApplicationPause(bool paused) { applicationPaused = paused; if (paused && Session != null) { PauseRun(); Saves.Save(); } }
+        void OnApplicationPause(bool paused) { applicationPaused = paused; if (!paused) RetryLeaderboards(); if (paused && Session != null) { PauseRun(); Saves.Save(); } }
         void OnApplicationFocus(bool focused) { applicationFocused = focused; if (!focused && Session != null) PauseRun(); }
-        void OnDestroy() { InvalidateRevive(); ads?.Dispose(); Saves?.Save(); }
+        void OnDestroy() { if (leaderboards != null) leaderboards.ResultChanged -= LeaderboardResultChanged; InvalidateRevive(); ads?.Dispose(); Saves?.Save(); }
 
         static RectTransform Container(Transform parent, string name)
         {

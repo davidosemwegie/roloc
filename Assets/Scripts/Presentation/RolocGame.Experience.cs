@@ -31,6 +31,7 @@ namespace Roloc.Presentation
                 Saves.Save();
             }
             InitializeDaily();
+            InitializeLeaderboards();
         }
 
         void CreateRegularSession()
@@ -60,7 +61,7 @@ namespace Roloc.Presentation
             progressLabel = Label(menu, "", 12, Muted, new Vector2(0, 234), new Vector2(350, 35), new Vector2(.5f, 0));
             var dailyButton = Button(menu, "", new Vector2(0, 114), new Vector2(286, 48), new Vector2(.5f, 0), Palette[1], Color.white, ShowDaily);
             dailyLabel = Label(dailyButton.transform, "DAILY · SAME BOARD FOR EVERYONE", 12, Color.white, Vector2.zero, new Vector2(280, 44));
-            Button(menu, "Collection", new Vector2(-82, 57), new Vector2(145, 44), new Vector2(.5f, 0), Color.clear, Ink, ShowCollection);
+            Button(menu, "Collection", new Vector2(-112, 57), new Vector2(108, 44), new Vector2(.5f, 0), Color.clear, Ink, ShowCollection);
             livesLabel = Label(game, "", 11, Ink, new Vector2(-92, -161), new Vector2(170, 22), new Vector2(.5f, 1));
             chainLabel = Label(game, "", 11, Ink, new Vector2(90, -161), new Vector2(172, 22), new Vector2(.5f, 1));
             feedbackLabel = Label(game, "", 15, Ink, new Vector2(0, 104), new Vector2(360, 32), new Vector2(.5f, 0));
@@ -187,7 +188,8 @@ namespace Roloc.Presentation
                 Session.LastFailure == DropFailure.WrongRing ? "Right puck, different color's ring." : "Just outside the matching ring.";
             resultBest.text = Session.Mode.ToString().ToUpperInvariant() + " · " + Session.BoardStyle.ToString().ToUpperInvariant();
             RefreshResultRewards();
-            if (dailyStandingLabel) dailyStandingLabel.gameObject.SetActive(dailyRun);
+            if (dailyStandingLabel) { dailyStandingLabel.gameObject.SetActive(true); if (!dailyRun) dailyStandingLabel.text = regularRankingCaption; }
+            if (leaderboardResultButton) leaderboardResultButton.gameObject.SetActive(!dailyRun);
             if (shareButton) shareButton.gameObject.SetActive(dailyRun);
         }
 

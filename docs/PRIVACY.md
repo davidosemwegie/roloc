@@ -63,3 +63,14 @@ Rewarded-ad completion grants an eligible revive. LevelPlay includes ad-quality 
 - Verify device backup behavior, cached-queue expiry, auth revocation, and provider log/backup retention rather than promising immediate removal everywhere.
 
 App Attest is a later public-competition gate. Update this inventory when attestation information is collected. Revisit the disclosure before changing ad networks or adding analytics, purchases, named accounts, or cloud progression.
+
+
+## Public Flow/Rush leaderboard addition
+
+The leaderboard release adds an optional public nickname and submission of regular-run summaries to Convex. After choosing a nickname and enabling participation, online Flow/Rush runs obtain a server-issued run ticket. Completed submissions include mode, match score, revive count, and elapsed time. The service also stores server timestamps, an anonymous guest identifier, and validation/moderation status. Regular gameplay traces are not uploaded for this casual leaderboard.
+
+Nickname, best score, and rank are visible to other players. Authentication identifiers and credentials are not returned in board entries. Nicknames are unique ignoring case and belong to the installation's guest identity; there is no account-recovery promise. Players can edit their nickname or disable participation in Settings. Disabling participation prevents new ranked starts; previously issued runs can finish and existing scores remain until retention expiry or operator removal.
+
+Run tickets and their submitted summaries expire seven days after their upload deadline. Best-score records expire one year after the day's upload deadline. Profile and authentication records persist independently; include these and both Daily and regular leaderboard aggregates in the operator deletion process. Retention purges run in bounded batches and do not promise immediate removal from provider backups.
+
+Update the release's published policy and App Store disclosures to cover public nicknames and regular-run summaries before enabling this feature for players. The public casual leaderboard does not collect App Attest information or independently verify gameplay or advertising completion. This section documents implementation data flow; it does not publish or replace the public privacy policy.

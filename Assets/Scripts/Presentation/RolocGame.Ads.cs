@@ -150,6 +150,7 @@ namespace Roloc.Presentation
             if (!Session.ApplyRewardedRevive()) { InvalidateRevive(); return; }
             // The event starts a fixed 3-second transition, matching the server replay.
             RecordDailyEvent("revive");
+            if (!dailyRun) regularRevives++;
             InvalidateRevive();
             reviveCountingDown = true;
             overlay.gameObject.SetActive(false);

@@ -6,6 +6,8 @@ Ranked Daily is paused on `affable-lyrebird-62` using `operations:setRankedEnabl
 
 The compiled invitation code admits guests from any installed copy. `publicCompetitionEnabled=false` is descriptive, not an independent admission control. Keep the actual ranked switch off while the public-competition gates remain incomplete. Already accepted validation may finish; paused submissions cannot advance into new validation.
 
+The separate [public casual Flow/Rush leaderboards](LEADERBOARDS.md) have their own submission switch and accept public guests. Public registration does not grant Daily access; only a valid invitation attaches the current closed-test epoch. Keep Daily paused independently when rolling out the casual boards.
+
 Unity is the repository root; the isolated Convex package is `backend/`. The Convex project is **ring-rush**. Development, automated tests, and closed production testing use separate data. Firebase, Mixpanel, and analytics are not part of this runtime.
 
 ## Deployment and configuration

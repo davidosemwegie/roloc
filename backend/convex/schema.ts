@@ -5,6 +5,22 @@ import { boardVariant, traceEvent, attemptState } from "./validators";
 
 export default defineSchema({
   ...authTables,
+  leaderboardProfiles: defineTable({ userId: v.id("users"), nickname: v.string(), nicknameKey: v.string(), participating: v.boolean(), updatedAt: v.number() })
+    .index("by_userId", ["userId"]).index("by_nicknameKey", ["nicknameKey"]),
+  leaderboardControls: defineTable({ key: v.literal("public"), enabled: v.boolean(), updatedAt: v.number() }).index("by_key", ["key"]),
+  leaderboardRuns: defineTable({
+    userId: v.id("users"), requestId: v.string(), mode: v.union(v.literal("flow"), v.literal("rush")), date: v.string(),
+    status: v.union(v.literal("open"), v.literal("accepted"), v.literal("rejected"), v.literal("expired")),
+    clientRulesRevision: v.number(), startedAt: v.number(), uploadDeadline: v.number(), purgeAt: v.number(),
+    score: v.optional(v.number()), revives: v.optional(v.number()), elapsedMs: v.optional(v.number()), reason: v.optional(v.string()),
+  }).index("by_userId_and_requestId", ["userId", "requestId"]).index("by_purgeAt", ["purgeAt"]),
+  leaderboardBests: defineTable({
+    userId: v.id("users"), mode: v.union(v.literal("flow"), v.literal("rush")), date: v.string(), score: v.number(),
+    negativeScore: v.number(), tieKey: v.string(), achievedAt: v.number(), runId: v.id("leaderboardRuns"), excluded: v.boolean(),
+    exclusionReason: v.optional(v.string()), expiresAt: v.number(),
+  }).index("by_date_and_mode_and_userId", ["date", "mode", "userId"])
+    .index("by_date_and_mode_and_excluded_and_negativeScore_and_achievedAt", ["date", "mode", "excluded", "negativeScore", "achievedAt", "tieKey"])
+    .index("by_expiresAt", ["expiresAt"]),
   users: defineTable({ ...authTables.users.validator.fields, closedTestEpoch: v.optional(v.string()) }).index("email", ["email"]).index("phone", ["phone"]),
   challenges: defineTable({
     date: v.string(), seed: v.number(), rulesVersion: v.number(), variant: boardVariant,

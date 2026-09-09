@@ -4,6 +4,7 @@ import workflow from "@convex-dev/workflow/convex.config";
 import rateLimiter from "@convex-dev/rate-limiter/convex.config";
 const app = defineApp();
 app.use(aggregate, { name: "dailyScores" });
+app.use(aggregate, { name: "leaderboardScores" });
 app.use(workflow);
 app.use(rateLimiter);
 export default app;

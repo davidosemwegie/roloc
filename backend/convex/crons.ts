@@ -6,4 +6,5 @@ crons.interval("Check Daily operational health", { minutes: 5 }, internal.operat
 crons.interval("Finalize Daily standings", { minutes: 1 }, internal.operations.sealDue, {});
 crons.interval("Expire unsubmitted attempts", { hours: 1 }, internal.operations.expireOpen, {});
 crons.daily("Remove expired ranking data", { hourUTC: 2, minuteUTC: 15 }, internal.operations.purge, {});
+crons.daily("Remove expired public leaderboard data", { hourUTC: 2, minuteUTC: 30 }, internal.leaderboard.purge, {});
 export default crons;
