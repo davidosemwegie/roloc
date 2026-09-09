@@ -2,6 +2,8 @@
 
 Ring Rush uses Unity LevelPlay 9.5.0 with Unity Ads demand. The package lock pins EDM4U 1.2.185; dependency XMLs pin native LevelPlay 9.5.0, the Unity adapter bundle 5.11.0.0, iOS adapter 5.9.0.0, and Unity Ads 4.19.0. Do not accept automatic network-manager upgrades without reviewing and validating the resulting XML/pods.
 
+Ads and advertising consent are enabled only in iOS distribution exports from `ProjectBuilder.BuildTestFlight`, which is also the App Store build path. It supplies the export-only `RING_RUSH_DISTRIBUTION_ADS` scripting define. Runtime eligibility additionally requires `com.clearjar.ringrush` and excludes the Editor and Unity Development Builds. Local `BuildIOS`, simulator and Mac builds do not initialize advertising or request UMP/ATT advertising consent, even with the live identifiers configured. Do not add the distribution define to persistent Player Settings. Existing exported projects and installed binaries must be rebuilt to pick up this restriction.
+
 ## Dashboard and configuration
 
 The Unity Ads iOS app is registered as **Ring Rush**, general audience, in organization `2476041440047`, project `19a271b8-521b-4cba-bf26-786950060f49`. Its dashboard app ID is `c6c4fa2d-98b1-4192-a75d-aa7259e33884` and Unity Ads Game ID is `800368993`.
@@ -66,7 +68,7 @@ Newly published challenges use rules v2; existing published rows remain v1. This
 
 On September 8, 2026, the fresh iOS export and signed Xcode Release build succeeded. Build `0.1.0 (10)`, bundle `com.clearjar.ringrush`, was installed and launched on the owner's iPhone 16 Pro Max. Code-signature verification passed. The built app contains the correct UMP app ID, ATT purpose string, 82 SKAdNetwork entries (including Unity Ads), and the LevelPlay, Unity Ads, UMP, Ad Quality and Unity Coherence privacy manifests. Native pods resolved to the pinned versions above.
 
-Twelve focused native consent checks passed against the bridge's actual decision helpers, covering current TCF consent/refusal, stale Additional Consent grants, storage/personalization refusal, incomplete vendor strings, invalid UMP updates and contextual US handling. Backend CI passed; that workflow does not exercise the native iOS integration. Installation and launch do not establish successful consent presentation, ad delivery or rewarded callbacks. Those device acceptance checks remain open, and build 10 has not been submitted for release.
+Twelve focused native consent checks passed against the bridge's actual decision helpers, covering current TCF consent/refusal, stale Additional Consent grants, storage/personalization refusal, incomplete vendor strings, invalid UMP updates and contextual US handling. Backend CI passed; that workflow does not exercise the native iOS integration. The owner subsequently confirmed on-device ads were working. That is owner-reported acceptance, not an independently observed full consent/reward callback matrix. Build 10 has not been submitted for release. The later distribution-only gate requires a fresh export to be included in a binary.
 
 ## Release checks
 

@@ -25,7 +25,7 @@ namespace Roloc.Editor
             Selection.activeObject = configuration;
             EditorGUIUtility.PingObject(configuration);
             Debug.Log("Configure your published HTTPS privacy policy and LevelPlay iOS app/ad-unit identifiers. "
-                + "Use Unity Ads as the demand network and dashboard test devices during development. "
+                + "Ads and advertising consent are disabled in local development builds. Use the TestFlight export for distribution. "
                 + "Keep LevelPlay automatic initialization disabled: Ring Rush initializes after privacy choices.");
         }
     }

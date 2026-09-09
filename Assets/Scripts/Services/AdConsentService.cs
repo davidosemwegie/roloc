@@ -23,7 +23,8 @@ namespace Roloc.Services
         bool pending;
 
         public GoogleUmpConsentService(AdsConfiguration config) { this.config = config; }
-        public bool IsConfigured => config && config.HasConsentAppId && config.ConsentMessagesPublished && config.HasPrivacyPolicy;
+        public bool IsConfigured => AdsConfiguration.IsAdvertisingBuild && config
+            && config.HasConsentAppId && config.ConsentMessagesPublished && config.HasPrivacyPolicy;
         public bool CanRequestAds { get; private set; }
         public bool PrivacyOptionsRequired { get; private set; }
         public bool TrackingAllowedByConsent { get; private set; }
@@ -85,6 +86,7 @@ namespace Roloc.Services
         /// <summary>Restricts Unity Ads without replacing the CMP's GDPR or US opt-out decisions.</summary>
         public static void ApplyTrackingRestriction(bool trackingAllowed)
         {
+            if (!AdsConfiguration.IsAdvertisingBuild) return;
 #if UNITY_IOS && !UNITY_EDITOR
             RRAdConsentSetTrackingAllowed(trackingAllowed ? 1 : 0);
 #endif

@@ -22,7 +22,7 @@ namespace Roloc.Services
         void ShowInterstitial(Action completed);
     }
 
-    /// <summary>Owns native ad inventory. Only iOS device builds use the SDK; tests inject a fake.</summary>
+    /// <summary>Owns native ad inventory. Only distribution iOS builds use the SDK; tests inject a fake.</summary>
     public sealed class LevelPlayAdService : IAdService
     {
         readonly AdsConfiguration config;
@@ -54,7 +54,7 @@ namespace Roloc.Services
             get
             {
 #if UNITY_IOS && !UNITY_EDITOR
-                return !disposed && config && config.HasIosIdentifiers && config.HasPrivacyPolicy;
+                return AdsConfiguration.IsAdvertisingBuild && !disposed && config && config.HasIosIdentifiers && config.HasPrivacyPolicy;
 #else
                 return false;
 #endif

@@ -19,7 +19,7 @@ From the repository root, with the private environment already configured:
 /Users/david/.unity/bin/unity build . --target iOS --execute-method Roloc.Editor.ProjectBuilder.BuildTestFlight --output-path Builds/iOS --allow-dirty-build --timeout 600 --no-tail --format json
 ```
 
-`BuildTestFlight` uses the device SDK and `BuildOptions.None`, selects `com.clearjar.ringrush` on team `BK7TPQ53FF`, and requires `RING_RUSH_BUILD_NUMBER`. `BuildIOS` uses `com.clearjar.ringrush.dev`; store export restores this development identity afterward. Ensure the output shown by Unity is the directory opened in Xcode.
+`BuildTestFlight` uses the device SDK and `BuildOptions.None`, selects `com.clearjar.ringrush` on team `BK7TPQ53FF`, and requires `RING_RUSH_BUILD_NUMBER`. It enables advertising through the export-only `RING_RUSH_DISTRIBUTION_ADS` define for both TestFlight and App Store distribution. `BuildIOS` uses `com.clearjar.ringrush.dev` and keeps ads and advertising-consent prompts disabled; store export restores this development identity afterward. The Editor, simulator and Unity Development Builds also keep ads disabled. Ensure the output shown by Unity is the directory opened in Xcode.
 
 Archive the fresh store project with identifier `com.clearjar.ringrush` and Apple team `BK7TPQ53FF`:
 
