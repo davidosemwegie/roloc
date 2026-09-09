@@ -152,7 +152,7 @@ namespace Roloc.Editor
                 Configure();
                 PlayerSettings.iOS.sdkVersion = iOSSdkVersion.DeviceSDK;
                 Build(BuildTarget.iOS, Argument("-buildOutput") ?? "Builds/iOS", BuildOptions.None,
-                    StoreApplicationIdentifier);
+                    StoreApplicationIdentifier, distributionExport: true);
             }
             finally
             {
@@ -234,7 +234,7 @@ namespace Roloc.Editor
         }
 
         static void Build(BuildTarget target, string output, BuildOptions options,
-            string iosIdentifier = DevelopmentApplicationIdentifier)
+            string iosIdentifier = DevelopmentApplicationIdentifier, bool distributionExport = false)
         {
             if (!File.Exists(ScenePath)) Setup();
             // Setup configures development defaults, so select the export identity afterward.
@@ -242,15 +242,20 @@ namespace Roloc.Editor
             Directory.CreateDirectory(Path.GetDirectoryName(output) ?? "Builds");
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions {
                 scenes = new[] { ScenePath }, target = target, locationPathName = output, options = options,
-                // Export-only define: never persist this in the Editor's scripting settings.
-                extraScriptingDefines = target == BuildTarget.iOS && iosIdentifier == StoreApplicationIdentifier
-                    && (options & BuildOptions.Development) == 0
-                    ? new[] { "RING_RUSH_DISTRIBUTION_ADS" } : Array.Empty<string>()
+                extraScriptingDefines = DistributionDefines(target, options, iosIdentifier,
+                    PlayerSettings.iOS.sdkVersion, distributionExport)
             });
             if (report.summary.result != BuildResult.Succeeded)
                 throw new Exception("ROLOC build failed: " + report.summary.result + " (" + report.summary.totalErrors + " errors)");
             Debug.Log("ROLOC build succeeded: " + output);
         }
+
+        // Applies to this export only; never persists in PlayerSettings or enables Editor analytics.
+        static string[] DistributionDefines(BuildTarget target, BuildOptions options, string identifier,
+            iOSSdkVersion sdk, bool distributionExport) =>
+            distributionExport && target == BuildTarget.iOS && sdk == iOSSdkVersion.DeviceSDK
+                && (options & BuildOptions.Development) == 0 && identifier == StoreApplicationIdentifier
+                ? new[] { "RING_RUSH_DISTRIBUTION", "RING_RUSH_DISTRIBUTION_ADS" } : Array.Empty<string>();
 
         static string Argument(string name)
         {

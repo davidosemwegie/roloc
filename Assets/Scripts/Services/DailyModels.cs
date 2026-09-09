@@ -84,6 +84,7 @@ namespace Roloc.Services
         public DailyChallenge challenge;
         public string startingChallengeId;
         public string startingRequestId;
+        public bool startingAnalyticsEligible;
         public List<DailyPendingUpload> pending = new List<DailyPendingUpload>();
     }
     [Serializable] internal sealed class DailyPendingUpload

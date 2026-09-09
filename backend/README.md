@@ -1,6 +1,6 @@
 # Ring Rush Daily backend
 
-The isolated Convex project is **ring-rush**. Unity is the client; this package contains no analytics, Firebase, or Mixpanel integration.
+The isolated Convex project is **ring-rush**. Unity is the client; this package stores canonical player identities and run summaries, and delivers optional usage analytics to PostHog only for eligible distribution builds on beta/production environments. Firebase and Mixpanel are not used. See [analytics contracts and operations](../docs/ANALYTICS.md).
 
 ## Development
 
@@ -17,7 +17,7 @@ Link an existing `ring-rush` project when prompted. Keep `.env.local` and deploy
 Configure these **deployment** environment variables independently for development and production:
 
 - `JWT_PRIVATE_KEY`, `JWKS`, `SITE_URL`: Convex Auth configuration. `auth.config.ts` uses Convex's `CONVEX_SITE_URL` issuer.
-- `RING_RUSH_CLOSED_TEST_CODE`: code distributed only with the closed-test client. No new anonymous registration works without a matching code.
+- `RING_RUSH_CLOSED_TEST_CODE`: code distributed only with the closed-test client. A matching code grants closed-test Daily access. Public Flow/Rush guests register without a code and do not receive Daily access.
 - `RING_RUSH_CLOSED_TEST_EPOCH`: optional, defaults to `1`. Increment alongside a code rotation to revoke existing guest access. Every private Daily API checks the user's stored epoch.
 
 The test code is an invitation gate, not a deployment/admin key or a device-integrity guarantee. The schema fixes `publicCompetitionEnabled` to `false`. Opening public competition requires implementation and review of App Attest and abuse controls; there is deliberately no public-enable toggle.
@@ -76,3 +76,9 @@ V2 permits a banked revive after a loss, without advancing randomness, geometry 
 - Raw trace chunks and attempt metadata expire seven days after validation completes (unfinished attempts: seven days after the upload deadline). Completed workflow journals are also removed after seven days. Standing records expire one year after the upload deadline; challenge definitions follow two days later. Bounded purge batches schedule continuation until cleared.
 
 Review Convex failed-function/workflow logs and the health-check alert before reopening ranked submissions. Operational logs do not contain raw traces, credentials, or analytics events. App Store privacy disclosures should cover anonymous guest identifiers and submitted gameplay/standing data. Cross-device identity and progression are not provided in this release.
+
+## Public casual Flow/Rush leaderboards
+
+These use independent profiles, run tickets, best scores, and ranking controls. They do not change Daily's replay validation or invitation checks. See [leaderboard operations and contract](../docs/LEADERBOARDS.md) for endpoints, release configuration, ranking rules, moderation, and retention.
+
+Anonymous sign-in without a code creates a public guest. A valid invitation additionally grants Daily access; an invalid nonempty invitation is rejected. Existing guest sessions remain valid for the new leaderboard. Nicknames do not add recovery or cross-device accounts.

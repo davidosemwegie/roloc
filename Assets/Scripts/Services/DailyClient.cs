@@ -30,6 +30,15 @@ namespace Roloc.Services
         private double realtimeAtSync;
 
         public DailyChallenge CachedChallenge => cache.challenge;
+        internal string CacheNamespace => DeploymentKey(deploymentUrl ?? "unconfigured");
+        internal string LastErrorCode => lastErrorCode;
+
+        // Shared authenticated transport keeps public leaderboards and Daily on one Keychain identity.
+        internal IEnumerator Send<T>(string endpoint, string path, object args, Action<T> done,
+            Action<string> failed, int timeoutSeconds = 20) where T : class
+        {
+            yield return Request(endpoint, path, args, true, done, error => failed?.Invoke(error.Replace("Daily", "Leaderboard")), true, timeoutSeconds, Time.realtimeSinceStartupAsDouble + timeoutSeconds);
+        }
         public bool IsConfigured => !string.IsNullOrEmpty(deploymentUrl);
         public int PendingCount => cache.pending.FindAll(item => item.ready).Count;
 
@@ -85,12 +94,14 @@ namespace Roloc.Services
                 {
                     cache.startingChallengeId = challenge.id;
                     cache.startingRequestId = Guid.NewGuid().ToString();
+                    cache.startingAnalyticsEligible = DistributionAnalyticsPolicy.BuildEligible;
                 }
+                cache.startingAnalyticsEligible = cache.startingAnalyticsEligible && DistributionAnalyticsPolicy.BuildEligible;
                 if (!Persist()) { failed?.Invoke("Daily could not save this attempt. Check available device storage."); yield break; }
                 string requestId = cache.startingRequestId;
                 DailyAttempt issued = null;
                 yield return Request<DailyAttempt>("mutation", "daily:createAttempt",
-                    new StartArgs { challengeId = challenge.id, requestId = requestId }, true, value => issued = value, failed);
+                    new StartArgs { challengeId = challenge.id, requestId = requestId, analyticsEligible = cache.startingAnalyticsEligible }, true, value => issued = value, failed);
                 if (issued == null)
                 {
                     // An upgraded client must not keep retrying a pre-upgrade attempt ID.
@@ -244,14 +255,14 @@ namespace Roloc.Services
         }
 
         private IEnumerator Request<T>(string endpoint, string path, object args, bool authenticated,
-            Action<T> done, Action<string> failed, bool allowRefresh = true) where T : class
+            Action<T> done, Action<string> failed, bool allowRefresh = true, int timeoutSeconds = 20, double deadline = -1) where T : class
         {
             lastErrorCode = null;
             if (!IsConfigured) { failed?.Invoke("Daily is not configured on this build. Offline modes are available."); yield break; }
             if (authenticated && (tokens == null || string.IsNullOrEmpty(tokens.token)))
             {
                 bool signedIn = false;
-                yield return Authenticate(false, () => signedIn = true, failed);
+                yield return Authenticate(false, () => signedIn = true, failed, timeoutSeconds, deadline);
                 if (!signedIn) yield break;
             }
             string body = "{\"path\":\"" + path + "\",\"args\":" + JsonUtility.ToJson(args) + ",\"format\":\"json\"}";
@@ -259,10 +270,19 @@ namespace Roloc.Services
             {
                 request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
                 request.downloadHandler = new DownloadHandlerBuffer();
-                request.timeout = 20;
+                request.timeout = timeoutSeconds;
                 request.SetRequestHeader("Content-Type", "application/json");
                 if (authenticated) request.SetRequestHeader("Authorization", "Bearer " + tokens.token);
-                yield return request.SendWebRequest();
+                if (deadline > 0 && Time.realtimeSinceStartupAsDouble >= deadline)
+                { failed?.Invoke("Connection timed out. Please try again."); yield break; }
+                var operation = request.SendWebRequest();
+                if (deadline > 0)
+                {
+                    while (!operation.isDone && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
+                    if (!operation.isDone)
+                    { request.Abort(); failed?.Invoke("Connection timed out. Please try again."); yield break; }
+                }
+                else yield return operation;
                 string json = request.downloadHandler.text;
                 DailyReply<T> reply = null;
                 try { if (!string.IsNullOrEmpty(json)) reply = DeserializeReply<T>(json); }
@@ -273,8 +293,8 @@ namespace Roloc.Services
                     || (!string.IsNullOrEmpty(json) && json.Contains("UNAUTHENTICATED"))))
                 {
                     bool refreshed = false;
-                    yield return Authenticate(true, () => refreshed = true, failed);
-                    if (refreshed) yield return Request(endpoint, path, args, true, done, failed, false);
+                    yield return Authenticate(true, () => refreshed = true, failed, timeoutSeconds, deadline);
+                    if (refreshed) yield return Request(endpoint, path, args, true, done, failed, false, timeoutSeconds, deadline);
                     yield break;
                 }
                 if (request.result != UnityWebRequest.Result.Success || reply == null || reply.status != "success")
@@ -290,11 +310,16 @@ namespace Roloc.Services
             }
         }
 
-        private IEnumerator Authenticate(bool refresh, Action done, Action<string> failed)
+        private IEnumerator Authenticate(bool refresh, Action done, Action<string> failed, int timeoutSeconds = 20, double deadline = -1)
         {
             if (authenticating)
             {
-                while (authenticating) yield return null;
+                while (authenticating)
+                {
+                    if (deadline > 0 && Time.realtimeSinceStartupAsDouble >= deadline)
+                    { failed?.Invoke("Connection timed out. Please try again."); yield break; }
+                    yield return null;
+                }
                 if (lastAuthenticationSucceeded && tokens != null && !string.IsNullOrEmpty(tokens.token)) done?.Invoke();
                 else failed?.Invoke("Daily sign-in could not finish. Please try again.");
                 yield break;
@@ -315,7 +340,7 @@ namespace Roloc.Services
                 DailyAuthResult result = null;
                 bool requestFailed = false;
                 yield return Request<DailyAuthResult>("action", "auth:signIn", args, false, value => result = value,
-                    error => { requestFailed = true; failed?.Invoke(error); });
+                    error => { requestFailed = true; failed?.Invoke(error); }, true, timeoutSeconds, deadline);
                 if (result?.tokens == null || string.IsNullOrEmpty(result.tokens.token))
                 {
                     if (!requestFailed) failed?.Invoke("Daily sign-in did not return a guest session. Please try again.");
@@ -379,6 +404,9 @@ namespace Roloc.Services
         private static DailyReply<T> DeserializeReply<T>(string json) where T : class
         {
             var reply = JsonUtility.FromJson<DailyReply<T>>(json);
+            // Some Unity serializers materialize a default nested object for a JSON null.
+            if (reply != null && (typeof(T) == typeof(LeaderboardProfile) || typeof(T) == typeof(LeaderboardBoard))
+                && FieldIsNull(json, "value")) reply.value = null;
             if (reply?.value is DailyChallenge challenge)
             {
                 var wire = JsonUtility.FromJson<DailyReply<DailyChallengeNumbers>>(json).value;
@@ -392,6 +420,27 @@ namespace Roloc.Services
             {
                 var wire = JsonUtility.FromJson<DailyReply<DailyAttemptNumbers>>(json).value;
                 attempt.uploadDeadline = EpochMilliseconds(wire.uploadDeadline);
+            }
+            if (reply?.value is LeaderboardTicket ticket)
+            {
+                LeaderboardWire.ValidateTicket(ticket);
+                ticket.score = LeaderboardWire.Integer(JsonUtility.FromJson<DailyReply<LeaderboardTicketNumbers>>(json).value.score);
+            }
+            if (reply?.value is LeaderboardBoard board)
+            {
+                var wire = JsonUtility.FromJson<DailyReply<LeaderboardBoardNumbers>>(json).value;
+                if (FieldIsNull(json, "personal")) board.personal = null;
+                board.participants = LeaderboardWire.Integer(wire.participants);
+                for (int i = 0; i < (board.entries?.Length ?? 0); i++)
+                {
+                    board.entries[i].score = LeaderboardWire.Integer(wire.entries[i].score);
+                    board.entries[i].rank = LeaderboardWire.Integer(wire.entries[i].rank);
+                }
+                if (board.personal != null && wire.personal != null)
+                {
+                    board.personal.score = LeaderboardWire.Integer(wire.personal.score);
+                    board.personal.rank = LeaderboardWire.Integer(wire.personal.rank);
+                }
             }
             return reply;
         }
@@ -423,7 +472,7 @@ namespace Roloc.Services
         [Serializable] private sealed class EmptyArgs { }
         [Serializable] private sealed class ChallengeArgs { public string challengeId; }
         // Revision 3 supports the v2 revive protocol and the immutable v1 challenges.
-        [Serializable] private sealed class StartArgs { public string challengeId; public string requestId; public int clientRulesRevision = 3; }
+        [Serializable] private sealed class StartArgs { public string challengeId; public string requestId; public int clientRulesRevision = 3; public bool analyticsEligible; }
         [Serializable] private sealed class AttemptArgs { public string attemptId; }
         [Serializable] private sealed class ChunkArgs { public string attemptId; public int index; public DailyTraceEvent[] events; }
         [Serializable] private sealed class FinalizeArgs { public string attemptId; public int chunkCount; }

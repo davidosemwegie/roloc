@@ -175,7 +175,8 @@ namespace Roloc.Presentation
             if (rankingHeight > 0) PlaceResultRow(dailyStandingLabel.rectTransform, width, rankingHeight, ref y, gap);
             PlaceResultRow(resultReplay, width, 56, ref y, gap);
             PlaceResultRow(resultFooter, width, 44, ref y, gap);
-            resultMenu.anchoredPosition = new Vector2(dailyRun ? -width * .25f : 0, 0);
+            resultMenu.anchoredPosition = new Vector2(-width * .25f, 0);
+            if (leaderboardResultButton) ((RectTransform)leaderboardResultButton.transform).anchoredPosition = new Vector2(width * .25f, 0);
             ((RectTransform)shareButton.transform).anchoredPosition = new Vector2(width * .25f, 0);
         }
 
