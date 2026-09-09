@@ -49,7 +49,7 @@ namespace Roloc.Services
         public IEnumerator SetProfile(string nickname, bool participating, Action<LeaderboardProfile> done, Action<string> failed = null)
         {
             yield return shared.Send<LeaderboardProfile>("mutation", "leaderboard:setProfile",
-                new ProfileArgs { nickname = nickname, participating = participating }, value =>
+                new ProfileArgs { nickname = nickname, participating = participating, analyticsEligible = DistributionAnalyticsPolicy.BuildEligible }, value =>
                 { cache.profile = value; Persist(); done?.Invoke(value); }, failed);
         }
         public IEnumerator GetBoard(string mode, string day, Action<LeaderboardBoard> done, Action<string> failed = null)
@@ -71,7 +71,7 @@ namespace Roloc.Services
                 if (!Persist()) { failed?.Invoke("Could not save the ranking ticket. This run is unranked."); yield break; }
                 LeaderboardTicket ticket = null;
                 yield return shared.Send<LeaderboardTicket>("mutation", "leaderboard:start",
-                    new StartArgs { mode = mode, requestId = cache.startingRequestId }, value => ticket = value, failed, 3);
+                    new StartArgs { mode = mode, requestId = cache.startingRequestId, analyticsEligible = DistributionAnalyticsPolicy.BuildEligible }, value => ticket = value, failed, 3);
                 if (ticket == null) yield break;
                 if (ticket.status != "open") { failed?.Invoke("This ranking ticket has ended. This run is unranked."); yield break; }
                 cache.pending.Add(new LeaderboardPending { ticket = ticket });
@@ -165,9 +165,9 @@ namespace Roloc.Services
             finally { try { if (File.Exists(temporary)) File.Delete(temporary); } catch (Exception) { } }
         }
         [Serializable] private sealed class EmptyArgs { }
-        [Serializable] private sealed class ProfileArgs { public string nickname; public bool participating; }
+        [Serializable] private sealed class ProfileArgs { public string nickname; public bool participating, analyticsEligible; }
         [Serializable] private sealed class BoardArgs { public string mode, day; }
-        [Serializable] private sealed class StartArgs { public string mode, requestId; public int clientRulesRevision = 1; }
+        [Serializable] private sealed class StartArgs { public string mode, requestId; public int clientRulesRevision = 1; public bool analyticsEligible; }
         [Serializable] private sealed class RunArgs { public string runId; }
         [Serializable] private sealed class SubmitArgs { public string runId; public int score, revives; public double elapsedMs; }
     }

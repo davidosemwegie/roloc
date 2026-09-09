@@ -10,23 +10,23 @@ export const profile = query({ args: {}, returns: v.union(profileValue, v.null()
   const row = await ctx.db.query("leaderboardProfiles").withIndex("by_userId", q => q.eq("userId", userId)).unique();
   return row ? { nickname: row.nickname, participating: row.participating } : null;
 } });
-export const setProfile = mutation({ args: { nickname: v.string(), participating: v.boolean() }, returns: profileValue, handler: async (ctx, args) => {
+export const setProfile = mutation({ args: { nickname: v.string(), participating: v.boolean(), analyticsEligible: v.optional(v.boolean()) }, returns: profileValue, handler: async (ctx, args) => {
   const userId = await publicUser(ctx);
   if (!/^[A-Za-z0-9_]{3,16}$/.test(args.nickname)) fail("INVALID_NICKNAME", "Use 3–16 letters, numbers, or underscores.");
   const row = await ctx.db.query("leaderboardProfiles").withIndex("by_userId", q => q.eq("userId", userId)).unique();
-  if (row?.nickname === args.nickname && row.participating === args.participating) return args;
+  if (row?.nickname === args.nickname && row.participating === args.participating) return { nickname: args.nickname, participating: args.participating };
   if (row?.nickname !== args.nickname) await publicLimits.limit(ctx, "nicknameChanges", { key: userId, throws: true });
   const nicknameKey = args.nickname.toLowerCase();
   const reserved = await ctx.db.query("leaderboardProfiles").withIndex("by_nicknameKey", q => q.eq("nicknameKey", nicknameKey)).unique();
   if (reserved && reserved.userId !== userId) fail("NICKNAME_TAKEN", "That nickname is already taken.");
   const alreadyJoined = row?.hasJoinedLeaderboard ?? row?.participating ?? false;
   const joined = args.participating && !alreadyJoined;
-  const value = { userId, ...args, nicknameKey, hasJoinedLeaderboard: alreadyJoined || args.participating, updatedAt: Date.now() };
+  const value = { userId, nickname: args.nickname, participating: args.participating, nicknameKey, hasJoinedLeaderboard: alreadyJoined || args.participating, updatedAt: Date.now() };
   if (row) await ctx.db.replace(row._id, value); else await ctx.db.insert("leaderboardProfiles", value);
-  await enqueue(ctx, userId, joined ? `leaderboard-joined:${userId}` : `leaderboard-profile:${uuid()}`, joined ? "leaderboard_joined" : "leaderboard_profile_updated", Date.now(), { participating: args.participating, source: "server_validation" });
-  return args;
+  await enqueue(ctx, userId, joined ? `leaderboard-joined:${userId}` : `leaderboard-profile:${uuid()}`, joined ? "leaderboard_joined" : "leaderboard_profile_updated", Date.now(), { participating: args.participating, source: "server_validation" }, true, args.analyticsEligible === true);
+  return { nickname: args.nickname, participating: args.participating };
 } });
-export const start = mutation({ args: { mode, requestId: v.string(), clientRulesRevision: v.number() }, returns: ticketValue, handler: async (ctx, args) => {
+export const start = mutation({ args: { mode, requestId: v.string(), clientRulesRevision: v.number(), analyticsEligible: v.optional(v.boolean()) }, returns: ticketValue, handler: async (ctx, args) => {
   const userId = await publicUser(ctx);
   if (!/^[A-Za-z0-9_-]{8,128}$/.test(args.requestId)) fail("INVALID_ARGUMENT", "Invalid request ID.");
   if (args.clientRulesRevision !== 1) fail("UPDATE_REQUIRED", "Update Ring Rush to enter leaderboards.");
@@ -37,7 +37,7 @@ export const start = mutation({ args: { mode, requestId: v.string(), clientRules
   if (!profile?.participating) fail("OPT_IN_REQUIRED", "Choose a nickname and enable leaderboard participation.");
   await publicLimits.limit(ctx, "leaderboardStarts", { key: userId, throws: true });
   const startedAt = Date.now(), uploadDeadline = midnight(startedAt) + DAY + 3_600_000;
-  const id = await ctx.db.insert("leaderboardRuns", { ...args, userId, date: utcDate(startedAt), status: "open", startedAt, uploadDeadline, purgeAt: uploadDeadline + 7 * DAY });
+  const id = await ctx.db.insert("leaderboardRuns", { ...args, analyticsEligible: args.analyticsEligible === true, userId, date: utcDate(startedAt), status: "open", startedAt, uploadDeadline, purgeAt: uploadDeadline + 7 * DAY });
   return ticket((await ctx.db.get(id))!);
 } });
 export const status = query({ args: { runId: v.id("leaderboardRuns") }, returns: ticketValue, handler: async (ctx, args) => ticket(await ownedRun(ctx, args.runId)) });

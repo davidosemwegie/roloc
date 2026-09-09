@@ -12,9 +12,10 @@ export const telemetryLimits = new RateLimiter(components.rateLimiter, {
 });
 export function playerIdentity(userId: Id<"users">) { return `${process.env.CONVEX_SITE_URL ?? "local"}:${userId}`; }
 export function posthogConfig() {
-  const token = process.env.POSTHOG_PROJECT_TOKEN, host = process.env.POSTHOG_HOST;
+  const token = process.env.POSTHOG_PROJECT_TOKEN, host = process.env.POSTHOG_HOST, environment = process.env.RING_RUSH_ENVIRONMENT;
+  if (environment !== "beta" && environment !== "production") return null;
   if (!token || !host || !["https://us.i.posthog.com", "https://eu.i.posthog.com"].includes(host)) return null;
-  return { token, host };
+  return { token, host, environment };
 }
 export function uuid() {
   // Convex mutations seed Math.random transactionally; persist once for every retry.
@@ -29,15 +30,16 @@ export function boundedId(value: string, field: string, optional = false, allowC
 export function clientTimestamp(value: number, field: string) {
   integer(value, Date.now() - 7 * DAY, Date.now() + 300_000, field);
 }
-export async function enqueue(ctx: MutationCtx, userId: Id<"users">, eventId: string, name: string, occurredAt: number, properties: Infer<typeof analyticsProperties>, analyticsEnabledAtOccurrence = true) {
+export async function enqueue(ctx: MutationCtx, userId: Id<"users">, eventId: string, name: string, occurredAt: number, properties: Infer<typeof analyticsProperties>, analyticsEnabledAtOccurrence = true, analyticsEligible = false) {
   const prior = await ctx.db.query("analyticsReceipts").withIndex("by_userId_and_eventId", q => q.eq("userId", userId).eq("eventId", eventId)).unique();
   if (prior) return false;
   // Keep receipts even when opted out/unconfigured: later retries cannot backfill.
   await ctx.db.insert("analyticsReceipts", { userId, eventId, expiresAt: Date.now() + 8 * DAY });
   const user = await ctx.db.get(userId);
-  if (!analyticsEnabledAtOccurrence || !user || user.analyticsEnabled === false || !posthogConfig()) return true;
+  const config = posthogConfig();
+  if (!analyticsEligible || !analyticsEnabledAtOccurrence || !user || user.analyticsEnabled === false || !config) return true;
   await ctx.db.insert("analyticsOutbox", { userId, uuid: uuid(), name, occurredAt, distinctId: playerIdentity(userId), properties,
-    consentRevision: user.analyticsConsentRevision ?? 0, attempts: 0, nextAttemptAt: Date.now(), expiresAt: Date.now() + 7 * DAY });
+    analyticsEligible: true, environment: config.environment, consentRevision: user.analyticsConsentRevision ?? 0, attempts: 0, nextAttemptAt: Date.now(), expiresAt: Date.now() + 7 * DAY });
   return true;
 }
 
@@ -46,5 +48,6 @@ export async function rankingOutcome(ctx: MutationCtx, userId: Id<"users">, runI
     ? await ctx.db.query("runHistory").withIndex("by_dailyAttemptId", q => q.eq("dailyAttemptId", runId as Id<"attempts">)).unique()
     : await ctx.db.query("runHistory").withIndex("by_leaderboardRunId", q => q.eq("leaderboardRunId", runId as Id<"leaderboardRuns">)).unique();
   if (history) await ctx.db.patch(history._id, { rankingStatus: status, ...(status === "accepted" && score !== undefined ? { rankedScore: score } : {}), updatedAt: Date.now() });
-  await enqueue(ctx, userId, `ranking:${runId}:${status}`, `leaderboard_score_${status}`, Date.now(), { mode, runId, status, ...(score === undefined ? {} : { score }), source: "server_validation" });
+  const ticket = await ctx.db.get(runId);
+  await enqueue(ctx, userId, `ranking:${runId}:${status}`, `leaderboard_score_${status}`, Date.now(), { mode, runId, status, ...(score === undefined ? {} : { score }), source: "server_validation" }, true, ticket?.analyticsEligible === true);
 }

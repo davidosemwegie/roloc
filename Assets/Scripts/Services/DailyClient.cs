@@ -94,12 +94,14 @@ namespace Roloc.Services
                 {
                     cache.startingChallengeId = challenge.id;
                     cache.startingRequestId = Guid.NewGuid().ToString();
+                    cache.startingAnalyticsEligible = DistributionAnalyticsPolicy.BuildEligible;
                 }
+                cache.startingAnalyticsEligible = cache.startingAnalyticsEligible && DistributionAnalyticsPolicy.BuildEligible;
                 if (!Persist()) { failed?.Invoke("Daily could not save this attempt. Check available device storage."); yield break; }
                 string requestId = cache.startingRequestId;
                 DailyAttempt issued = null;
                 yield return Request<DailyAttempt>("mutation", "daily:createAttempt",
-                    new StartArgs { challengeId = challenge.id, requestId = requestId }, true, value => issued = value, failed);
+                    new StartArgs { challengeId = challenge.id, requestId = requestId, analyticsEligible = cache.startingAnalyticsEligible }, true, value => issued = value, failed);
                 if (issued == null)
                 {
                     // An upgraded client must not keep retrying a pre-upgrade attempt ID.
@@ -470,7 +472,7 @@ namespace Roloc.Services
         [Serializable] private sealed class EmptyArgs { }
         [Serializable] private sealed class ChallengeArgs { public string challengeId; }
         // Revision 3 supports the v2 revive protocol and the immutable v1 challenges.
-        [Serializable] private sealed class StartArgs { public string challengeId; public string requestId; public int clientRulesRevision = 3; }
+        [Serializable] private sealed class StartArgs { public string challengeId; public string requestId; public int clientRulesRevision = 3; public bool analyticsEligible; }
         [Serializable] private sealed class AttemptArgs { public string attemptId; }
         [Serializable] private sealed class ChunkArgs { public string attemptId; public int index; public DailyTraceEvent[] events; }
         [Serializable] private sealed class FinalizeArgs { public string attemptId; public int chunkCount; }

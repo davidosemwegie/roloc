@@ -1,6 +1,6 @@
 # Ring Rush Daily backend
 
-The isolated Convex project is **ring-rush**. Unity is the client; this package stores canonical player identities and run summaries, and delivers optional usage analytics to PostHog. Firebase and Mixpanel are not used. See [analytics contracts and operations](../docs/ANALYTICS.md).
+The isolated Convex project is **ring-rush**. Unity is the client; this package stores canonical player identities and run summaries, and delivers optional usage analytics to PostHog only for eligible distribution builds on beta/production environments. Firebase and Mixpanel are not used. See [analytics contracts and operations](../docs/ANALYTICS.md).
 
 ## Development
 

@@ -8,13 +8,14 @@ namespace Roloc.Services
     {
         public string clientRunId, mode, status, leaderboardRunId = "", dailyAttemptId = "";
         public double startedAt, endedAt, elapsedMs;
-        public bool analyticsEnabled;
+        public bool analyticsEnabled, analyticsEligible;
         public int score, revives;
     }
     [Serializable] internal sealed class GameUsageEvent
     {
         public string eventId, name, sessionId, mode, clientRunId;
         public double occurredAt;
+        public bool analyticsEligible;
     }
     [Serializable] internal sealed class GameTelemetryItem
     {

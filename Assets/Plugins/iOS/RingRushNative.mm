@@ -1,6 +1,7 @@
 #import <UIKit/UIKit.h>
 #import <Security/Security.h>
 #import <AppTrackingTransparency/AppTrackingTransparency.h>
+#include <TargetConditionals.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -26,6 +27,13 @@ static NSMutableDictionary* RRKeychainQuery(const char* key) {
 }
 
 extern "C" {
+    bool RingRushIsPhysicalDevice() {
+#if TARGET_OS_SIMULATOR || TARGET_OS_MACCATALYST
+        return false;
+#else
+        return true;
+#endif
+    }
     int RRTrackingAuthorizationStatus() {
         if (@available(iOS 14, *)) return (int)ATTrackingManager.trackingAuthorizationStatus;
         return 2;

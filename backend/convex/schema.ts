@@ -17,7 +17,7 @@ export default defineSchema({
   analyticsOutbox: defineTable({
     userId: v.id("users"), uuid: v.string(), name: v.string(), occurredAt: v.number(), distinctId: v.string(),
     properties: analyticsProperties, consentRevision: v.number(), attempts: v.number(), nextAttemptAt: v.number(),
-    expiresAt: v.number(), leaseToken: v.optional(v.string()),
+    expiresAt: v.number(), leaseToken: v.optional(v.string()), analyticsEligible: v.optional(v.boolean()), environment: v.optional(v.string()),
   }).index("by_userId_and_consentRevision", ["userId", "consentRevision"]).index("by_nextAttemptAt", ["nextAttemptAt"]).index("by_expiresAt", ["expiresAt"]).index("by_userId", ["userId"]),
   leaderboardProfiles: defineTable({ userId: v.id("users"), nickname: v.string(), nicknameKey: v.string(), participating: v.boolean(), hasJoinedLeaderboard: v.optional(v.boolean()), updatedAt: v.number() })
     .index("by_userId", ["userId"]).index("by_nicknameKey", ["nicknameKey"]),
@@ -25,7 +25,7 @@ export default defineSchema({
   leaderboardRuns: defineTable({
     userId: v.id("users"), requestId: v.string(), mode: v.union(v.literal("flow"), v.literal("rush")), date: v.string(),
     status: v.union(v.literal("open"), v.literal("accepted"), v.literal("rejected"), v.literal("expired")),
-    clientRulesRevision: v.number(), startedAt: v.number(), uploadDeadline: v.number(), purgeAt: v.number(),
+    analyticsEligible: v.optional(v.boolean()), clientRulesRevision: v.number(), startedAt: v.number(), uploadDeadline: v.number(), purgeAt: v.number(),
     score: v.optional(v.number()), revives: v.optional(v.number()), elapsedMs: v.optional(v.number()), reason: v.optional(v.string()),
   }).index("by_userId_and_requestId", ["userId", "requestId"]).index("by_status_and_uploadDeadline", ["status", "uploadDeadline"]).index("by_purgeAt", ["purgeAt"]),
   leaderboardBests: defineTable({
@@ -46,7 +46,7 @@ export default defineSchema({
     userId: v.id("users"), challengeId: v.id("challenges"), requestId: v.string(), status: attemptState,
     startedAt: v.number(), uploadDeadline: v.number(), nextChunkIndex: v.number(), eventCount: v.number(),
     submittedAt: v.optional(v.number()), finalizedAt: v.optional(v.number()), score: v.optional(v.number()), reason: v.optional(v.string()),
-    workflowId: v.optional(v.string()), purgeAt: v.number(), clientRulesRevision: v.optional(v.number()),
+    analyticsEligible: v.optional(v.boolean()), workflowId: v.optional(v.string()), purgeAt: v.number(), clientRulesRevision: v.optional(v.number()),
   }).index("by_userId_and_requestId", ["userId", "requestId"])
     .index("by_challengeId_and_userId", ["challengeId", "userId"])
     .index("by_challengeId_and_status", ["challengeId", "status"])

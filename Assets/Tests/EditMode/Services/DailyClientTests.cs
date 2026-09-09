@@ -42,6 +42,19 @@ namespace Roloc.Services.Tests
         }
 
         [Test]
+        public void LegacyStartRetryDoesNotGainAnalyticsEligibility()
+        {
+            var client = new DailyClient(connection, directory);
+            string path = (string)typeof(DailyClient).GetField("cachePath", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(client);
+            File.WriteAllText(path, "{\"version\":1,\"startingChallengeId\":\"fixture\",\"startingRequestId\":\"old-request\",\"pending\":[]}");
+            client = new DailyClient(connection, directory);
+            DriveSynchronously(client.StartRanked(new DailyChallenge { id = "fixture", rulesVersion = 1, variant = "still", rankedEnabled = true }, null));
+            string saved = File.ReadAllText(path);
+            Assert.That(saved, Does.Contain("\"startingRequestId\":\"old-request\""));
+            Assert.That(saved, Does.Contain("\"startingAnalyticsEligible\":false"));
+        }
+
+        [Test]
         public void ChallengeRoundTripPreservesUnsignedSeedAndEpochMilliseconds()
         {
             const string json = "{\"id\":\"fixture\",\"date\":\"2026-09-06\",\"seed\":4294967295,\"rulesVersion\":1,\"variant\":\"lively\",\"opensAt\":1788652800000,\"closesAt\":1788739200000,\"uploadDeadline\":1788742800000}";

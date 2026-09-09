@@ -73,13 +73,13 @@ export const recordRuns = mutation({ args: { runs: v.array(historyInput) }, retu
     if (previous) await ctx.db.replace(previous._id, { ...value, receivedAt: previous.receivedAt, updatedAt: Date.now() });
     else await ctx.db.insert("runHistory", { ...value, receivedAt: Date.now(), updatedAt: Date.now() });
     // A final summary arriving alone still proves that a run started.
-    if (!previous) await enqueue(ctx, userId, `run:${run.clientRunId}:started`, "run_started", run.startedAt, { mode: run.mode, clientRunId: run.clientRunId, source: "client_summary" }, run.analyticsEnabled !== false);
-    if (run.status !== "started") await enqueue(ctx, userId, `run:${run.clientRunId}:final`, `run_${run.status}`, run.endedAt, { mode: run.mode, clientRunId: run.clientRunId, score: run.score, revives: run.revives, elapsedMs: run.elapsedMs, status: run.status, source: "client_summary" }, run.analyticsEnabled !== false);
+    if (!previous) await enqueue(ctx, userId, `run:${run.clientRunId}:started`, "run_started", run.startedAt, { mode: run.mode, clientRunId: run.clientRunId, source: "client_summary" }, run.analyticsEnabled !== false, run.analyticsEligible === true);
+    if (run.status !== "started") await enqueue(ctx, userId, `run:${run.clientRunId}:final`, `run_${run.status}`, run.endedAt, { mode: run.mode, clientRunId: run.clientRunId, score: run.score, revives: run.revives, elapsedMs: run.elapsedMs, status: run.status, source: "client_summary" }, run.analyticsEnabled !== false, run.analyticsEligible === true);
     recorded++;
   }
   return { recorded, duplicates };
 } });
-export const capture = mutation({ args: { eventId: v.string(), name: captureName, occurredAt: v.number(), sessionId: v.string(), mode: v.string(), clientRunId: v.string() }, returns: v.null(), handler: async (ctx, args) => {
+export const capture = mutation({ args: { analyticsEligible: v.optional(v.boolean()), eventId: v.string(), name: captureName, occurredAt: v.number(), sessionId: v.string(), mode: v.string(), clientRunId: v.string() }, returns: v.null(), handler: async (ctx, args) => {
   const userId = await publicUser(ctx);
   boundedId(args.eventId, "event ID"); boundedId(args.sessionId, "session ID"); boundedId(args.clientRunId, "run ID", true, true);
   if (!["", "flow", "rush", "daily"].includes(args.mode)) fail("INVALID_ARGUMENT", "Invalid game mode.");
@@ -87,6 +87,6 @@ export const capture = mutation({ args: { eventId: v.string(), name: captureName
   if (receipt) return null;
   clientTimestamp(args.occurredAt, "event time");
   await telemetryLimits.limit(ctx, "telemetryEvents", { key: userId, throws: true });
-  await enqueue(ctx, userId, `client:${args.eventId}`, args.name, args.occurredAt, { sessionId: args.sessionId, mode: args.mode, clientRunId: args.clientRunId, source: "client" });
+  await enqueue(ctx, userId, `client:${args.eventId}`, args.name, args.occurredAt, { sessionId: args.sessionId, mode: args.mode, clientRunId: args.clientRunId, source: "client" }, true, args.analyticsEligible === true);
   return null;
 } });

@@ -86,6 +86,16 @@ namespace Roloc.Presentation
         void ShowAnalyticsSettings(Action back)
         {
             var panel = NewOverlay("Usage analytics", "Share gameplay statistics to help improve Ring Rush.", 420);
+            if (!telemetry.AnalyticsAvailable)
+            {
+                Label(panel, "Usage analytics is unavailable in this build.\nYour game history continues to be saved.\nYour analytics preference is unchanged.", 14, Muted,
+                    new Vector2(0, -4), new Vector2(296, 85));
+                var unavailable = Button(panel, "ANALYTICS UNAVAILABLE", new Vector2(0, -83), new Vector2(270, 48),
+                    new Vector2(.5f, .5f), Muted, Color.white, () => { });
+                unavailable.interactable = false;
+                Button(panel, "Back", new Vector2(0, -154), new Vector2(270, 44), new Vector2(.5f, .5f), Color.clear, Ink, back);
+                return;
+            }
             int generation = leaderboardViewGeneration;
             var explanation = Label(panel, "Turning this off stops usage analytics.\nYour game history and leaderboard records\ncontinue to be saved.", 14, Muted,
                 new Vector2(0, -4), new Vector2(296, 85));

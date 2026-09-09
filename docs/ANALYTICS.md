@@ -1,6 +1,6 @@
 # Player history and usage analytics
 
-[Ring Rush PostHog project](https://us.posthog.com/project/600627/) is in **CJVS**, with UTC dates. [Game health & leaderboards dashboard](https://us.posthog.com/project/600627/dashboard/2078262) contains ten saved insights: daily/weekly active players, completed runs by mode, median/p90 score, average elapsed time, completed/abandoned runs, tutorial completion, leaderboard activation, rewarded revive conversion, ranked submission outcomes, and 14-day retention (including D1/D7). Development events are excluded by default. Funnel conversion is per player; it is not an exact per-run ad delivery audit.
+[Ring Rush PostHog project](https://us.posthog.com/project/600627/) is in **CJVS**, with UTC dates. [Game health & leaderboards dashboard](https://us.posthog.com/project/600627/dashboard/2078262) contains ten saved insights: daily/weekly active players, completed runs by mode, median/p90 score, average elapsed time, completed/abandoned runs, tutorial completion, leaderboard activation, rewarded revive conversion, ranked submission outcomes, and 14-day retention (including D1/D7). Collection is limited to eligible iOS distribution builds on beta/production backends. Earlier development smoke events remain excluded by default. Funnel conversion is per player; it is not an exact per-run ad delivery audit.
 
 ## Identity and storage
 
@@ -8,7 +8,7 @@ Convex `users` is canonical. Public anonymous registration reuses the installati
 
 `runHistory` keeps each run under `(userId, clientRunId)` with mode, timestamps, match score, revives, elapsed milliseconds, and started/completed/abandoned status. Final results are immutable and retries are idempotent. Owned leaderboard/Daily links retain separate `rankingStatus` and `rankedScore` fields; client history does not change a board score. Profiles and histories persist until explicit deletion. Tickets and daily bests keep their independent retention policies.
 
-History includes unranked play and survives disabling optional analytics. A run finishes only after the revive decision; navigation out records abandonment. Backgrounding snapshots the active run, and a restarted process recovers an unfinished run as abandoned using its last saved counters. History is best effort: the atomic deployment-specific local queue holds 256 items for seven days and prioritizes run summaries over optional events when full. Long offline use, storage/credential loss, or rejected payloads can leave missing history. Active run snapshots are not replay logs.
+History includes unranked play in every build and survives disabling optional analytics. Build eligibility is separate from the saved player preference; ineligible builds show analytics unavailable and preserve that preference. A run finishes only after the revive decision; navigation out records abandonment. Backgrounding snapshots the active run, and a restarted process recovers an unfinished run as abandoned using its last saved counters. History is best effort: the atomic deployment-specific local queue holds 256 items for seven days and prioritizes run summaries over optional events when full. Long offline use, storage/credential loss, or rejected payloads can leave missing history. Active run snapshots are not replay logs.
 
 ## Validated API
 
@@ -19,9 +19,9 @@ All endpoints require the existing shared authenticated transport and explicit a
 | `telemetry:identity` query | `{}` | `{playerId, analyticsEnabled}` |
 | `telemetry:setAnalyticsEnabled` mutation | `{enabled: boolean}` | `{playerId, analyticsEnabled}` |
 | `telemetry:recordRuns` mutation | `{runs: RunSummary[]}` (1–20) | `{recorded, duplicates}` |
-| `telemetry:capture` mutation | `{eventId, name, occurredAt, sessionId, mode, clientRunId}` | `null` |
+| `telemetry:capture` mutation | `{eventId, name, occurredAt, sessionId, mode, clientRunId, analyticsEligible?}` | `null` |
 
-`RunSummary` has `clientRunId`, `mode` (`flow/rush/daily`), `startedAt`, `endedAt`, `score`, `revives`, `elapsedMs`, `status` (`started/completed/abandoned`), `leaderboardRunId`, and `dailyAttemptId`, plus optional `analyticsEnabled` captured with the run. A false value keeps history without sending usage analytics even after re-enabling. Use empty strings for absent links. Started rows have zero end/result counters. Timestamps are integer Unix milliseconds, at most seven days old or five minutes ahead; finite bounded integer counters and linked ownership/mode are checked. IDs are 8–128 ASCII letters/digits/underscore/hyphen; client run IDs also allow the colon used by the game's installation-and-counter format. Run writes and client events have independent per-user token buckets; duplicate retries do not consume another token.
+`RunSummary` has `clientRunId`, `mode` (`flow/rush/daily`), `startedAt`, `endedAt`, `score`, `revives`, `elapsedMs`, `status` (`started/completed/abandoned`), `leaderboardRunId`, and `dailyAttemptId`, plus optional `analyticsEnabled` and `analyticsEligible` captured with the run. Missing `analyticsEligible` defaults to false, including older clients. A false value keeps history without sending usage analytics even after re-enabling. Use empty strings for absent links. Started rows have zero end/result counters. Timestamps are integer Unix milliseconds, at most seven days old or five minutes ahead; finite bounded integer counters and linked ownership/mode are checked. IDs are 8–128 ASCII letters/digits/underscore/hyphen; client run IDs also allow the colon used by the game's installation-and-counter format. Run writes and client events have independent per-user token buckets; duplicate retries do not consume another token.
 
 ## Events
 
@@ -37,15 +37,23 @@ All endpoints require the existing shared authenticated transport and explicit a
 
 Properties include `mode`, `score`, `revives`, `elapsed_ms`, `client_run_id`, `session_id`, `run_id`, `status`, `participating`, `environment`, and `source` as applicable. Sources distinguish `client`, `client_summary`, and `server_validation`. Duration includes pauses/ads. No credentials, nicknames, raw traces, advertising IDs, or arbitrary client properties are captured. Casual accepted scores still use plausibility checks; accepted does not mean independently verified gameplay. Expired counts include unfinished tickets and missed deadlines.
 
+## Distribution eligibility
+
+`ProjectBuilder.BuildTestFlight` is the shared release export for TestFlight and App Store archives. It passes `RING_RUSH_DISTRIBUTION` through Unity's build-scoped `extraScriptingDefines` only for the store identifier, iOS Device SDK, and non-development export. It never writes the flag into persistent PlayerSettings. Ordinary exports, simulator, Mac, Editor and development players are ineligible. Runtime checks additionally require an iPhone player, debug mode off, and the native physical-device check (`TARGET_OS_SIMULATOR` and Catalyst return false).
+
+Telemetry requests, leaderboard profile mutations, and regular/Daily ticket creation carry optional `analyticsEligible`. Tickets preserve eligibility from the first start request, so retrying an old/ineligible request cannot upgrade it. Server ranking events use the ticket's eligibility, independent of run-history upload order. This metadata controls build behavior and is not attestation or proof of Apple distribution.
+
+Local events and run summaries retain their originating eligibility. Legacy cache entries default false. Ineligible builds remove pending usage events and send histories with analytics disabled; installing a release build never upgrades development or legacy queued records. Eligible release builds still respect the player's analytics preference. Deploy backend gates before the updated client, remove development capture credentials, and run the bounded pending-event cleanup on development and beta. Keep beta capture configuration; do not create or modify a future default production deployment as part of this rollout.
+
 ## Deployment and operations
 
-Set these Convex environment variables on each intended deployment, keeping the capture token out of Unity assets and Git:
+Set these Convex environment variables only on intended distribution deployments, keeping the capture token out of Unity assets and Git:
 
 - `POSTHOG_PROJECT_TOKEN`: Ring Rush project capture token.
 - `POSTHOG_HOST`: `https://us.i.posthog.com` (only US/EU PostHog ingestion hosts accepted).
-- `RING_RUSH_ENVIRONMENT`: `development` for dev and `beta` for the isolated beta; use `production` only for a later production deployment.
+- `RING_RUSH_ENVIRONMENT`: exactly `beta` for the isolated TestFlight backend or `production` for a future production deployment. Missing, development, or any other value blocks both enqueue and delivery, even if a capture token is present.
 
-Without valid PostHog configuration, history is still saved and optional events are not later backfilled. Delivery runs every minute through a bounded transactional outbox, leased batches, retries, stable UUID/timestamp/identity, and consent revision checks. Delivered payloads are deleted; pending payloads expire at seven days and deduplication receipts at eight days. `telemetryDelivery:deliver` can be invoked internally for a smoke test. Failures log no payloads or secrets. Inspect oldest due outbox rows and failure logs if charts stop advancing; dashboard emptiness alone is not proof of no activity.
+Development must have no `POSTHOG_PROJECT_TOKEN` or `POSTHOG_HOST`. Without eligible build metadata and valid distribution environment/configuration, history is still saved and optional events are not later backfilled. Delivery runs every minute through a bounded transactional outbox, leased batches, retries, stable UUID/timestamp/identity, originating environment, and consent revision checks. Outbox rows without eligible origin metadata are discarded before delivery. Delivered payloads are deleted; pending payloads expire at seven days and deduplication receipts at eight days. `telemetryDelivery:discardIneligiblePending {}` discards legacy/ineligible pending payloads in bounded batches during rollout; in development it discards all pending payloads. It retains receipts and previously delivered PostHog data. `telemetryDelivery:deliver` can be invoked internally for a distribution-environment smoke test; avoid fabricating production gameplay. Failures log no payloads or secrets. Inspect oldest due outbox rows and failure logs if charts stop advancing; dashboard emptiness alone is not proof of no activity.
 
 Keep public leaderboard submissions disabled until integrated device validation. Existing Daily controls remain independent. Follow [DAILY_OPERATIONS.md](DAILY_OPERATIONS.md) for the isolated beta deployment rather than deploying to the project's unrelated default production.
 

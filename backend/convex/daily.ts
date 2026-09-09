@@ -19,7 +19,7 @@ export const current = query({
   },
 });
 export const createAttempt = mutation({
-  args: { challengeId: v.id("challenges"), requestId: v.string(), clientRulesRevision: v.optional(v.number()) }, returns: attemptPublic,
+  args: { challengeId: v.id("challenges"), requestId: v.string(), clientRulesRevision: v.optional(v.number()), analyticsEligible: v.optional(v.boolean()) }, returns: attemptPublic,
   handler: async (ctx, args) => {
     const userId = await requireGuest(ctx);
     const challenge = await ctx.db.get(args.challengeId);
@@ -36,7 +36,7 @@ export const createAttempt = mutation({
     if (!challenge || now < challenge.opensAt || now >= challenge.closesAt) fail("CHALLENGE_CLOSED", "This challenge is not open for new attempts.");
     await limits.limit(ctx, "starts", { key: userId, throws: true });
     const id = await ctx.db.insert("attempts", { userId, challengeId: args.challengeId, requestId: args.requestId,
-      clientRulesRevision: args.clientRulesRevision, status: "open", startedAt: now, uploadDeadline: challenge.uploadDeadline, nextChunkIndex: 0, eventCount: 0,
+      analyticsEligible: args.analyticsEligible === true, clientRulesRevision: args.clientRulesRevision, status: "open", startedAt: now, uploadDeadline: challenge.uploadDeadline, nextChunkIndex: 0, eventCount: 0,
       purgeAt: challenge.uploadDeadline + 7 * DAY });
     return attemptDto((await ctx.db.get(id))!);
   },

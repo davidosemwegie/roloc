@@ -5,23 +5,25 @@ import { claimedEvent } from "./telemetryValidators";
 import { posthogConfig, uuid } from "./telemetryModel";
 
 export const claim = internalMutation({ args: {}, returns: v.array(claimedEvent), handler: async ctx => {
-  if (!posthogConfig()) return [];
+  const config = posthogConfig();
   const due = await ctx.db.query("analyticsOutbox").withIndex("by_nextAttemptAt", q => q.lte("nextAttemptAt", Date.now())).take(50);
   const result = [];
   for (const row of due) {
     const user = await ctx.db.get(row.userId);
-    if (!user || user.analyticsEnabled === false || (user.analyticsConsentRevision ?? 0) !== row.consentRevision || row.expiresAt <= Date.now()) { await ctx.db.delete(row._id); continue; }
+    if (row.analyticsEligible !== true || !["beta", "production"].includes(row.environment ?? "") || !user || user.analyticsEnabled === false || (user.analyticsConsentRevision ?? 0) !== row.consentRevision || row.expiresAt <= Date.now()) { await ctx.db.delete(row._id); continue; }
+    if (!config) continue;
     const leaseToken = uuid();
     await ctx.db.patch(row._id, { leaseToken, attempts: row.attempts + 1, nextAttemptAt: Date.now() + 120_000 });
-    result.push({ id: row._id, leaseToken, uuid: row.uuid, name: row.name, occurredAt: row.occurredAt, distinctId: row.distinctId, properties: row.properties });
+    result.push({ id: row._id, leaseToken, environment: row.environment!, uuid: row.uuid, name: row.name, occurredAt: row.occurredAt, distinctId: row.distinctId, properties: row.properties });
   }
   return result;
 } });
 export const eligible = internalQuery({ args: { events: v.array(claimedEvent) }, returns: v.array(claimedEvent), handler: async (ctx, args) => {
+  if (!posthogConfig()) return [];
   const result = [];
   for (const event of args.events) {
     const row = await ctx.db.get(event.id), user = row ? await ctx.db.get(row.userId) : null;
-    if (row?.leaseToken === event.leaseToken && user && user.analyticsEnabled !== false && (user.analyticsConsentRevision ?? 0) === row.consentRevision && row.expiresAt > Date.now()) result.push(event);
+    if (row?.leaseToken === event.leaseToken && row.analyticsEligible === true && ["beta", "production"].includes(row.environment ?? "") && row.environment === event.environment && user && user.analyticsEnabled !== false && (user.analyticsConsentRevision ?? 0) === row.consentRevision && row.expiresAt > Date.now()) result.push(event);
   }
   return result;
 } });
@@ -46,7 +48,7 @@ export const deliver = internalAction({ args: {}, returns: v.number(), handler: 
       properties: { mode: event.properties.mode, score: event.properties.score, revives: event.properties.revives, elapsed_ms: event.properties.elapsedMs,
         client_run_id: event.properties.clientRunId, session_id: event.properties.sessionId, run_id: event.properties.runId,
         status: event.properties.status, participating: event.properties.participating, distinct_id: event.distinctId,
-        environment: process.env.RING_RUSH_ENVIRONMENT ?? "development", source: event.properties.source ?? "server_validation", $geoip_disable: true },
+        environment: event.environment, source: event.properties.source ?? "server_validation", $geoip_disable: true },
     })) }) });
     success = response.ok;
   } catch { /* Retry without logging player data, payloads, or project credentials. */ }
@@ -78,4 +80,16 @@ export const deletePlayerHistory = internalMutation({ args: { userId: v.id("user
   for (const row of [...runs, ...events, ...receipts]) await ctx.db.delete(row._id);
   if (runs.length === 100 || events.length === 100 || receipts.length === 100) await ctx.scheduler.runAfter(0, internal.telemetryDelivery.deletePlayerHistory, args);
   return runs.length + events.length + receipts.length;
+} });
+
+// One-time rollout sweep also works with capture disabled in development.
+export const discardIneligiblePending = internalMutation({ args: { cursor: v.optional(v.string()) }, returns: v.number(), handler: async (ctx, args) => {
+  const page = await ctx.db.query("analyticsOutbox").paginate({ cursor: args.cursor ?? null, numItems: 100 });
+  const distributionEnvironment = ["beta", "production"].includes(process.env.RING_RUSH_ENVIRONMENT ?? "");
+  let deleted = 0;
+  for (const row of page.page) {
+    if (!distributionEnvironment || row.analyticsEligible !== true || !["beta", "production"].includes(row.environment ?? "")) { await ctx.db.delete(row._id); deleted++; }
+  }
+  if (!page.isDone) await ctx.scheduler.runAfter(0, internal.telemetryDelivery.discardIneligiblePending, { cursor: page.continueCursor });
+  return deleted;
 } });

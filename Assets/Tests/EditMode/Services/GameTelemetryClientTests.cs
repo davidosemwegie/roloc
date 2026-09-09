@@ -18,7 +18,8 @@ namespace Roloc.Services.Tests
             connection = ScriptableObject.CreateInstance<DailyConnection>();
         }
         [TearDown] public void TearDown() { UnityEngine.Object.DestroyImmediate(connection); Directory.Delete(directory, true); }
-        private GameTelemetryClient Client() => new GameTelemetryClient(new DailyClient(connection, directory), directory);
+        private GameTelemetryClient Client(bool eligible = true) => (GameTelemetryClient)Activator.CreateInstance(typeof(GameTelemetryClient),
+            BindingFlags.Instance | BindingFlags.NonPublic, null, new object[] { new DailyClient(connection, directory), directory, eligible }, null);
         private string PathFor(GameTelemetryClient client) => (string)typeof(GameTelemetryClient).GetField("cachePath", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(client);
         private string Saved(GameTelemetryClient client) => File.ReadAllText(PathFor(client));
         [Test] public void RelaunchAbandonsActiveRunAndPreservesLastBackgroundSnapshot()
@@ -95,6 +96,46 @@ namespace Roloc.Services.Tests
         }
         [Serializable] private sealed class ConsentFixture { public ConsentItem[] pending; }
         [Serializable] private sealed class ConsentItem { public GameRunSummary run; }
+        [Test] public void DevelopmentBuildKeepsHistoryWithoutChangingPreferenceOrCapturingUsage()
+        {
+            var client = Client(false);
+            Assert.That(client.AnalyticsAvailable, Is.False);
+            Assert.That(client.AnalyticsEnabled, Is.True);
+            client.Capture("game_opened");
+            client.StartRun("installation123:1", "flow");
+            client.CompleteRun("installation123:1", 1, 0, 1000);
+            var saved = JsonUtility.FromJson<ConsentFixture>(Saved(client));
+            Assert.That(saved.pending.Length, Is.EqualTo(2));
+            foreach (var item in saved.pending)
+            {
+                Assert.That(item.run.analyticsEligible, Is.False);
+                Assert.That(item.run.analyticsEnabled, Is.False);
+            }
+            Assert.That(Client(false).AnalyticsEnabled, Is.True);
+        }
+        [Test] public void DevelopmentAndLegacyQueueCannotUpgradeWhenDistributionLaunches()
+        {
+            var dev = Client(false);
+            dev.StartRun("installation123:1", "rush");
+            dev.CompleteRun("installation123:1", 1, 0, 1000);
+            string saved = Saved(dev).Replace("\"analyticsEligible\":false,", "").Replace(",\"analyticsEligible\":false", "");
+            File.WriteAllText(PathFor(dev), saved);
+            var release = Client(true);
+            var restored = JsonUtility.FromJson<ConsentFixture>(Saved(release));
+            foreach (var item in restored.pending) Assert.That(item.run.analyticsEligible, Is.False);
+            release.Capture("game_opened");
+            Assert.That(release.PendingCount, Is.EqualTo(3));
+            var backToDev = Client(false);
+            Assert.That(backToDev.PendingCount, Is.EqualTo(2), "Ineligible launch suppresses stored usage events.");
+            Assert.That(Client(true).PendingCount, Is.EqualTo(2), "Suppressed events never return on a later release launch.");
+        }
+        [Test] public void MissingEligibilityUsageEventsAreDiscardedInRelease()
+        {
+            var client = Client(true);
+            client.Capture("game_opened");
+            File.WriteAllText(PathFor(client), Saved(client).Replace("\"analyticsEligible\":true,", "").Replace(",\"analyticsEligible\":true", ""));
+            Assert.That(Client(true).PendingCount, Is.Zero);
+        }
         [Test] public void InvalidModesAndEventNamesAreNotQueued()
         {
             var client = Client();

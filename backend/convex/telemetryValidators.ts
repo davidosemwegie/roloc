@@ -7,6 +7,6 @@ export const analyticsProperties = v.object({
   runId: v.optional(v.string()), score: v.optional(v.number()), revives: v.optional(v.number()), elapsedMs: v.optional(v.number()),
   status: v.optional(v.string()), participating: v.optional(v.boolean()), source: v.optional(v.string()),
 });
-export const historyInput = v.object({ analyticsEnabled: v.optional(v.boolean()), clientRunId: v.string(), mode: historyMode, startedAt: v.number(), endedAt: v.number(), score: v.number(), revives: v.number(), elapsedMs: v.number(), status: historyStatus, leaderboardRunId: v.string(), dailyAttemptId: v.string() });
+export const historyInput = v.object({ analyticsEligible: v.optional(v.boolean()), analyticsEnabled: v.optional(v.boolean()), clientRunId: v.string(), mode: historyMode, startedAt: v.number(), endedAt: v.number(), score: v.number(), revives: v.number(), elapsedMs: v.number(), status: historyStatus, leaderboardRunId: v.string(), dailyAttemptId: v.string() });
 export const identityValue = v.object({ playerId: v.string(), analyticsEnabled: v.boolean() });
-export const claimedEvent = v.object({ id: v.id("analyticsOutbox"), leaseToken: v.string(), uuid: v.string(), name: v.string(), occurredAt: v.number(), distinctId: v.string(), properties: analyticsProperties });
+export const claimedEvent = v.object({ id: v.id("analyticsOutbox"), leaseToken: v.string(), environment: v.string(), uuid: v.string(), name: v.string(), occurredAt: v.number(), distinctId: v.string(), properties: analyticsProperties });

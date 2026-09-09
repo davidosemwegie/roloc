@@ -13,8 +13,10 @@ namespace Roloc.Services
         private const double RetentionMs = 7d * 24 * 60 * 60 * 1000;
         private readonly DailyClient shared;
         private readonly string cachePath;
+        private readonly bool analyticsEligible;
         private GameTelemetryCache cache = new GameTelemetryCache();
         private bool flushing;
+        public bool AnalyticsAvailable => analyticsEligible;
         public bool AnalyticsEnabled => cache.analyticsEnabled;
         public string PlayerId => cache.playerId;
         public string SessionId { get; } = Guid.NewGuid().ToString("N");
@@ -24,7 +26,16 @@ namespace Roloc.Services
         private static double Now => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         public GameTelemetryClient(DailyClient shared, string directory = null)
+            : this(shared, directory, DistributionAnalyticsPolicy.BuildEligible) { }
+
+        // Tests can exercise distribution transitions in Editor; player builds always use the policy.
+        private GameTelemetryClient(DailyClient shared, string directory, bool eligible)
         {
+#if UNITY_EDITOR
+            analyticsEligible = eligible;
+#else
+            analyticsEligible = DistributionAnalyticsPolicy.BuildEligible;
+#endif
             this.shared = shared ?? throw new ArgumentNullException(nameof(shared));
             cachePath = Path.Combine(directory ?? Application.persistentDataPath, "ring-rush-telemetry-" + shared.CacheNamespace + ".json");
             try
@@ -42,6 +53,7 @@ namespace Roloc.Services
                     if (item.kind == "event") item.run = null;
                 }
                 if (!cache.hasActive) cache.active = null;
+                ApplyEligibility();
                 Prune();
                 if (cache.active != null)
                 {
@@ -80,7 +92,7 @@ namespace Roloc.Services
             if (!ValidRunId(clientRunId) || !ValidMode(mode)) { Report("Invalid run history start was discarded."); return; }
             if (cache.active?.clientRunId == clientRunId) return;
             if (cache.active != null) Finish(cache.active.clientRunId, cache.active.score, cache.active.revives, cache.active.elapsedMs, "abandoned");
-            cache.active = new GameRunSummary { clientRunId = clientRunId, mode = mode, status = "started", startedAt = Now, analyticsEnabled = AnalyticsEnabled,
+            cache.active = new GameRunSummary { clientRunId = clientRunId, mode = mode, status = "started", startedAt = Now, analyticsEnabled = AnalyticsAvailable && AnalyticsEnabled, analyticsEligible = AnalyticsAvailable,
                 leaderboardRunId = leaderboardRunId ?? "", dailyAttemptId = dailyAttemptId ?? "" };
             cache.hasActive = true;
             Enqueue(new GameTelemetryItem { kind = "run", run = Copy(cache.active) });
@@ -101,7 +113,8 @@ namespace Roloc.Services
             if (!ValidCounters(score, revives, elapsedMs))
             { Report("Invalid run history counters were discarded."); return; }
             var final = Copy(cache.active);
-            final.analyticsEnabled = final.analyticsEnabled && AnalyticsEnabled;
+            final.analyticsEligible = final.analyticsEligible && AnalyticsAvailable;
+            final.analyticsEnabled = final.analyticsEnabled && final.analyticsEligible && AnalyticsEnabled;
             final.status = status; final.score = score; final.revives = revives; final.elapsedMs = Math.Floor(elapsedMs);
             final.endedAt = Math.Max(final.startedAt, Now);
             Enqueue(new GameTelemetryItem { kind = "run", run = final });
@@ -110,11 +123,11 @@ namespace Roloc.Services
         }
         public void Capture(string name, string mode = "", string clientRunId = "")
         {
-            if (!AnalyticsEnabled) return;
+            if (!AnalyticsAvailable || !AnalyticsEnabled) return;
             if (!ValidEvent(name) || (mode != "" && !ValidMode(mode)) || (clientRunId != "" && !ValidRunId(clientRunId)))
             { Report("Invalid usage event was discarded."); return; }
             Enqueue(new GameTelemetryItem { kind = "event", usage = new GameUsageEvent { eventId = Guid.NewGuid().ToString("N"), name = name,
-                sessionId = SessionId, occurredAt = Now, mode = mode, clientRunId = clientRunId } });
+                sessionId = SessionId, occurredAt = Now, mode = mode, clientRunId = clientRunId, analyticsEligible = AnalyticsAvailable } });
             Persist();
         }
 
@@ -124,6 +137,7 @@ namespace Roloc.Services
             flushing = true;
             try
             {
+                ApplyEligibility();
                 Prune();
                 Persist();
                 bool identityReady = false;
@@ -139,7 +153,7 @@ namespace Roloc.Services
                         if (!identityReady) yield break;
                     }
                     var item = cache.pending[0];
-                    if (item.usage != null && !AnalyticsEnabled) { cache.pending.Remove(item); Persist(); continue; }
+                    if (item.usage != null && (!AnalyticsAvailable || !item.usage.analyticsEligible || !AnalyticsEnabled)) { cache.pending.Remove(item); Persist(); continue; }
                     bool success = false;
                     string error = null, code = null;
                     Action<string> onFailure = value => { error = value; code = shared.LastErrorCode; };
@@ -183,6 +197,21 @@ namespace Roloc.Services
                 if (cache.preferencePending) { yield return EnsureIdentity(done, failed); yield break; }
             }
             done?.Invoke();
+        }
+        private void ApplyEligibility()
+        {
+            cache.pending.RemoveAll(item => item?.usage != null && (!AnalyticsAvailable || !item.usage.analyticsEligible));
+            foreach (var item in cache.pending)
+            {
+                if (item?.run == null) continue;
+                item.run.analyticsEligible = item.run.analyticsEligible && AnalyticsAvailable;
+                item.run.analyticsEnabled = item.run.analyticsEnabled && item.run.analyticsEligible;
+            }
+            if (cache.active != null)
+            {
+                cache.active.analyticsEligible = cache.active.analyticsEligible && AnalyticsAvailable;
+                cache.active.analyticsEnabled = cache.active.analyticsEnabled && cache.active.analyticsEligible;
+            }
         }
         private void Enqueue(GameTelemetryItem item)
         {

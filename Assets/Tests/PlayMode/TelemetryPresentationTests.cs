@@ -36,7 +36,10 @@ namespace Roloc.Tests
             var daily = new DailyClient(connection, directory);
             Set("daily", daily);
             Set("leaderboards", new LeaderboardClient(daily, directory));
-            telemetry = new GameTelemetryClient(daily, directory); Set("telemetry", telemetry);
+            telemetry = (GameTelemetryClient)Activator.CreateInstance(typeof(GameTelemetryClient),
+                BindingFlags.Instance | BindingFlags.NonPublic, null, new object[] { daily, directory, true }, null);
+            Set("telemetry", telemetry);
+            telemetry.Capture("game_opened");
             yield return null;
         }
         [UnityTearDown] public IEnumerator TearDown()
@@ -49,6 +52,21 @@ namespace Roloc.Tests
         T Get<T>(string field) => (T)typeof(RolocGame).GetField(field, Private).GetValue(game);
         void Set(string field, object value) => typeof(RolocGame).GetField(field, Private).SetValue(game, value);
         Snapshot Read() => JsonUtility.FromJson<Snapshot>(JsonUtility.ToJson(typeof(GameTelemetryClient).GetField("cache", Private).GetValue(telemetry)));
+
+        [UnityTest] public IEnumerator EditorSettingsExplainUnavailableAnalyticsWithoutChangingPreference()
+        {
+            telemetry = new GameTelemetryClient(new DailyClient(connection, directory), directory);
+            Set("telemetry", telemetry);
+            bool preference = telemetry.AnalyticsEnabled;
+            Invoke("ShowAnalyticsSettings", (Action)(() => game.ShowMenu()));
+            var unavailable = root.GetComponentsInChildren<UnityEngine.UI.Button>(true)
+                .Single(button => button.GetComponentInChildren<UnityEngine.UI.Text>()?.text == "ANALYTICS UNAVAILABLE");
+            Assert.That(unavailable.interactable, Is.False);
+            Assert.That(telemetry.AnalyticsAvailable, Is.False);
+            Assert.That(telemetry.AnalyticsEnabled, Is.EqualTo(preference));
+            Assert.That(Read().pending.Any(item => item.usage != null && !string.IsNullOrEmpty(item.usage.name)), Is.False);
+            yield return null;
+        }
 
         [UnityTest] public IEnumerator UnrankedRunKeepsLocalIdAndFinalizesExactlyOnceWithAnalyticsOff()
         {
