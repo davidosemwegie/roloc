@@ -22,7 +22,7 @@ These public identifiers are saved in `Assets/Resources/AdsConfiguration.asset`.
 
 Unity Ads is connected using an owner-authorized monetization reporting key and Organization Core ID `2476041440047`. The key remains in the dashboards, never the app or repository. All three active Unity Ads bidding instances map Game ID `800368993` to the matching placement above and target All Countries. Default ironSource demand instances were deactivated; only Unity Ads demand is active. Rewarded and interstitial ad-unit capping and pacing are disabled, as verified in their saved Advanced settings. LevelPlay still reports that the ironSource Ads account is pending approval; this notice does not establish whether Unity Ads test delivery will succeed.
 
-Test-device registration requires the physical iPhone's advertising ID, not its Xcode device identifier. On September 8, 2026, the owner's iPhone 16 Pro Max was available and paired. Dashboard test registration and real callback verification still require separate confirmation. No placeholder device ID has been registered.
+Test-device registration requires the physical iPhone's advertising ID, not its Xcode device identifier. On September 8, 2026, the owner's iPhone 16 Pro Max was available and paired. Both the LevelPlay and Unity Ads dashboards showed zero registered test devices when checked. Registration and real callback verification remain outstanding. No placeholder device ID has been registered.
 
 1. Verify the saved LevelPlay app and ad-unit identifiers above against the intended iOS build. Unity Ads is the configured demand network. Do not enable SDK automatic initialization.
 2. Configure the rewarded unit to award one revive. Register device identifiers as test devices in the dashboard before requesting ads. Never click live ads while validating.
@@ -61,6 +61,12 @@ The native bridge and build postprocessor add ATT and its purpose description. C
 ## Daily rollout
 
 Newly published challenges use rules v2; existing published rows remain v1. This may delay Daily revives by eight days. Client revision 3 supports both; existing revision-2 v1 attempts remain valid. Both replays derive bank eligibility independently and share action fixtures. Revive events retain the same seed sequence and exclude ad/countdown time from the active timer. The existing closed-test gate remains: server replay validates gameplay eligibility, not independent proof of watching an ad.
+
+## Build 10 validation
+
+On September 8, 2026, the fresh iOS export and signed Xcode Release build succeeded. Build `0.1.0 (10)`, bundle `com.clearjar.ringrush`, was installed and launched on the owner's iPhone 16 Pro Max. Code-signature verification passed. The built app contains the correct UMP app ID, ATT purpose string, 82 SKAdNetwork entries (including Unity Ads), and the LevelPlay, Unity Ads, UMP, Ad Quality and Unity Coherence privacy manifests. Native pods resolved to the pinned versions above.
+
+Twelve focused native consent checks passed against the bridge's actual decision helpers, covering current TCF consent/refusal, stale Additional Consent grants, storage/personalization refusal, incomplete vendor strings, invalid UMP updates and contextual US handling. Backend CI passed; that workflow does not exercise the native iOS integration. Installation and launch do not establish successful consent presentation, ad delivery or rewarded callbacks. Those device acceptance checks remain open, and build 10 has not been submitted for release.
 
 ## Release checks
 
