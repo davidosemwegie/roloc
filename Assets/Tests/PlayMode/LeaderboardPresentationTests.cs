@@ -11,6 +11,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using SafeArea = Roloc.Presentation.SafeArea;
 
 namespace Roloc.Tests
 {
