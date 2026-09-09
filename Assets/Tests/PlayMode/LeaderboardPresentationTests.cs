@@ -60,7 +60,7 @@ namespace Roloc.Tests
         {
             foreach (float height in new[] { 560f, 840f })
             {
-                var safe = Get<RectTransform>("safe"); safe.GetComponent<SafeArea>().enabled = false;
+                var safe = Get<RectTransform>("safe"); safe.GetComponent<Roloc.Presentation.SafeArea>().enabled = false;
                 safe.anchorMin = safe.anchorMax = new Vector2(.5f, .5f); safe.sizeDelta = new Vector2(360, height);
                 Invoke("ShowLeaderboardBoard"); yield return null; Canvas.ForceUpdateCanvases();
                 var viewport = Get<RectTransform>("overlay").GetComponentsInChildren<ScrollRect>().Single();
