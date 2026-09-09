@@ -34,9 +34,12 @@ static int RRConsentFlags(BOOL validUpdate) {
         if (!RRConsentPurpose(purposes, 1)) return flags;
         flags |= 1;
         NSString* additional = [defaults stringForKey:@"IABTCF_AddtlConsent"];
-        // Google's published additional-consent-providers.csv: Unity Ads3234, ironSource2878.
+        NSString* vendors = [defaults stringForKey:@"IABTCF_VendorConsents"];
+        // Unity Ads is TCF vendor 1549; ironSource remains Additional Consent provider 2878.
+        // Never let legacy Unity AC consent override a current TCF refusal.
+        BOOL unityConsented = vendors.length >= 1549 && [vendors characterAtIndex:1548] == '1';
         if (RRConsentPurpose(purposes, 3) && RRConsentPurpose(purposes, 4)
-            && RRAdditionalConsentContains(additional, @"3234")
+            && unityConsented
             && RRAdditionalConsentContains(additional, @"2878")) flags |= 4;
         return flags;
     }
