@@ -1,6 +1,6 @@
 # Public casual leaderboard
 
-The current client ranks regular Lively Flow games independently from the invitation-only Daily challenge. Rush is no longer selectable; existing Rush records, queued submissions and backend mode contracts remain readable for older clients. Existing saved Rush selections switch to Flow without importing Rush scores into its board. Players join by choosing a nickname; later online runs obtain a server-issued ticket automatically. Offline starts, tutorial runs, and historical local records do not qualify. The score is the number of matches, including runs with rewarded revives, not progress points or Perfect bonuses.
+The current client ranks regular Lively Flow games independently from the invitation-only Daily challenge. The current menu offers Play and Leaderboards; the separate Daily challenge is hidden. The leaderboard resets at 00:00 UTC, with yesterday remaining provisional until its 01:00 UTC upload cutoff. Rush is no longer selectable; existing Rush records, queued submissions and backend mode contracts remain readable for older clients. Existing saved Rush selections switch to Flow without importing Rush scores into its board. Players join by choosing a nickname; later online runs obtain a server-issued ticket automatically. Offline starts, tutorial runs, and historical local records do not qualify. The score is the number of matches, including runs with rewarded revives, not progress points or Perfect bonuses.
 
 ## Player identity and connectivity
 

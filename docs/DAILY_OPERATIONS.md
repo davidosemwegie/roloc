@@ -1,5 +1,7 @@
 # Ring Rush Daily operations
 
+The current client hides the separate Daily game and its final-standing popup. Its visible leaderboard ranks regular Flow games each UTC day. Keep the legacy Daily backend paused and invitation-gated for earlier clients.
+
 ## Public TestFlight beta status — September 7, 2026
 
 Ranked Daily is paused on `affable-lyrebird-62` using `operations:setRankedEnabled` with `enabled=false`. The public build-9 beta offers Daily practice; Flow, Rush, local progress and existing standings remain available. Verified through `daily:current`. Development and default production were not changed.

@@ -12,7 +12,7 @@ Regular challenge episodes can change colors from 20 matches, orbit either pucks
 
 Daily uses the isolated [Convex backend](backend/README.md). Invited ranked attempts require an online start; gameplay then runs locally and finished traces queue for upload. Cached challenges are available as practice. Development and production must use separate deployments and invitation codes. Public competition stays disabled until App Attest and suspicious-submission review are ready.
 
-Regular Flow runs offer an opt-in public casual leaderboard: choose a unique nickname, then online starts can submit your best match score for each UTC day. Rewarded revives count. The board shows the top 100 and your rank for today and yesterday. Offline starts and expired uploads keep local progress. These scores receive plausibility checks, not full gameplay replay; see [leaderboard operations](docs/LEADERBOARDS.md). Public submissions default to disabled until deployment validation is complete. Daily remains separately invitation-gated.
+Regular Flow runs offer an opt-in public casual leaderboard: choose a unique nickname, then online starts can submit your best match score for each UTC day. Rewarded revives count. The board shows the top 100 and your rank for today and yesterday. Offline starts and expired uploads keep local progress. These scores receive plausibility checks, not full gameplay replay; see [leaderboard operations](docs/LEADERBOARDS.md). Public submissions default to disabled until deployment validation is complete. The current app offers one regular game and a daily-reset leaderboard. The separate Daily challenge is hidden; its backend remains invitation-gated for older clients.
 
 ## Develop
 
