@@ -135,7 +135,7 @@ namespace Roloc.Presentation
                 dash.shadow = dash.shaded = false; dash.cornerRadius = 1;
                 dash.transform.localRotation = Quaternion.Euler(0, 0, 40);
             }
-            PrimaryButton(menu, "PLAY", new Vector2(0, 176), new Vector2(286, 60), new Vector2(.5f, 0), BeginRun);
+            PrimaryButton(menu, "PLAY", new Vector2(0, 185), new Vector2(286, 60), new Vector2(.5f, 0), BeginRun);
             Button(menu, "How to play", new Vector2(112, 57), new Vector2(108, 44), new Vector2(.5f, 0), Color.clear, Ink, BeginTutorial);
             ColorMarks(menu);
         }

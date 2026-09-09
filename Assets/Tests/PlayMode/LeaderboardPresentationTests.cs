@@ -212,6 +212,10 @@ namespace Roloc.Tests
             Assert.That(menuText.Any(text => text.Contains("DAILY") || text.Contains("RUSH")), Is.False);
             var boardButton = menu.GetComponentsInChildren<Button>().Single(button => button.GetComponentInChildren<Text>().text == "Leaderboards");
             Assert.That(((RectTransform)boardButton.transform).rect.width, Is.GreaterThan(250));
+            var play = (RectTransform)menu.GetComponentsInChildren<Button>().Single(button => button.GetComponentInChildren<Text>().text == "PLAY").transform;
+            var board = (RectTransform)boardButton.transform;
+            Assert.That(play.anchoredPosition.y - play.rect.height / 2 - 9 - (board.anchoredPosition.y + board.rect.height / 2),
+                Is.GreaterThanOrEqualTo(8), "Leave room between the Play shadow and the leaderboard button.");
             Invoke("BeginRunNow"); Invoke("FinishRun");
             Assert.That(Get<Button>("leaderboardResultButton").gameObject.activeSelf, Is.True);
             Assert.That(Get<Button>("shareButton").gameObject.activeSelf, Is.False);
