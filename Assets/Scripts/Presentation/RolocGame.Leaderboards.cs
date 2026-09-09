@@ -26,9 +26,8 @@ namespace Roloc.Presentation
 
         void BuildLeaderboardUI()
         {
-            var button = Button(menu, "Leaderboards", new Vector2(0, 57), new Vector2(116, 44),
-                new Vector2(.5f, 0), Color.clear, Ink, OpenLeaderboards);
-            button.GetComponentInChildren<Text>().fontSize = 12;
+            Button(menu, "Leaderboards", new Vector2(0, 114), new Vector2(286, 48),
+                new Vector2(.5f, 0), Palette[1], Color.white, OpenLeaderboards);
             leaderboardResultButton = Button(resultFooter, "Leaderboards", Vector2.zero, new Vector2(170, 44),
                 new Vector2(.5f, .5f), Color.clear, Palette[1], OpenLeaderboards);
             RetryLeaderboards();

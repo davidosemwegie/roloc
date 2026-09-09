@@ -155,13 +155,14 @@ namespace Roloc.Tests
                 var safe = Get<RectTransform>("safe"); safe.GetComponent<SafeArea>().enabled = false;
                 safe.anchorMin = new Vector2(0, 34f / size.y); safe.anchorMax = new Vector2(1, 1 - 62f / size.y);
                 yield return null; Canvas.ForceUpdateCanvases();
-                foreach (string state in new[] { "empty", "scores", "join", "profile" })
+                foreach (string state in new[] { "empty", "scores", "join", "profile", "menu" })
                 {
-                    if (state == "join" || state == "profile")
+                    if (state == "menu") game.ShowMenu();
+                    else if (state == "join" || state == "profile")
                         Invoke("ShowLeaderboardProfile", state == "join" ? null : new LeaderboardProfile { nickname = "Player_1234567890", participating = false }, (Action)(() => { }), null);
                     else Invoke("ShowLeaderboardBoard");
                     var overlay = Get<RectTransform>("overlay");
-                    var overlaySafe = overlay.GetComponentsInChildren<SafeArea>().Last(); overlaySafe.enabled = false;
+                    var overlaySafe = overlay.GetComponentsInChildren<SafeArea>(true).Last(); overlaySafe.enabled = false;
                     var overlayRect = (RectTransform)overlaySafe.transform;
                     overlayRect.anchorMin = safe.anchorMin; overlayRect.anchorMax = safe.anchorMax;
                     yield return null; Canvas.ForceUpdateCanvases();
@@ -185,8 +186,9 @@ namespace Roloc.Tests
                             Assert.That(message.rectTransform.anchoredPosition.y, Is.EqualTo(-scroll.viewport.rect.height / 2).Within(1));
                         }
                     }
-                    else panel = (RectTransform)overlay.GetComponentInChildren<InputField>().transform.parent;
-                    Canvas.ForceUpdateCanvases(); AssertLayout(panel);
+                    else panel = state == "menu" ? Get<RectTransform>("menu") : (RectTransform)overlay.GetComponentInChildren<InputField>().transform.parent;
+                    Canvas.ForceUpdateCanvases();
+                    if (state != "menu") AssertLayout(panel);
                     Assert.That(panel.rect.height, Is.LessThanOrEqualTo(overlayRect.rect.height));
                     camera.Render();
                     var previous = RenderTexture.active; RenderTexture.active = target;
@@ -206,6 +208,10 @@ namespace Roloc.Tests
         {
             var menu = Get<RectTransform>("menu");
             Assert.That(menu.GetComponentsInChildren<Button>().Count(button => button.GetComponentInChildren<Text>().text == "Leaderboards"), Is.EqualTo(1));
+            var menuText = menu.GetComponentsInChildren<Text>().Select(label => label.text).ToArray();
+            Assert.That(menuText.Any(text => text.Contains("DAILY") || text.Contains("RUSH")), Is.False);
+            var boardButton = menu.GetComponentsInChildren<Button>().Single(button => button.GetComponentInChildren<Text>().text == "Leaderboards");
+            Assert.That(((RectTransform)boardButton.transform).rect.width, Is.GreaterThan(250));
             Invoke("BeginRunNow"); Invoke("FinishRun");
             Assert.That(Get<Button>("leaderboardResultButton").gameObject.activeSelf, Is.True);
             Assert.That(Get<Button>("shareButton").gameObject.activeSelf, Is.False);

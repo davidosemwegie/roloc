@@ -12,7 +12,7 @@ namespace Roloc.Presentation
         int startingBest, startingCombo, startingPerfect;
         long startingPoints;
         Text progressLabel, livesLabel, chainLabel, feedbackLabel;
-        Text resultProgress, dailyLabel, resultReason;
+        Text resultProgress, resultReason;
         SoftShape backgroundArt;
         readonly MatchSymbol[] symbols = new MatchSymbol[8];
         readonly SoftShape[] trail = new SoftShape[12];
@@ -54,8 +54,6 @@ namespace Roloc.Presentation
         void BuildExperienceUI()
         {
             progressLabel = Label(menu, "", 12, Muted, new Vector2(0, 234), new Vector2(350, 35), new Vector2(.5f, 0));
-            var dailyButton = Button(menu, "", new Vector2(0, 114), new Vector2(286, 48), new Vector2(.5f, 0), Palette[1], Color.white, ShowDaily);
-            dailyLabel = Label(dailyButton.transform, "DAILY · SAME BOARD FOR EVERYONE", 12, Color.white, Vector2.zero, new Vector2(280, 44));
             Button(menu, "Collection", new Vector2(-112, 57), new Vector2(108, 44), new Vector2(.5f, 0), Color.clear, Ink, ShowCollection);
             livesLabel = Label(game, "", 11, Ink, new Vector2(-92, -161), new Vector2(170, 22), new Vector2(.5f, 1));
             chainLabel = Label(game, "", 11, Ink, new Vector2(90, -161), new Vector2(172, 22), new Vector2(.5f, 1));
@@ -164,7 +162,6 @@ namespace Roloc.Presentation
             menuBest.text = Saves.GetRecord("Flow", "Lively").HighScore.ToString();
             if (progressLabel) progressLabel.text = NextProgress();
             ApplyAppearance();
-            LoadFinalStandingOnReturn();
         }
 
         void ShowResultExperience()
