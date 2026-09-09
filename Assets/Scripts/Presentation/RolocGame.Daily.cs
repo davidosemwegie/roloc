@@ -44,7 +44,7 @@ namespace Roloc.Presentation
                 if (!dailyBusy) return;
                 dailyBusy = false; challenge = daily.CachedChallenge;
                 if (challenge != null) DailyEntry(false);
-                else DailyUnavailable(daily.IsConfigured ? "Connect to the internet to load your first Daily." : "Daily is available in the invited test build.\nFlow and Rush are ready offline.");
+                else DailyUnavailable(daily.IsConfigured ? "Connect to the internet to load your first Daily." : "Daily is available in the invited test build.\nRegular play is ready offline.");
             }));
         }
 
@@ -59,11 +59,11 @@ namespace Roloc.Presentation
         {
             if (!challenge.Supported)
             {
-                DailyUnavailable("Update Ring Rush to play this Daily.\nYour regular modes are still ready."); return;
+                DailyUnavailable("Update Ring Rush to play this Daily.\nRegular play is still ready."); return;
             }
             bool ranked = online && challenge.rankedEnabled && challenge.serverNow < challenge.closesAt;
             string deadline = DateTimeOffset.FromUnixTimeMilliseconds(challenge.uploadDeadline).UtcDateTime.ToString("MMM d, HH:mm 'UTC'");
-            var panel = NewOverlay("Daily · " + challenge.date, challenge.variant.ToUpperInvariant() + " · Rush · Unlimited retries\nUpload by " + deadline, 460);
+            var panel = NewOverlay("Daily · " + challenge.date, challenge.variant.ToUpperInvariant() + " · 1 chance · Unlimited retries\nUpload by " + deadline, 460);
             Label(panel, ranked ? "Your best attempt counts.\nEveryone starts with the same sequence." : "Cached practice · no ranking\nYou still earn local progress.", 15, Ink,
                 new Vector2(0, 10), new Vector2(294, 65));
             Button(panel, ranked ? "PLAY RANKED" : "PLAY PRACTICE", new Vector2(0, -76), new Vector2(270, 54), new Vector2(.5f, .5f), Palette[1], Color.white, () => {

@@ -46,8 +46,11 @@ namespace Roloc.Tests
 
         [UnityTest] public IEnumerator OfflineRunStartsImmediatelyAndIncompleteRunDoesNotSubmit()
         {
+            game.Saves.Data.SelectedMode = "Rush";
             Invoke("BeginRunNow");
             Assert.That(game.Session.State, Is.EqualTo(RoundState.Playing));
+            Assert.That(game.Session.Mode, Is.EqualTo(GameMode.Flow));
+            Assert.That(game.Saves.Data.SelectedMode, Is.EqualTo("Flow"));
             Assert.That(Get<LeaderboardTicket>("regularTicket"), Is.Null);
             Assert.That(Get<string>("regularRankingCaption"), Does.Contain("Local score"));
             Set("regularTicket", new LeaderboardTicket { runId = "fixture" });
@@ -132,7 +135,7 @@ namespace Roloc.Tests
             input.ProcessEvent(new Event { type = EventType.KeyDown, character = 'é' });
             input.ForceLabelUpdate(); // ProcessEvent bypasses OnUpdateSelected's final label refresh.
             Assert.That(input.text, Is.EqualTo("abc"));
-            Assert.That(input.placeholder.gameObject.activeSelf, Is.False);
+            Assert.That(input.placeholder.enabled, Is.False);
             Assert.That(input.keyboardType, Is.EqualTo(TouchScreenKeyboardType.ASCIICapable));
             AssertLayout((RectTransform)input.transform.parent);
             Assert.That(input.transform.parent.GetComponentsInChildren<Button>().Any(button => button.name.StartsWith("Rank my runs")), Is.False);
@@ -207,6 +210,7 @@ namespace Roloc.Tests
             Assert.That(Get<Button>("leaderboardResultButton").gameObject.activeSelf, Is.True);
             Assert.That(Get<Button>("shareButton").gameObject.activeSelf, Is.False);
             Invoke("ShowLeaderboardBoard"); yield return null;
+            Assert.That(Get<RectTransform>("overlay").GetComponentsInChildren<Button>().Any(button => button.GetComponentInChildren<Text>().text == "Rush"), Is.False);
             int generation = Get<int>("leaderboardViewGeneration");
             var panel = (RectTransform)Get<RectTransform>("overlay").GetComponentInChildren<ScrollRect>().transform.parent;
             Invoke("ShowSettings", false);

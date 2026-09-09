@@ -29,7 +29,7 @@ namespace Roloc.Tests
             game.difficulty.FlowTransitionSeconds = 0;
             game.difficulty.RotationSeconds = 0;
             root.SetActive(true);
-            game.Saves.Data.SelectedMode = "Rush";
+            game.Saves.Data.SelectedMode = "Flow";
             yield return null;
         }
 
@@ -114,6 +114,14 @@ namespace Roloc.Tests
             Assert.That(game.Session.State, Is.EqualTo(RoundState.Transition));
             yield return new WaitForSecondsRealtime(.3f);
             Assert.That(game.Session.State, Is.EqualTo(RoundState.Playing));
+            for (int chances = 2; chances >= 1; chances--)
+            {
+                Drop(ActivePuck(), false);
+                Assert.That(game.Session.Chances, Is.EqualTo(chances));
+                Assert.That(game.Saves.Data.GamesPlayed, Is.Zero);
+                yield return new WaitForSecondsRealtime(.5f);
+                Assert.That(game.Session.State, Is.EqualTo(RoundState.Playing));
+            }
             Drop(ActivePuck(), false);
             Assert.That(game.Session.State, Is.EqualTo(RoundState.GameOver));
             Assert.That(game.Saves.Data.GamesPlayed, Is.EqualTo(1));

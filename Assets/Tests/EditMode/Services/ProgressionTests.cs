@@ -56,7 +56,7 @@ namespace Roloc.Services.Tests
             saves.Data.RushSuggestionShown = true;
             saves.Flush();
             var loaded = new SaveService(directory).Data;
-            Assert.That(loaded.SelectedMode, Is.EqualTo("Rush"));
+            Assert.That(loaded.SelectedMode, Is.EqualTo("Flow"));
             Assert.That(loaded.SelectedBoard, Is.EqualTo("Still"));
             Assert.That(loaded.HapticsEnabled, Is.False);
             Assert.That(loaded.SymbolsEnabled && loaded.ReduceEffects && loaded.EffectsPreferenceInitialized, Is.True);
@@ -237,21 +237,19 @@ namespace Roloc.Services.Tests
         }
 
         [Test]
-        public void RushSuggestionRequiresThreeFinishedFlowRunsAndARealBest()
+        public void PersistedRushSelectionNormalizesToFlowWithoutChangingHistoricalRecords()
         {
+            File.WriteAllText(Path.Combine(directory, SaveService.FileName),
+                "{\"SchemaVersion\":2,\"SelectedMode\":\"Rush\",\"SelectedBoard\":\"Lively\",\"Records\":[{\"Mode\":\"Rush\",\"Board\":\"Lively\",\"HighScore\":99,\"GamesPlayed\":7}]}");
             var saves = new SaveService(directory);
-            Assert.That(saves.ShouldSuggestRush(), Is.False);
-            for (int runIndex = 0; runIndex < 3; runIndex++)
-            {
-                var id = saves.StartRun("Flow", "Still", Day);
-                for (int match = 1; match <= 40; match++) saves.RecordMatch(id, match, "Flow", "Still", false, match, 0, Day);
-                Assert.That(saves.ShouldSuggestRush(), Is.False);
-                saves.FinalizeRun(new LocalRunSummary { RunId = id });
-            }
-            Assert.That(saves.ShouldSuggestRush(), Is.True);
-            saves.Data.RushSuggestionShown = true;
+            Assert.That(saves.Data.SelectedMode, Is.EqualTo("Flow"));
+            Assert.That(saves.GetRecord("Rush", "Lively").HighScore, Is.EqualTo(99));
+            Assert.That(saves.GetRecord("Rush", "Lively").GamesPlayed, Is.EqualTo(7));
+            Assert.That(saves.GetRecord("Flow", "Lively").HighScore, Is.Zero);
             saves.Save();
-            Assert.That(new SaveService(directory).ShouldSuggestRush(), Is.False);
+            var reloaded = new SaveService(directory);
+            Assert.That(reloaded.Data.SelectedMode, Is.EqualTo("Flow"));
+            Assert.That(reloaded.GetRecord("Rush", "Lively").HighScore, Is.EqualTo(99));
         }
 
         [Test]

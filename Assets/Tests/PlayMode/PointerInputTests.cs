@@ -180,12 +180,18 @@ namespace Roloc.Tests
         }
 
         [UnityTest]
-        public IEnumerator InactivePuckReleaseEndsRushButCanceledTouchDoesNot()
+        public IEnumerator InactivePuckReleaseEndsLastFlowChanceButCanceledTouchDoesNot()
         {
             game.Saves.Data.TutorialCompleted = true;
-            game.Saves.Data.SelectedMode = "Rush";
+            game.Saves.Data.SelectedMode = "Flow";
             game.BeginRun();
             yield return null;
+            for (int chance = 0; chance < 2; chance++)
+            {
+                Assert.That(game.Session.Drop(game.Session.ActiveColor, false), Is.EqualTo(MatchResult.ChanceLost));
+                game.Session.CompleteTransition();
+            }
+            Assert.That(game.Session.Chances, Is.EqualTo(1));
             Canvas.ForceUpdateCanvases();
             var puck = root.GetComponentsInChildren<PuckView>().First(p => p.ColorIndex != game.Session.ActiveColor);
             Vector2 start = RectTransformUtility.WorldToScreenPoint(null, puck.Rect.position);

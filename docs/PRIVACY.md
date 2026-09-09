@@ -65,9 +65,9 @@ Rewarded-ad completion grants an eligible revive. LevelPlay includes ad-quality 
 App Attest is a later public-competition gate. Update this inventory when attestation information is collected. Revisit the disclosure before changing ad networks or adding analytics, purchases, named accounts, or cloud progression.
 
 
-## Public Flow/Rush leaderboard addition
+## Public regular-run leaderboard addition
 
-The leaderboard release adds an optional public nickname and submission of regular-run summaries to Convex. After choosing a nickname and enabling participation, online Flow/Rush runs obtain a server-issued run ticket. Completed submissions include mode, match score, revive count, and elapsed time. The service also stores server timestamps, an anonymous guest identifier, and validation/moderation status. Regular gameplay traces are not uploaded for this casual leaderboard.
+The leaderboard release adds an optional public nickname and submission of regular-run summaries to Convex. After choosing a nickname and enabling participation, online regular runs obtain a server-issued run ticket. The current client offers Flow only; earlier clients may still submit Rush results. Completed submissions include mode, match score, revive count, and elapsed time. The service also stores server timestamps, an anonymous guest identifier, and validation/moderation status. Regular gameplay traces are not uploaded for this casual leaderboard.
 
 Nickname, best score, and rank are visible to other players. Authentication identifiers and credentials are not returned in board entries. Nicknames are unique ignoring case and belong to the installation's guest identity; there is no account-recovery promise. Players can edit their nickname or disable participation in Settings. Disabling participation prevents new ranked starts; previously issued runs can finish and existing scores remain until retention expiry or operator removal.
 

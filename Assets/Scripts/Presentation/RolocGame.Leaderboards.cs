@@ -15,7 +15,7 @@ namespace Roloc.Presentation
         bool regularStarting, regularSubmitted, leaderboardRetrying;
         double regularStartedAt;
         string regularRankingCaption = "Local score · join Leaderboards to compete";
-        string leaderboardMode = "Flow", leaderboardDay = "today";
+        string leaderboardDay = "today";
         bool leaderboardVisible;
 
         void InitializeLeaderboards()
@@ -43,11 +43,10 @@ namespace Roloc.Presentation
             if (!leaderboards.IsConfigured || !leaderboards.IsParticipating) { LaunchRegularRun(); return; }
             regularStarting = true;
             int generation = ++regularStartGeneration;
-            string mode = Saves.Data.SelectedMode == "Rush" ? "Rush" : "Flow";
-            var panel = NewOverlay("Ready to compete", "Connecting your " + mode + " run…", 300);
+            var panel = NewOverlay("Ready to compete", "Connecting your run…", 300);
             Button(panel, "Back", new Vector2(0, -92), new Vector2(270, 44), new Vector2(.5f, .5f), Color.clear, Ink,
                 () => { CancelRegularLeaderboardStart(); overlay.gameObject.SetActive(false); });
-            StartCoroutine(leaderboards.StartRun(mode.ToLowerInvariant(), ticket => {
+            StartCoroutine(leaderboards.StartRun("flow", ticket => {
                 if (generation != regularStartGeneration) return;
                 regularStarting = false; regularTicket = ticket;
                 regularRankingCaption = "GLOBAL DAILY · your best score counts";
@@ -107,7 +106,6 @@ namespace Roloc.Presentation
         void OpenLeaderboards()
         {
             CaptureTelemetry("leaderboard_viewed");
-            leaderboardMode = dailyRun ? "Flow" : Session.Mode == GameMode.Rush ? "Rush" : Saves.Data.SelectedMode == "Rush" ? "Rush" : "Flow";
             leaderboardDay = "today";
             ShowLeaderboardBoard();
             RetryLeaderboards();
@@ -118,7 +116,7 @@ namespace Roloc.Presentation
 
         void ShowLeaderboardBoard()
         {
-            float height = Mathf.Min(580, safe.rect.height - 24);
+            float height = Mathf.Min(524, safe.rect.height - 24);
             var panel = NewOverlayPanel(height);
             leaderboardVisible = true;
             int generation = leaderboardViewGeneration;
@@ -126,12 +124,10 @@ namespace Roloc.Presentation
             var title = Label(panel, "Leaderboards", 26, Ink, new Vector2(0, top - 37), new Vector2(298, 38));
             title.fontStyle = FontStyle.Bold;
             Label(panel, "Your best run each UTC day", 13, Muted, new Vector2(0, top - 72), new Vector2(298, 24));
-            LeaderboardTab(panel, "Flow", -77, top - 116, leaderboardMode == "Flow", () => { leaderboardMode = "Flow"; ShowLeaderboardBoard(); });
-            LeaderboardTab(panel, "Rush", 77, top - 116, leaderboardMode == "Rush", () => { leaderboardMode = "Rush"; ShowLeaderboardBoard(); });
-            LeaderboardTab(panel, "Today", -77, top - 172, leaderboardDay == "today", () => { leaderboardDay = "today"; ShowLeaderboardBoard(); });
-            LeaderboardTab(panel, "Yesterday", 77, top - 172, leaderboardDay == "yesterday", () => { leaderboardDay = "yesterday"; ShowLeaderboardBoard(); });
-            var status = Label(panel, "Loading scores…", 12, Muted, new Vector2(0, top - 226), new Vector2(298, 40));
-            float listTop = top - 258, listBottom = -top + 163;
+            LeaderboardTab(panel, "Today", -77, top - 116, leaderboardDay == "today", () => { leaderboardDay = "today"; ShowLeaderboardBoard(); });
+            LeaderboardTab(panel, "Yesterday", 77, top - 116, leaderboardDay == "yesterday", () => { leaderboardDay = "yesterday"; ShowLeaderboardBoard(); });
+            var status = Label(panel, "Loading scores…", 12, Muted, new Vector2(0, top - 170), new Vector2(298, 40));
+            float listTop = top - 202, listBottom = -top + 163;
             var viewport = Container(panel, "Leaderboard viewport");
             Place(viewport, new Vector2(.5f, .5f), new Vector2(0, (listTop + listBottom) / 2), new Vector2(302, Mathf.Max(44, listTop - listBottom)));
             viewport.gameObject.AddComponent<Image>().color = Color.clear;
@@ -149,7 +145,7 @@ namespace Roloc.Presentation
             profileButton.GetComponent<SoftShape>().shadow = false;
             Button(panel, "Back", new Vector2(0, -top + 30), new Vector2(142, 44), new Vector2(.5f, .5f), Color.clear, Ink,
                 () => { leaderboardVisible = false; leaderboardViewGeneration++; overlay.gameObject.SetActive(false); });
-            StartCoroutine(leaderboards.GetBoard(leaderboardMode.ToLowerInvariant(), leaderboardDay, value => {
+            StartCoroutine(leaderboards.GetBoard("flow", leaderboardDay, value => {
                 if (!LeaderboardViewCurrent(generation, panel)) return;
                 RenderLeaderboardBoard(value, content, status, personal);
             }, error => {
@@ -244,7 +240,7 @@ namespace Roloc.Presentation
             input.onValidateInput = (_, __, character) => IsNicknameCharacter(character) ? character : '\0';
             Label(panel, "3–16 letters, numbers or underscores.", 12, Muted, new Vector2(0, top - 208), new Vector2(292, 32));
             if (joining)
-                Label(panel, "Your nickname is public.\nYour best Flow and Rush run counts each day.", 14, Muted,
+                Label(panel, "Your nickname is public.\nYour best run counts each day.", 14, Muted,
                     new Vector2(0, top - 265), new Vector2(292, 64));
             else
             {
