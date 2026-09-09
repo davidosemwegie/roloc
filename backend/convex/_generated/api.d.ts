@@ -69,8 +69,8 @@ export declare const internal: FilterApi<
 >;
 
 export declare const components: {
-  leaderboardScores: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"leaderboardScores">;
   dailyScores: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"dailyScores">;
+  leaderboardScores: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"leaderboardScores">;
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
 };

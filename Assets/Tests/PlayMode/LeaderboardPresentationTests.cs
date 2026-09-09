@@ -73,7 +73,7 @@ namespace Roloc.Tests
                 foreach (Transform child in viewport.content) UnityEngine.Object.Destroy(child.gameObject);
                 yield return null;
                 var entries = Enumerable.Range(1, 100).Select(rank => new LeaderboardEntry {
-                    nickname = "Player_1234567890", rank = rank, score = 101 - rank, isMe = rank == 20
+                    nickname = "Player_123456789", rank = rank, score = 101 - rank, isMe = rank == 20
                 }).ToArray();
                 Invoke("RenderLeaderboardBoard", new LeaderboardBoard { enabled = true, date = "2026-09-08", participants = 120,
                     provisional = true, entries = entries, personal = new LeaderboardEntry { rank = 119, score = 1 } }, viewport.content, status, personal);
@@ -100,8 +100,8 @@ namespace Roloc.Tests
             Assert.That(Get<bool>("leaderboardVisible"), Is.False);
         }
 
-        [TestCase("abc", true)] [TestCase("Player_1234567890", true)]
-        [TestCase("ab", false)] [TestCase("Player_12345678901", false)]
+        [TestCase("abc", true)] [TestCase("Player_123456789", true)]
+        [TestCase("ab", false)] [TestCase("Player_1234567890", false)]
         [TestCase("a b", false)] [TestCase("éab", false)] [TestCase("<b>", false)]
         public void NicknameRulesMatchPublicContract(string nickname, bool valid)
         {
