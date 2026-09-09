@@ -1,3 +1,4 @@
+import { rankingOutcome } from "./telemetryModel";
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { internal } from "./_generated/api";
@@ -61,6 +62,7 @@ export const appendChunk = mutation({
     if (attempt.status !== "open") fail("ATTEMPT_CLOSED", "This attempt is no longer accepting events.");
     if (Date.now() >= attempt.uploadDeadline) {
       await ctx.db.patch(attempt._id, { status: "expired", reason: "The upload deadline passed.", finalizedAt: Date.now() });
+      await rankingOutcome(ctx, attempt.userId, attempt._id, "daily", "expired");
       return attemptDto((await ctx.db.get(attempt._id))!);
     }
     if (!(await rankedEnabled(ctx))) fail("RANKED_PAUSED", "Ranked submissions are temporarily paused.");
@@ -81,6 +83,7 @@ export const finalize = mutation({
     if (attempt.status !== "open") return attemptDto(attempt);
     if (Date.now() >= attempt.uploadDeadline) {
       await ctx.db.patch(attempt._id, { status: "expired", reason: "The upload deadline passed.", finalizedAt: Date.now() });
+      await rankingOutcome(ctx, attempt.userId, attempt._id, "daily", "expired");
       return attemptDto((await ctx.db.get(attempt._id))!);
     }
     if (!(await rankedEnabled(ctx))) fail("RANKED_PAUSED", "Ranked submissions are temporarily paused.");

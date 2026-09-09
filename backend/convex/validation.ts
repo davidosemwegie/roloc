@@ -1,3 +1,4 @@
+import { rankingOutcome } from "./telemetryModel";
 import { v } from "convex/values";
 import { WorkflowManager, vWorkflowId, vResultValidator } from "@convex-dev/workflow";
 import { internalQuery, internalMutation } from "./_generated/server";
@@ -66,6 +67,7 @@ export const recordResult = internalMutation({
     const finalizedAt = Date.now();
     if (error) {
       await ctx.db.patch(attempt._id, { status: "rejected", reason: error, finalizedAt, purgeAt: finalizedAt + 7 * DAY });
+      await rankingOutcome(ctx, attempt.userId, attempt._id, "daily", "rejected");
       return null;
     }
     const score = args.checkpoint.rules.score;
@@ -80,6 +82,7 @@ export const recordResult = internalMutation({
       await scores.replace(ctx, best, updated);
     }
     await ctx.db.patch(attempt._id, { status: "accepted", score, finalizedAt, purgeAt: finalizedAt + 7 * DAY });
+    await rankingOutcome(ctx, attempt.userId, attempt._id, "daily", "accepted", score);
     return null;
   },
 });
@@ -90,6 +93,7 @@ export const onComplete = internalMutation({
     if (args.result.kind !== "success" && attempt?.status === "validating") {
       // Expose no internal error details or user traces. Convex retains the workflow error for operators.
       await ctx.db.patch(attempt._id, { status: "rejected", reason: "Daily validation could not finish. Please try another run.", finalizedAt: Date.now(), purgeAt: Date.now() + 7 * DAY });
+      await rankingOutcome(ctx, attempt.userId, attempt._id, "daily", "rejected");
     }
     await ctx.scheduler.runAfter(7 * DAY, internal.operations.cleanupWorkflow, { workflowId: args.workflowId });
     return null;

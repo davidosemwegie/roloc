@@ -106,6 +106,7 @@ namespace Roloc.Presentation
 
         void OpenLeaderboards()
         {
+            CaptureTelemetry("leaderboard_viewed");
             leaderboardMode = dailyRun ? "Flow" : Session.Mode == GameMode.Rush ? "Rush" : Saves.Data.SelectedMode == "Rush" ? "Rush" : "Flow";
             leaderboardDay = "today";
             ShowLeaderboardBoard();

@@ -7,4 +7,7 @@ crons.interval("Finalize Daily standings", { minutes: 1 }, internal.operations.s
 crons.interval("Expire unsubmitted attempts", { hours: 1 }, internal.operations.expireOpen, {});
 crons.daily("Remove expired ranking data", { hourUTC: 2, minuteUTC: 15 }, internal.operations.purge, {});
 crons.daily("Remove expired public leaderboard data", { hourUTC: 2, minuteUTC: 30 }, internal.leaderboard.purge, {});
+crons.interval("Deliver usage analytics", { minutes: 1 }, internal.telemetryDelivery.deliver, {});
+crons.daily("Remove temporary analytics data", { hourUTC: 2, minuteUTC: 45 }, internal.telemetryDelivery.purge, {});
+crons.interval("Expire public leaderboard tickets", { hours: 1 }, internal.leaderboard.expireOpen, {});
 export default crons;

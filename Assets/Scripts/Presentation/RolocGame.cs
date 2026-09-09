@@ -231,6 +231,8 @@ namespace Roloc.Presentation
 
         public void BeginTutorial()
         {
+            EndTelemetryRun(true);
+            CaptureTelemetry("tutorial_started");
             CancelRegularLeaderboardStart();
             regularTicket = null;
             dailyRun = false;
@@ -245,6 +247,8 @@ namespace Roloc.Presentation
         public void ShowMenu()
         {
             if (fullScreenAdShowing || startingAfterAd) return;
+            EndTelemetryRun(true);
+            FlushTelemetry();
             CancelRegularLeaderboardStart();
             regularTicket = null;
             AbandonDailyIfNeeded();
@@ -323,6 +327,8 @@ namespace Roloc.Presentation
             {
                 audioPlayer.PlayMatch(); audioPlayer.StopMusic();
                 Saves.CompleteTutorial();
+                CaptureTelemetry("tutorial_completed");
+                FlushTelemetry();
                 ShowTutorialComplete();
             }
             else if (Session.State == RoundState.Tutorial)
@@ -342,6 +348,7 @@ namespace Roloc.Presentation
             InvalidateRevive();
             if (Session.State == RoundState.AwaitingRevive) RecordDailyEvent("abandon");
             Session.EndRun();
+            EndTelemetryRun(false);
             gameRecorded = true;
             interstitialPending = !Session.WasTutorial && Session.RevivesAvailable == 0;
             bool record = Session.Score > startingBest;
@@ -404,8 +411,10 @@ namespace Roloc.Presentation
             SoundToggle(panel, "Gentle haptics", 1, () => Saves.Data.HapticsEnabled, () => Saves.Data.HapticsEnabled = !Saves.Data.HapticsEnabled);
             SoundToggle(panel, "Matching symbols", -47, () => Saves.Data.SymbolsEnabled, () => Saves.Data.SymbolsEnabled = !Saves.Data.SymbolsEnabled);
             SoundToggle(panel, "Reduce effects", -95, () => Saves.Data.ReduceEffects, () => Saves.Data.ReduceEffects = !Saves.Data.ReduceEffects);
-            Button(panel, "Leaderboard profile", new Vector2(0, -150), new Vector2(270, 44), new Vector2(.5f, .5f), Color.clear, Ink,
+            Button(panel, "Leaderboard profile", new Vector2(-75, -150), new Vector2(146, 44), new Vector2(.5f, .5f), Color.clear, Ink,
                 () => OpenLeaderboardProfile(() => ShowSettings(fromPause)));
+            Button(panel, "Usage analytics", new Vector2(75, -150), new Vector2(146, 44), new Vector2(.5f, .5f), Color.clear, Ink,
+                () => ShowAnalyticsSettings(() => ShowSettings(fromPause)));
             if (HasPrivacyPolicy())
                 Button(panel, "Privacy policy", new Vector2(-72, -208), new Vector2(140, 44), new Vector2(.5f, .5f), Color.clear, Ink,
                     () => Application.OpenURL(adsConfiguration.PrivacyPolicyUrl));
@@ -631,8 +640,8 @@ namespace Roloc.Presentation
         }
 
         void CancelAllTouches() { foreach (var puck in pucks) if (puck) puck.CancelDrag(); }
-        void OnApplicationPause(bool paused) { applicationPaused = paused; if (!paused) RetryLeaderboards(); if (paused && Session != null) { PauseRun(); Saves.Save(); } }
-        void OnApplicationFocus(bool focused) { applicationFocused = focused; if (!focused && Session != null) PauseRun(); }
+        void OnApplicationPause(bool paused) { applicationPaused = paused; TelemetryForegroundChanged(); if (!paused) RetryLeaderboards(); if (paused && Session != null) { PauseRun(); Saves.Save(); } }
+        void OnApplicationFocus(bool focused) { applicationFocused = focused; TelemetryForegroundChanged(); if (!focused && Session != null) PauseRun(); }
         void OnDestroy() { if (leaderboards != null) leaderboards.ResultChanged -= LeaderboardResultChanged; InvalidateRevive(); ads?.Dispose(); Saves?.Save(); }
 
         static RectTransform Container(Transform parent, string name)

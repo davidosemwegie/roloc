@@ -8,7 +8,7 @@ The compiled invitation code admits guests from any installed copy. `publicCompe
 
 The separate [public casual Flow/Rush leaderboards](LEADERBOARDS.md) have their own submission switch and accept public guests. Public registration does not grant Daily access; only a valid invitation attaches the current closed-test epoch. Keep Daily paused independently when rolling out the casual boards.
 
-Unity is the repository root; the isolated Convex package is `backend/`. The Convex project is **ring-rush**. Development, automated tests, and closed production testing use separate data. Firebase, Mixpanel, and analytics are not part of this runtime.
+Unity is the repository root; the isolated Convex package is `backend/`. The Convex project is **ring-rush**. Development, automated tests, and closed production testing use separate data. Firebase and Mixpanel are not part of this runtime. Optional PostHog analytics and persistent run history use the same Convex guest identity; see [ANALYTICS.md](ANALYTICS.md).
 
 ## Deployment and configuration
 

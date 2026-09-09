@@ -32,6 +32,7 @@ namespace Roloc.Presentation
             }
             InitializeDaily();
             InitializeLeaderboards();
+            InitializeTelemetry();
         }
 
         void CreateRegularSession()
@@ -93,6 +94,7 @@ namespace Roloc.Presentation
             startingCombo = record.LongestCombo; startingPerfect = record.LongestPerfectStreak;
             startingPoints = Saves.Data.ProgressPoints;
             localRunId = Saves.StartRun(Session.Mode.ToString(), Session.BoardStyle.ToString());
+            StartTelemetryRun();
             if (Session.Mode == GameMode.Flow && !Saves.Data.ChancesHintShown)
             {
                 Hint("Three chances. A mistake retries this color.", 5);

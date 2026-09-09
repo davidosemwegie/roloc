@@ -8,6 +8,10 @@
  * @module
  */
 
+import type * as telemetry from "../telemetry.js";
+import type * as telemetryModel from "../telemetryModel.js";
+import type * as telemetryValidators from "../telemetryValidators.js";
+import type * as telemetryDelivery from "../telemetryDelivery.js";
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
 import type * as daily from "../daily.js";
@@ -28,6 +32,10 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  telemetry: typeof telemetry;
+  telemetryModel: typeof telemetryModel;
+  telemetryValidators: typeof telemetryValidators;
+  telemetryDelivery: typeof telemetryDelivery;
   auth: typeof auth;
   crons: typeof crons;
   daily: typeof daily;

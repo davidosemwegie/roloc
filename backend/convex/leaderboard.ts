@@ -1,3 +1,4 @@
+import { enqueue, rankingOutcome, uuid } from "./telemetryModel";
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
@@ -18,8 +19,11 @@ export const setProfile = mutation({ args: { nickname: v.string(), participating
   const nicknameKey = args.nickname.toLowerCase();
   const reserved = await ctx.db.query("leaderboardProfiles").withIndex("by_nicknameKey", q => q.eq("nicknameKey", nicknameKey)).unique();
   if (reserved && reserved.userId !== userId) fail("NICKNAME_TAKEN", "That nickname is already taken.");
-  const value = { userId, ...args, nicknameKey, updatedAt: Date.now() };
+  const alreadyJoined = row?.hasJoinedLeaderboard ?? row?.participating ?? false;
+  const joined = args.participating && !alreadyJoined;
+  const value = { userId, ...args, nicknameKey, hasJoinedLeaderboard: alreadyJoined || args.participating, updatedAt: Date.now() };
   if (row) await ctx.db.replace(row._id, value); else await ctx.db.insert("leaderboardProfiles", value);
+  await enqueue(ctx, userId, joined ? `leaderboard-joined:${userId}` : `leaderboard-profile:${uuid()}`, joined ? "leaderboard_joined" : "leaderboard_profile_updated", Date.now(), { participating: args.participating, source: "server_validation" });
   return args;
 } });
 export const start = mutation({ args: { mode, requestId: v.string(), clientRulesRevision: v.number() }, returns: ticketValue, handler: async (ctx, args) => {
@@ -46,6 +50,7 @@ export const submit = mutation({ args: { runId: v.id("leaderboardRuns"), score: 
   }
   if (Date.now() >= run.uploadDeadline) {
     await ctx.db.patch(run._id, { status: "expired", reason: "The upload deadline passed." });
+    await rankingOutcome(ctx, run.userId, run._id, run.mode, "expired");
     return ticket((await ctx.db.get(run._id))!);
   }
   if (!await enabled(ctx)) fail("PAUSED", "Leaderboard submissions are paused. Your result will retry later.");
@@ -63,6 +68,7 @@ export const submit = mutation({ args: { runId: v.id("leaderboardRuns"), score: 
       else { const id = await ctx.db.insert("leaderboardBests", value); await ctx.db.patch(id, { tieKey: id }); await publicScores.insert(ctx, (await ctx.db.get(id))!); }
     }
   }
+  await rankingOutcome(ctx, run.userId, run._id, run.mode, reason ? "rejected" : "accepted", args.score);
   return ticket((await ctx.db.get(run._id))!);
 } });
 export const board = query({ args: { mode, day: v.union(v.literal("today"), v.literal("yesterday")) }, returns: v.object({ date: v.string(), mode, participants: v.number(), provisional: v.boolean(), enabled: v.boolean(), entries: v.array(entryValue), personal: v.union(entryValue, v.null()) }), handler: async (ctx, args) => {
@@ -105,4 +111,14 @@ export const purge = internalMutation({ args: {}, returns: v.number(), handler: 
   for (const best of bests) { if (!best.excluded) await publicScores.delete(ctx, best); await ctx.db.delete(best._id); }
   if (runs.length === 100 || bests.length === 100) await ctx.scheduler.runAfter(0, internal.leaderboard.purge, {});
   return runs.length + bests.length;
+} });
+
+export const expireOpen = internalMutation({ args: {}, returns: v.number(), handler: async ctx => {
+  const rows = await ctx.db.query("leaderboardRuns").withIndex("by_status_and_uploadDeadline", q => q.eq("status", "open").lte("uploadDeadline", Date.now())).take(100);
+  for (const row of rows) {
+    await ctx.db.patch(row._id, { status: "expired", reason: "The upload deadline passed." });
+    await rankingOutcome(ctx, row.userId, row._id, row.mode, "expired");
+  }
+  if (rows.length === 100) await ctx.scheduler.runAfter(0, internal.leaderboard.expireOpen, {});
+  return rows.length;
 } });

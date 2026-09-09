@@ -99,6 +99,7 @@ namespace Roloc.Presentation
                 return;
             }
             audioPlayer.PauseMusic();
+            CaptureRunTelemetry("revive_offered");
             ShowReviveOffer();
         }
 
@@ -121,6 +122,7 @@ namespace Roloc.Presentation
         {
             if (fullScreenAdShowing || Session.State != RoundState.AwaitingRevive) return;
             if (ads == null || !ads.IsRewardedReady) { FinishRun(); return; }
+            CaptureRunTelemetry("revive_requested");
             var playback = new RewardPlayback { Generation = ++reviveGeneration, Session = Session };
             rewardPlayback = playback;
             fullScreenAdShowing = true;
@@ -151,6 +153,8 @@ namespace Roloc.Presentation
             // The event starts a fixed 3-second transition, matching the server replay.
             RecordDailyEvent("revive");
             if (!dailyRun) regularRevives++;
+            telemetryRevives++;
+            CaptureRunTelemetry("revive_completed");
             InvalidateRevive();
             reviveCountingDown = true;
             overlay.gameObject.SetActive(false);

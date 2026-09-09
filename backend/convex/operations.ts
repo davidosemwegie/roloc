@@ -1,3 +1,4 @@
+import { rankingOutcome } from "./telemetryModel";
 import { v } from "convex/values";
 import { internalAction, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
@@ -70,7 +71,10 @@ export const expireOpen = internalMutation({
   args: {}, returns: v.number(),
   handler: async (ctx) => {
     const rows = await ctx.db.query("attempts").withIndex("by_status_and_uploadDeadline", q => q.eq("status", "open").lte("uploadDeadline", Date.now())).take(100);
-    for (const row of rows) await ctx.db.patch(row._id, { status: "expired", reason: "The upload deadline passed.", finalizedAt: Date.now() });
+    for (const row of rows) {
+      await ctx.db.patch(row._id, { status: "expired", reason: "The upload deadline passed.", finalizedAt: Date.now() });
+      await rankingOutcome(ctx, row.userId, row._id, "daily", "expired");
+    }
     if (rows.length === 100) await ctx.scheduler.runAfter(0, internal.operations.expireOpen, {});
     return rows.length;
   },
