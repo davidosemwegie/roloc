@@ -15,7 +15,7 @@ namespace Roloc.Presentation
         bool regularStarting, regularSubmitted, leaderboardRetrying;
         double regularStartedAt;
         string regularRankingCaption = "Local score · join Leaderboards to compete";
-        string leaderboardMode = "Flow", leaderboardDay = "today";
+        string leaderboardDay = "today";
         bool leaderboardVisible;
 
         void InitializeLeaderboards()
@@ -43,11 +43,10 @@ namespace Roloc.Presentation
             if (!leaderboards.IsConfigured || !leaderboards.IsParticipating) { LaunchRegularRun(); return; }
             regularStarting = true;
             int generation = ++regularStartGeneration;
-            string mode = Saves.Data.SelectedMode == "Rush" ? "Rush" : "Flow";
-            var panel = NewOverlay("Ready to compete", "Connecting your " + mode + " run…", 300);
+            var panel = NewOverlay("Ready to compete", "Connecting your run…", 300);
             Button(panel, "Back", new Vector2(0, -92), new Vector2(270, 44), new Vector2(.5f, .5f), Color.clear, Ink,
                 () => { CancelRegularLeaderboardStart(); overlay.gameObject.SetActive(false); });
-            StartCoroutine(leaderboards.StartRun(mode.ToLowerInvariant(), ticket => {
+            StartCoroutine(leaderboards.StartRun("flow", ticket => {
                 if (generation != regularStartGeneration) return;
                 regularStarting = false; regularTicket = ticket;
                 regularRankingCaption = "GLOBAL DAILY · your best score counts";
@@ -107,7 +106,6 @@ namespace Roloc.Presentation
         void OpenLeaderboards()
         {
             CaptureTelemetry("leaderboard_viewed");
-            leaderboardMode = dailyRun ? "Flow" : Session.Mode == GameMode.Rush ? "Rush" : Saves.Data.SelectedMode == "Rush" ? "Rush" : "Flow";
             leaderboardDay = "today";
             ShowLeaderboardBoard();
             RetryLeaderboards();
@@ -118,17 +116,18 @@ namespace Roloc.Presentation
 
         void ShowLeaderboardBoard()
         {
-            float height = Mathf.Min(620, safe.rect.height - 16);
-            var panel = NewOverlay("Leaderboards", "Global daily highscores · best run per player", height);
+            float height = Mathf.Min(524, safe.rect.height - 24);
+            var panel = NewOverlayPanel(height);
             leaderboardVisible = true;
             int generation = leaderboardViewGeneration;
             float top = height / 2;
-            LeaderboardTab(panel, "Flow", -75, top - 158, leaderboardMode == "Flow", () => { leaderboardMode = "Flow"; ShowLeaderboardBoard(); });
-            LeaderboardTab(panel, "Rush", 75, top - 158, leaderboardMode == "Rush", () => { leaderboardMode = "Rush"; ShowLeaderboardBoard(); });
-            LeaderboardTab(panel, "Today", -75, top - 205, leaderboardDay == "today", () => { leaderboardDay = "today"; ShowLeaderboardBoard(); });
-            LeaderboardTab(panel, "Yesterday", 75, top - 205, leaderboardDay == "yesterday", () => { leaderboardDay = "yesterday"; ShowLeaderboardBoard(); });
-            var status = Label(panel, "Loading scores…", 12, Muted, new Vector2(0, top - 247), new Vector2(298, 38));
-            float listTop = top - 270, listBottom = -top + 147;
+            var title = Label(panel, "Leaderboards", 26, Ink, new Vector2(0, top - 37), new Vector2(298, 38));
+            title.fontStyle = FontStyle.Bold;
+            Label(panel, "Your best run each UTC day", 13, Muted, new Vector2(0, top - 72), new Vector2(298, 24));
+            LeaderboardTab(panel, "Today", -77, top - 116, leaderboardDay == "today", () => { leaderboardDay = "today"; ShowLeaderboardBoard(); });
+            LeaderboardTab(panel, "Yesterday", 77, top - 116, leaderboardDay == "yesterday", () => { leaderboardDay = "yesterday"; ShowLeaderboardBoard(); });
+            var status = Label(panel, "Loading scores…", 12, Muted, new Vector2(0, top - 170), new Vector2(298, 40));
+            float listTop = top - 202, listBottom = -top + 163;
             var viewport = Container(panel, "Leaderboard viewport");
             Place(viewport, new Vector2(.5f, .5f), new Vector2(0, (listTop + listBottom) / 2), new Vector2(302, Mathf.Max(44, listTop - listBottom)));
             viewport.gameObject.AddComponent<Image>().color = Color.clear;
@@ -138,12 +137,15 @@ namespace Roloc.Presentation
             var scroll = viewport.gameObject.AddComponent<ScrollRect>();
             scroll.viewport = viewport; scroll.content = content; scroll.horizontal = false;
             scroll.movementType = ScrollRect.MovementType.Clamped;
-            var personal = Label(panel, "Your best: no ranked score yet", 12, Ink, new Vector2(0, -top + 122), new Vector2(300, 38));
-            Button(panel, "Nickname & participation", new Vector2(0, -top + 77), new Vector2(294, 44), new Vector2(.5f, .5f), Color.clear, Ink,
+            var personal = Label(panel, "Your best: no ranked score yet", 12, Ink, new Vector2(0, -top + 132), new Vector2(298, 38));
+            bool hasNickname = !string.IsNullOrEmpty(leaderboards.CachedProfile?.nickname);
+            var profileButton = Button(panel, hasNickname ? "Your profile" : "Join leaderboards", new Vector2(0, -top + 82), new Vector2(294, 44),
+                new Vector2(.5f, .5f), hasNickname ? Color.white : Palette[1], hasNickname ? Ink : Color.white,
                 () => OpenLeaderboardProfile(ShowLeaderboardBoard));
-            Button(panel, "Back", new Vector2(0, -top + 29), new Vector2(142, 44), new Vector2(.5f, .5f), Color.clear, Ink,
+            profileButton.GetComponent<SoftShape>().shadow = false;
+            Button(panel, "Back", new Vector2(0, -top + 30), new Vector2(142, 44), new Vector2(.5f, .5f), Color.clear, Ink,
                 () => { leaderboardVisible = false; leaderboardViewGeneration++; overlay.gameObject.SetActive(false); });
-            StartCoroutine(leaderboards.GetBoard(leaderboardMode.ToLowerInvariant(), leaderboardDay, value => {
+            StartCoroutine(leaderboards.GetBoard("flow", leaderboardDay, value => {
                 if (!LeaderboardViewCurrent(generation, panel)) return;
                 RenderLeaderboardBoard(value, content, status, personal);
             }, error => {
@@ -156,18 +158,26 @@ namespace Roloc.Presentation
 
         void LeaderboardTab(RectTransform panel, string caption, float x, float y, bool selected, Action action)
         {
-            Button(panel, caption, new Vector2(x, y), new Vector2(142, 44), new Vector2(.5f, .5f),
+            var button = Button(panel, caption, new Vector2(x, y), new Vector2(142, 44), new Vector2(.5f, .5f),
                 selected ? Palette[1] : Color.white, selected ? Color.white : Ink, action);
+            button.GetComponent<SoftShape>().shadow = false;
+            button.GetComponentInChildren<Text>().fontSize = 15;
         }
 
         void RenderLeaderboardBoard(LeaderboardBoard value, RectTransform content, Text status, Text personal)
         {
             if (value == null) { status.text = "Leaderboard unavailable. Try again shortly."; return; }
-            status.text = value.date + " UTC · " + value.participants + " players · " + (value.provisional ? "Provisional" : "Final")
-                + (value.enabled ? "" : "\nSubmissions paused");
+            status.text = value.date + " UTC · " + value.participants + " players\n"
+                + (value.provisional ? "Provisional" : "Final") + (value.enabled ? " results" : " · submissions paused");
             var entries = value.entries ?? new LeaderboardEntry[0];
             if (entries.Length == 0)
-                Label(content, "No scores yet. Be the first!", 14, Muted, new Vector2(151, -24), new Vector2(296, 44), new Vector2(0, 1));
+            {
+                float emptyHeight = ((RectTransform)content.parent).rect.height;
+                content.sizeDelta = new Vector2(302, emptyHeight);
+                content.anchoredPosition = Vector2.zero;
+                Label(content, value.enabled ? "No scores yet\nPlay a ranked run to join the board." : "Rankings are paused\nYou can still choose your nickname.",
+                    14, Muted, new Vector2(151, -emptyHeight / 2), new Vector2(296, 60), new Vector2(0, 1));
+            }
             for (int i = 0; i < entries.Length; i++)
             {
                 var entry = entries[i];
@@ -180,7 +190,7 @@ namespace Roloc.Presentation
                 name.supportRichText = false; name.alignment = TextAnchor.MiddleLeft;
                 Label(row.transform, entry.score.ToString(), 17, Palette[1], new Vector2(111, 0), new Vector2(65, 38));
             }
-            content.sizeDelta = new Vector2(302, Mathf.Max(48, entries.Length * 48));
+            if (entries.Length > 0) content.sizeDelta = new Vector2(302, entries.Length * 48);
             content.anchoredPosition = Vector2.zero;
             personal.text = value.personal == null ? "Your best: no ranked score yet" : "Your best: #" + value.personal.rank + " · " + value.personal.score + " matches";
         }
@@ -201,36 +211,66 @@ namespace Roloc.Presentation
 
         void ShowLeaderboardProfile(LeaderboardProfile profile, Action back, string error = null)
         {
-            var panel = NewOverlay("Your leaderboard", "A unique nickname for public Flow and Rush scores.\n3–16 letters, numbers or underscores.", 500);
+            bool joining = string.IsNullOrEmpty(profile?.nickname);
+            const float height = 500;
+            var panel = NewOverlayPanel(height);
+            float top = height / 2;
+            var title = Label(panel, joining ? "Join leaderboards" : "Your nickname", 25, Ink, new Vector2(0, top - 37), new Vector2(298, 38));
+            title.fontStyle = FontStyle.Bold;
+            Label(panel, "Choose a name other players will see.", 14, Muted, new Vector2(0, top - 79), new Vector2(298, 40));
             int generation = leaderboardViewGeneration;
-            bool participating = profile == null || profile.participating;
-            var fieldBox = Box(panel, "Nickname input", Color.white, new Vector2(0, 62), new Vector2(292, 48));
+            bool participating = joining || profile.participating;
+            var fieldLabel = Label(panel, "Nickname", 14, Ink, new Vector2(0, top - 120), new Vector2(292, 24));
+            fieldLabel.alignment = TextAnchor.MiddleLeft;
+            var fieldBox = Box(panel, "Nickname input", Color.white, new Vector2(0, top - 162), new Vector2(292, 48));
+            fieldBox.raycastTarget = true; fieldBox.shadow = false;
             var input = fieldBox.gameObject.AddComponent<InputField>();
             var text = Label(fieldBox.transform, profile?.nickname ?? "", 18, Ink, Vector2.zero, new Vector2(270, 44));
             text.supportRichText = false; text.alignment = TextAnchor.MiddleLeft;
             input.textComponent = text; input.targetGraphic = fieldBox; input.characterLimit = 16;
+            var placeholder = Label(fieldBox.transform, "Enter nickname", 16, Muted, Vector2.zero, new Vector2(270, 44));
+            placeholder.alignment = TextAnchor.MiddleLeft;
+            input.placeholder = placeholder;
+            input.keyboardType = TouchScreenKeyboardType.ASCIICapable;
+            input.customCaretColor = true; input.caretColor = Ink;
+            var inputColors = input.colors;
+            inputColors.selectedColor = new Color32(218, 232, 255, 255);
+            input.colors = inputColors;
             input.lineType = InputField.LineType.SingleLine; input.text = profile?.nickname ?? "";
             input.onValidateInput = (_, __, character) => IsNicknameCharacter(character) ? character : '\0';
-            var note = Label(panel, error ?? "Joining publishes your best eligible score each day.\nTurning off stops new ranked starts.", 12, Muted, new Vector2(0, -59), new Vector2(296, 72));
-            Button toggle = null;
-            toggle = Button(panel, participating ? "PARTICIPATION ON" : "PARTICIPATION OFF", new Vector2(0, 0), new Vector2(292, 44),
-                new Vector2(.5f, .5f), Color.white, Ink, () => {
-                    participating = !participating;
-                    toggle.GetComponentInChildren<Text>().text = participating ? "PARTICIPATION ON" : "PARTICIPATION OFF";
-                });
+            Label(panel, "3–16 letters, numbers or underscores.", 12, Muted, new Vector2(0, top - 208), new Vector2(292, 32));
+            if (joining)
+                Label(panel, "Your nickname is public.\nYour best run counts each day.", 14, Muted,
+                    new Vector2(0, top - 265), new Vector2(292, 64));
+            else
+            {
+                Button toggle = null;
+                toggle = Button(panel, participating ? "Rank my runs: ON" : "Rank my runs: OFF", new Vector2(0, top - 264), new Vector2(292, 44),
+                    new Vector2(.5f, .5f), Color.white, Ink, () => {
+                        participating = !participating;
+                        toggle.GetComponentInChildren<Text>().text = participating ? "Rank my runs: ON" : "Rank my runs: OFF";
+                    });
+                toggle.GetComponent<SoftShape>().shadow = false;
+            }
+            var note = Label(panel, error ?? "", 13, Muted, new Vector2(0, top - 332), new Vector2(296, 48));
             Button save = null;
-            save = Button(panel, profile == null ? "Join" : "Save", new Vector2(0, -145), new Vector2(270, 49), new Vector2(.5f, .5f), Palette[1], Color.white, () => {
+            save = Button(panel, joining ? "Join leaderboards" : "Save changes", new Vector2(0, -top + 90), new Vector2(292, 48), new Vector2(.5f, .5f), Palette[1], Color.white, () => {
                 string nickname = input.text.Trim();
                 if (!ValidLeaderboardNickname(nickname)) { note.text = "Use 3–16 letters, numbers or underscores."; return; }
                 save.interactable = false;
+                save.GetComponentInChildren<Text>().text = "Saving…";
+                input.DeactivateInputField();
                 StartCoroutine(leaderboards.SetProfile(nickname, participating, updated => {
                     if (LeaderboardViewCurrent(generation, panel)) back();
                 }, message => {
                     if (!LeaderboardViewCurrent(generation, panel)) return;
                     note.text = message; save.interactable = true;
+                    save.GetComponentInChildren<Text>().text = joining ? "Join leaderboards" : "Save changes";
                 }));
             });
-            Button(panel, "Back", new Vector2(0, -207), new Vector2(270, 44), new Vector2(.5f, .5f), Color.clear, Ink, back);
+            save.GetComponent<SoftShape>().shadow = false;
+            Button(panel, joining ? "Cancel" : "Back", new Vector2(0, -top + 30), new Vector2(270, 44), new Vector2(.5f, .5f), Color.clear, Ink,
+                () => { input.DeactivateInputField(); back(); });
         }
 
         static bool IsNicknameCharacter(char value) => value >= 'a' && value <= 'z' || value >= 'A' && value <= 'Z' || value >= '0' && value <= '9' || value == '_';

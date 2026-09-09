@@ -60,3 +60,7 @@ Keep public leaderboard submissions disabled until integrated device validation.
 `telemetryDelivery:deletePlayerHistory {userId}` is an internal, bounded deletion operation that disables analytics and removes run history, pending payloads, and receipts. It does not delete auth sessions, public/Daily profiles or scores, aggregates, or events already delivered to PostHog. Complete requests need those separate actions. Confirm PostHog/provider retention and publish updated privacy disclosures before distribution.
 
 Backend CI covers ownership, retry transitions, identity, consent, outbox leases, retention, and ranking linkage. Unity tests cover offline retry/persistence, opt-out, run lifecycle, revive/tutorial events and navigation. On an iOS device verify Keychain identity after restart, keyboard nickname entry, offline recovery, analytics toggle persistence, background/killed-run handling, safe areas and rewarded completion. CI cannot establish these native behaviors.
+
+## Flow-only regular play
+
+The current client no longer offers Rush. New regular runs and leaderboard views use Flow; Daily remains separate. Historical Rush events, run summaries and queued results keep their original mode. Mode breakdowns may therefore still include Rush from older builds.

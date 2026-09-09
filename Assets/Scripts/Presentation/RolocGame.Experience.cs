@@ -11,9 +11,8 @@ namespace Roloc.Presentation
         string localRunId;
         int startingBest, startingCombo, startingPerfect;
         long startingPoints;
-        Text modeChoice, progressLabel, livesLabel, chainLabel, feedbackLabel;
+        Text progressLabel, livesLabel, chainLabel, feedbackLabel;
         Text resultProgress, dailyLabel, resultReason;
-        Button modeButton;
         SoftShape backgroundArt;
         readonly MatchSymbol[] symbols = new MatchSymbol[8];
         readonly SoftShape[] trail = new SoftShape[12];
@@ -37,16 +36,16 @@ namespace Roloc.Presentation
 
         void CreateRegularSession()
         {
-            var mode = Saves.Data.SelectedMode == "Rush" ? GameMode.Rush : GameMode.Flow;
-            // Regular runs now use Lively. Keep historical Still records in the save.
-            if (Saves.Data.SelectedBoard != "Lively")
+            // Regular play has one mode. Keep older mode/board records in the save.
+            if (Saves.Data.SelectedMode != "Flow" || Saves.Data.SelectedBoard != "Lively")
             {
+                Saves.Data.SelectedMode = "Flow";
                 Saves.Data.SelectedBoard = "Lively";
                 Saves.Save();
             }
             var style = BoardStyle.Lively;
             var random = RandomSeedOverride.HasValue ? new System.Random(RandomSeedOverride.Value) : new System.Random();
-            Session = new GameSession(mode, style, random, mode == GameMode.Flow ? difficulty.GetFlowSeconds : difficulty.GetSeconds,
+            Session = new GameSession(GameMode.Flow, style, random, difficulty.GetFlowSeconds,
                 difficulty.IsShuffleScore, difficulty.IsPuckShuffleScore, difficulty.RandomFlowEnabled, difficulty.Variations);
         }
 
@@ -54,11 +53,6 @@ namespace Roloc.Presentation
 
         void BuildExperienceUI()
         {
-            modeButton = Button(menu, "", new Vector2(0, 282), new Vector2(286, 44), new Vector2(.5f, 0), Color.white, Ink, () => {
-                Saves.Data.SelectedMode = Saves.Data.SelectedMode == "Flow" ? "Rush" : "Flow";
-                selectedDaily = false; Saves.Save(); RefreshMenuExperience();
-            });
-            modeChoice = Label(modeButton.transform, "FLOW · 3 CHANCES", 12, Ink, Vector2.zero, new Vector2(280, 42));
             progressLabel = Label(menu, "", 12, Muted, new Vector2(0, 234), new Vector2(350, 35), new Vector2(.5f, 0));
             var dailyButton = Button(menu, "", new Vector2(0, 114), new Vector2(286, 48), new Vector2(.5f, 0), Palette[1], Color.white, ShowDaily);
             dailyLabel = Label(dailyButton.transform, "DAILY · SAME BOARD FOR EVERYONE", 12, Color.white, Vector2.zero, new Vector2(280, 44));
@@ -145,7 +139,7 @@ namespace Roloc.Presentation
                 feedbackLeft -= Time.unscaledDeltaTime;
                 if (feedbackLeft <= 0) feedbackLabel.text = "";
             }
-            if (livesLabel) livesLabel.text = Session.WasTutorial ? "" : Session.Mode == GameMode.Flow ? Session.Chances + " / 3 CHANCES" : Session.IsDaily ? "DAILY · RUSH" : "RUSH · 1 CHANCE";
+            if (livesLabel) livesLabel.text = Session.WasTutorial ? "" : Session.Mode == GameMode.Flow ? Session.Chances + " / 3 CHANCES" : "DAILY · 1 CHANCE";
             if (chainLabel) chainLabel.text = Session.WasTutorial ? "" : "COMBO " + Session.Combo + "  ·  PERFECT " + Session.PerfectStreak;
             for (int i = 0; i < trail.Length; i++)
             {
@@ -167,19 +161,9 @@ namespace Roloc.Presentation
         void RefreshMenuExperience()
         {
             selectedDaily = false;
-            menuBest.text = Saves.GetRecord(Saves.Data.SelectedMode, Saves.Data.SelectedBoard).HighScore.ToString();
-            if (modeChoice) modeChoice.text = Saves.Data.SelectedMode == "Rush" ? "RUSH · 1 CHANCE" : "FLOW · 3 CHANCES";
+            menuBest.text = Saves.GetRecord("Flow", "Lively").HighScore.ToString();
             if (progressLabel) progressLabel.text = NextProgress();
             ApplyAppearance();
-            if (Saves.ShouldSuggestRush())
-            {
-                Saves.Data.RushSuggestionShown = true; Saves.Save();
-                var panel = NewOverlay("Ready for Rush?", "One chance. A quicker clock.\nYour Flow record stays yours.", 360);
-                Button(panel, "Try Rush", new Vector2(0, -40), new Vector2(270, 50), new Vector2(.5f, .5f), Palette[1], Color.white,
-                    () => { Saves.Data.SelectedMode = "Rush"; Saves.Save(); overlay.gameObject.SetActive(false); RefreshMenuExperience(); });
-                Button(panel, "Keep my flow", new Vector2(0, -102), new Vector2(270, 44), new Vector2(.5f, .5f), Color.clear, Ink,
-                    () => overlay.gameObject.SetActive(false));
-            }
             LoadFinalStandingOnReturn();
         }
 

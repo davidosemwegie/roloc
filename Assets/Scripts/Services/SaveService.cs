@@ -152,15 +152,6 @@ namespace Roloc.Services
             return added;
         }
 
-        public bool ShouldSuggestRush()
-        {
-            if (Data.RushSuggestionShown) return false;
-            var lively = GetRecord("Flow", "Lively");
-            var still = GetRecord("Flow", "Still");
-            return (long)lively.GamesPlayed + still.GamesPlayed >= 3
-                && Math.Max(lively.HighScore, still.HighScore) >= 40;
-        }
-
         public ProgressSnapshot GetProgressSnapshot()
         {
             var next = CosmeticCatalog.NextUnlock(Data.ProgressPoints);
@@ -248,7 +239,7 @@ namespace Roloc.Services
             data.LongestPerfectStreak = Math.Max(0, data.LongestPerfectStreak);
             data.RunSequence = Math.Max(0L, data.RunSequence);
             if (string.IsNullOrEmpty(data.SaveId)) data.SaveId = Guid.NewGuid().ToString("N");
-            if (!IsMode(data.SelectedMode) || data.SelectedMode == "Daily") data.SelectedMode = "Flow";
+            data.SelectedMode = "Flow";
             if (!IsBoard(data.SelectedBoard)) data.SelectedBoard = "Lively";
             data.Records = data.Records ?? new List<ModeRecord>();
             data.Records.RemoveAll(record => record == null || !IsMode(record.Mode) || !IsBoard(record.Board));

@@ -33,7 +33,7 @@ namespace Roloc.Tests
             root.AddComponent<AudioListener>();
             game = root.AddComponent<RolocGame>();
             game.difficulty = settings; game.RandomSeedOverride = 42; game.SaveDirectoryOverride = directory;
-            root.SetActive(true); game.Saves.Data.SelectedMode = "Rush"; yield return null;
+            root.SetActive(true); game.Saves.Data.SelectedMode = "Flow"; yield return null;
             game.Saves.Data.TutorialCompleted = true;
             game.BeginRun(); yield return null;
         }
@@ -140,11 +140,11 @@ namespace Roloc.Tests
         public IEnumerator BreatherAddsTimeAndRestartClearsTheVariation()
         {
             Reach(FlowMode.Breather);
-            Assert.That(game.Session.DurationSeconds, Is.EqualTo(settings.GetSeconds(game.Session.Score) + .65f).Within(.001f));
+            Assert.That(game.Session.DurationSeconds, Is.EqualTo(settings.GetFlowSeconds(game.Session.Score) + .65f).Within(.001f));
             Assert.That(game.Session.RemainingSeconds, Is.EqualTo(game.Session.DurationSeconds));
             game.BeginRun(); yield return null;
             Assert.That(game.Session.FlowMode, Is.EqualTo(FlowMode.Steady));
-            Assert.That(game.Session.DurationSeconds, Is.EqualTo(3));
+            Assert.That(game.Session.DurationSeconds, Is.EqualTo(3.5f));
             foreach (var puck in Pucks) Assert.That(puck.IdleOffset, Is.EqualTo(Vector2.zero));
         }
     }

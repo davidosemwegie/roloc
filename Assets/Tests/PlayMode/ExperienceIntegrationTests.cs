@@ -120,9 +120,9 @@ namespace Roloc.Tests
             Invoke("ShowResultExperience");
             Invoke("SetRanking", "Top 12.5% so far · 12345 players\nDaily best 240 · early results");
             yield return Capture("results-daily-compact", 375, 667, false);
-            game.Saves.Data.SelectedMode = "Rush";
+            game.Saves.Data.SelectedMode = "Flow";
             game.Saves.Data.TotalScore = 392;
-            game.Saves.GetRecord("Rush", "Lively").HighScore = 99;
+            game.Saves.GetRecord("Flow", "Lively").HighScore = 99;
             FinishRecordRun(520, 45, 10);
             Assert.That(Get<UnityEngine.UI.Text[]>("resultStatValues")[0].text, Is.EqualTo("99"));
             Assert.That(Get<UnityEngine.UI.Text[]>("resultStatValues")[1].text, Is.EqualTo("45"));
@@ -149,9 +149,9 @@ namespace Roloc.Tests
             Invoke("ShowResultExperience");
             Invoke("SetRanking", "Top 12.5% so far · 12345 players\nDaily best 240 · early results");
             yield return Capture("results-daily-compact", 375, 667);
-            game.Saves.Data.SelectedMode = "Rush";
+            game.Saves.Data.SelectedMode = "Flow";
             game.Saves.Data.TotalScore = 392;
-            game.Saves.GetRecord("Rush", "Lively").HighScore = 99;
+            game.Saves.GetRecord("Flow", "Lively").HighScore = 99;
             FinishRecordRun(520, 45, 10);
             yield return Capture("results-unlocked", 440, 956);
             yield return Capture("results-unlocked-compact", 375, 667);

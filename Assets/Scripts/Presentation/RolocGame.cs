@@ -443,6 +443,15 @@ namespace Roloc.Presentation
 
         RectTransform NewOverlay(string title, string subtitle, float height)
         {
+            var panel = NewOverlayPanel(height);
+            var t = Label(panel, title, 28, Ink, new Vector2(0, height / 2 - 56), new Vector2(306, 55));
+            t.fontStyle = FontStyle.Bold;
+            Label(panel, subtitle, 14, Muted, new Vector2(0, height / 2 - 110), new Vector2(300, 50));
+            return panel;
+        }
+
+        RectTransform NewOverlayPanel(float height)
+        {
             leaderboardViewGeneration++;
             leaderboardVisible = false;
             ads?.SetBannerVisible(false);
@@ -455,9 +464,6 @@ namespace Roloc.Presentation
             content.gameObject.AddComponent<SafeArea>();
             var panel = Box(content, "Panel", Paper, Vector2.zero, new Vector2(338, height));
             panel.raycastTarget = true; panel.cornerRadius = 28;
-            var t = Label(panel.transform, title, 28, Ink, new Vector2(0, height / 2 - 56), new Vector2(306, 55));
-            t.fontStyle = FontStyle.Bold;
-            Label(panel.transform, subtitle, 14, Muted, new Vector2(0, height / 2 - 110), new Vector2(300, 50));
             return panel.rectTransform;
         }
 

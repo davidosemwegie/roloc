@@ -8,8 +8,10 @@ using Roloc.Core;
 using Roloc.Presentation;
 using Roloc.Services;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using SafeArea = Roloc.Presentation.SafeArea;
 
 namespace Roloc.Tests
 {
@@ -44,8 +46,11 @@ namespace Roloc.Tests
 
         [UnityTest] public IEnumerator OfflineRunStartsImmediatelyAndIncompleteRunDoesNotSubmit()
         {
+            game.Saves.Data.SelectedMode = "Rush";
             Invoke("BeginRunNow");
             Assert.That(game.Session.State, Is.EqualTo(RoundState.Playing));
+            Assert.That(game.Session.Mode, Is.EqualTo(GameMode.Flow));
+            Assert.That(game.Saves.Data.SelectedMode, Is.EqualTo("Flow"));
             Assert.That(Get<LeaderboardTicket>("regularTicket"), Is.Null);
             Assert.That(Get<string>("regularRankingCaption"), Does.Contain("Local score"));
             Set("regularTicket", new LeaderboardTicket { runId = "fixture" });
@@ -80,8 +85,120 @@ namespace Roloc.Tests
                 Assert.That(viewport.content.childCount, Is.EqualTo(100));
                 Assert.That(viewport.content.rect.height, Is.GreaterThan(viewport.viewport.rect.height));
                 Assert.That(personal.text, Does.Contain("#119"));
-                foreach (RectTransform child in panel)
-                    Assert.That(Mathf.Abs(child.anchoredPosition.y) + child.rect.height / 2, Is.LessThanOrEqualTo(panel.rect.height / 2 + 1), child.name);
+                AssertLayout(panel);
+            }
+        }
+
+        static void AssertLayout(RectTransform panel)
+        {
+            var rows = panel.Cast<RectTransform>().Where(child => child.gameObject.activeSelf).ToArray();
+            foreach (var child in rows)
+            {
+                Assert.That(Mathf.Abs(child.anchoredPosition.y) + child.rect.height / 2, Is.LessThanOrEqualTo(panel.rect.height / 2 + 1), child.name);
+                var label = child.GetComponent<Text>();
+                if (label) Assert.That(label.preferredHeight, Is.LessThanOrEqualTo(child.rect.height + 1), label.text + " clips vertically");
+            }
+            for (int a = 0; a < rows.Length; a++)
+                for (int b = a + 1; b < rows.Length; b++)
+                {
+                    var first = new Rect(rows[a].anchoredPosition + rows[a].rect.min, rows[a].rect.size);
+                    var second = new Rect(rows[b].anchoredPosition + rows[b].rect.min, rows[b].rect.size);
+                    Assert.That(first.Overlaps(second), Is.False, rows[a].name + " overlaps " + rows[b].name);
+                }
+            var buttons = panel.GetComponentsInChildren<Button>();
+            foreach (var button in buttons)
+            {
+                var rect = (RectTransform)button.transform;
+                Assert.That(rect.rect.height, Is.GreaterThanOrEqualTo(44));
+                Assert.That(rect.rect.width, Is.GreaterThanOrEqualTo(44));
+            }
+        }
+
+        [UnityTest] public IEnumerator NicknameFieldReceivesTapFocusAndFilteredText()
+        {
+            Invoke("ShowLeaderboardProfile", null, (Action)(() => { }), null);
+            yield return null; Canvas.ForceUpdateCanvases();
+            var input = Get<RectTransform>("overlay").GetComponentInChildren<InputField>();
+            var pointer = new PointerEventData(EventSystem.current) { button = PointerEventData.InputButton.Left,
+                position = RectTransformUtility.WorldToScreenPoint(null, input.transform.position) };
+            var hits = new System.Collections.Generic.List<RaycastResult>();
+            EventSystem.current.RaycastAll(pointer, hits);
+            Assert.That(hits.Count, Is.GreaterThan(0));
+            Assert.That(hits[0].gameObject, Is.EqualTo(input.gameObject), "A real tap must hit the nickname input, not the overlay panel.");
+            ExecuteEvents.Execute(hits[0].gameObject, pointer, ExecuteEvents.pointerDownHandler);
+            ExecuteEvents.Execute(hits[0].gameObject, pointer, ExecuteEvents.pointerClickHandler);
+            yield return null;
+            Assert.That(input.isFocused, Is.True);
+            input.ProcessEvent(Event.KeyboardEvent("a"));
+            input.ProcessEvent(Event.KeyboardEvent("b"));
+            input.ProcessEvent(Event.KeyboardEvent("c"));
+            input.ProcessEvent(new Event { type = EventType.KeyDown, character = 'é' });
+            input.ForceLabelUpdate(); // ProcessEvent bypasses OnUpdateSelected's final label refresh.
+            Assert.That(input.text, Is.EqualTo("abc"));
+            Assert.That(input.placeholder.enabled, Is.False);
+            Assert.That(input.keyboardType, Is.EqualTo(TouchScreenKeyboardType.ASCIICapable));
+            AssertLayout((RectTransform)input.transform.parent);
+            Assert.That(input.transform.parent.GetComponentsInChildren<Button>().Any(button => button.name.StartsWith("Rank my runs")), Is.False);
+        }
+
+        [UnityTest] public IEnumerator CaptureLeaderboardStatesAtPhoneSizes()
+        {
+            foreach (var size in new[] { new Vector2Int(375, 667), new Vector2Int(440, 956) })
+            {
+                var canvas = root.GetComponentInChildren<Canvas>();
+                var cameraObject = new GameObject("Leaderboard capture camera");
+                var camera = cameraObject.AddComponent<Camera>(); camera.orthographic = true;
+                camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = Color.white;
+                camera.transform.position = new Vector3(0, 0, -10);
+                var target = new RenderTexture(size.x, size.y, 24); camera.targetTexture = target;
+                canvas.renderMode = RenderMode.ScreenSpaceCamera; canvas.worldCamera = camera; canvas.planeDistance = 1;
+                var safe = Get<RectTransform>("safe"); safe.GetComponent<SafeArea>().enabled = false;
+                safe.anchorMin = new Vector2(0, 34f / size.y); safe.anchorMax = new Vector2(1, 1 - 62f / size.y);
+                yield return null; Canvas.ForceUpdateCanvases();
+                foreach (string state in new[] { "empty", "scores", "join", "profile" })
+                {
+                    if (state == "join" || state == "profile")
+                        Invoke("ShowLeaderboardProfile", state == "join" ? null : new LeaderboardProfile { nickname = "Player_1234567890", participating = false }, (Action)(() => { }), null);
+                    else Invoke("ShowLeaderboardBoard");
+                    var overlay = Get<RectTransform>("overlay");
+                    var overlaySafe = overlay.GetComponentsInChildren<SafeArea>().Last(); overlaySafe.enabled = false;
+                    var overlayRect = (RectTransform)overlaySafe.transform;
+                    overlayRect.anchorMin = safe.anchorMin; overlayRect.anchorMax = safe.anchorMax;
+                    yield return null; Canvas.ForceUpdateCanvases();
+                    RectTransform panel;
+                    if (state == "empty" || state == "scores")
+                    {
+                        var scroll = overlay.GetComponentInChildren<ScrollRect>(); panel = (RectTransform)scroll.transform.parent;
+                        var status = panel.GetComponentsInChildren<Text>().Single(text => text.text.StartsWith("Couldn’t load"));
+                        var personal = panel.GetComponentsInChildren<Text>().Single(text => text.text.StartsWith("Your best:"));
+                        foreach (Transform child in scroll.content) UnityEngine.Object.Destroy(child.gameObject);
+                        yield return null;
+                        var entries = state == "empty" ? new LeaderboardEntry[0] : Enumerable.Range(1, 100).Select(rank => new LeaderboardEntry {
+                            nickname = "Player_1234567890", score = 101 - rank, rank = rank
+                        }).ToArray();
+                        Invoke("RenderLeaderboardBoard", new LeaderboardBoard { date = "2026-09-09", enabled = state != "empty", participants = entries.Length,
+                            provisional = true, entries = entries, personal = state == "empty" ? null : new LeaderboardEntry { rank = 119, score = 1 } }, scroll.content, status, personal);
+                        if (state == "empty")
+                        {
+                            Assert.That(scroll.content.rect.height, Is.EqualTo(scroll.viewport.rect.height).Within(1));
+                            var message = scroll.content.GetComponentInChildren<Text>();
+                            Assert.That(message.rectTransform.anchoredPosition.y, Is.EqualTo(-scroll.viewport.rect.height / 2).Within(1));
+                        }
+                    }
+                    else panel = (RectTransform)overlay.GetComponentInChildren<InputField>().transform.parent;
+                    Canvas.ForceUpdateCanvases(); AssertLayout(panel);
+                    Assert.That(panel.rect.height, Is.LessThanOrEqualTo(overlayRect.rect.height));
+                    camera.Render();
+                    var previous = RenderTexture.active; RenderTexture.active = target;
+                    var image = new Texture2D(size.x, size.y, TextureFormat.RGB24, false);
+                    image.ReadPixels(new Rect(0, 0, size.x, size.y), 0, 0); image.Apply();
+                    Directory.CreateDirectory("TestResults/screens");
+                    File.WriteAllBytes("TestResults/screens/leaderboard-" + state + "-" + size.x + ".png", image.EncodeToPNG());
+                    RenderTexture.active = previous; UnityEngine.Object.Destroy(image);
+                }
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay; canvas.worldCamera = null;
+                camera.targetTexture = null; target.Release();
+                UnityEngine.Object.Destroy(target); UnityEngine.Object.Destroy(cameraObject);
             }
         }
 
@@ -93,6 +210,7 @@ namespace Roloc.Tests
             Assert.That(Get<Button>("leaderboardResultButton").gameObject.activeSelf, Is.True);
             Assert.That(Get<Button>("shareButton").gameObject.activeSelf, Is.False);
             Invoke("ShowLeaderboardBoard"); yield return null;
+            Assert.That(Get<RectTransform>("overlay").GetComponentsInChildren<Button>().Any(button => button.GetComponentInChildren<Text>().text == "Rush"), Is.False);
             int generation = Get<int>("leaderboardViewGeneration");
             var panel = (RectTransform)Get<RectTransform>("overlay").GetComponentInChildren<ScrollRect>().transform.parent;
             Invoke("ShowSettings", false);

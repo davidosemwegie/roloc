@@ -107,7 +107,7 @@ namespace Roloc.Tests
             configuration = ScriptableObject.CreateInstance<AdsConfiguration>();
             configuration.PrivacyPolicyUrl = "https://example.com/ring-rush-privacy";
             typeof(RolocGame).GetField("adsConfiguration", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(game, configuration);
-            game.Saves.Data.SelectedMode = "Rush";
+            game.Saves.Data.SelectedMode = "Flow";
             game.Saves.Data.TutorialCompleted = true;
             yield return game.StartCoroutine(FieldMethod<IEnumerator>("ResolveAdConsent", false, (Action)null));
         }
@@ -124,8 +124,21 @@ namespace Roloc.Tests
 
         // Core scoring keeps these integration tests fast. The production failure handler owns
         // offers, saved results, ad callbacks, and the next-game decision under test.
-        void FailAt(int score)
+        void FailAt(int score, int finalCombo = 0)
         {
+            // Retain a nonzero final streak when a test needs to verify revive
+            // restoration, without allowing Flow's 15-match chance recovery.
+            Assert.That(finalCombo, Is.InRange(0, 14));
+            while (game.Session.Score < score - finalCombo)
+            {
+                Assert.That(game.Session.Drop(game.Session.ActiveColor, true, true), Is.EqualTo(MatchResult.Matched));
+                game.Session.CompleteTransition();
+            }
+            while (game.Session.Chances > 1)
+            {
+                Assert.That(game.Session.Drop(game.Session.ActiveColor, false), Is.EqualTo(MatchResult.ChanceLost));
+                game.Session.CompleteTransition();
+            }
             while (game.Session.Score < score)
             {
                 Assert.That(game.Session.Drop(game.Session.ActiveColor, true, true), Is.EqualTo(MatchResult.Matched));
@@ -393,7 +406,7 @@ namespace Roloc.Tests
         [UnityTest]
         public IEnumerator RewardBeforeCloseWaitsThenRevivesExactlyOnce()
         {
-            game.BeginRun(); FailAt(20); Click("Watch ad & continue");
+            game.BeginRun(); FailAt(20, 10); Click("Watch ad & continue");
             Assert.That(ads.Rewards.Count, Is.EqualTo(1));
             var callback = ads.Rewards[0];
             callback(RewardedAdEvent.Rewarded);
@@ -404,7 +417,7 @@ namespace Roloc.Tests
             Invoke("UpdateAdvertising");
             Assert.That(game.Session.State, Is.EqualTo(RoundState.Transition));
             Assert.That(game.Session.RevivesAvailable, Is.Zero);
-            Assert.That(game.Session.Combo, Is.EqualTo(20));
+            Assert.That(game.Session.Combo, Is.EqualTo(10));
             Assert.That(game.Session.PerfectStreak, Is.Zero);
             Assert.That(game.Saves.Data.GamesPlayed, Is.Zero);
             callback(RewardedAdEvent.Rewarded); callback(RewardedAdEvent.Closed);
