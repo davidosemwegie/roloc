@@ -76,9 +76,7 @@ namespace Roloc.Presentation
             var ticket = regularTicket;
             SetRegularRanking("Saving your leaderboard score…");
             StartCoroutine(leaderboards.SubmitRun(ticket, Session.Score, regularRevives,
-                Math.Max(0, (Time.realtimeSinceStartupAsDouble - regularStartedAt) * 1000), value => {
-                    if (regularTicket != null && regularTicket.runId == ticket.runId) LeaderboardResultChanged(value);
-                }, error => {
+                Math.Max(0, (Time.realtimeSinceStartupAsDouble - regularStartedAt) * 1000), null, error => {
                     if (regularTicket != null && regularTicket.runId == ticket.runId)
                         SetRegularRanking(error);
                 }));
