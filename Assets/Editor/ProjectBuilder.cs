@@ -241,7 +241,11 @@ namespace Roloc.Editor
             ConfigureBuildIdentity(iosIdentifier);
             Directory.CreateDirectory(Path.GetDirectoryName(output) ?? "Builds");
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions {
-                scenes = new[] { ScenePath }, target = target, locationPathName = output, options = options
+                scenes = new[] { ScenePath }, target = target, locationPathName = output, options = options,
+                // Export-only define: never persist this in the Editor's scripting settings.
+                extraScriptingDefines = target == BuildTarget.iOS && iosIdentifier == StoreApplicationIdentifier
+                    && (options & BuildOptions.Development) == 0
+                    ? new[] { "RING_RUSH_DISTRIBUTION_ADS" } : Array.Empty<string>()
             });
             if (report.summary.result != BuildResult.Succeeded)
                 throw new Exception("ROLOC build failed: " + report.summary.result + " (" + report.summary.totalErrors + " errors)");

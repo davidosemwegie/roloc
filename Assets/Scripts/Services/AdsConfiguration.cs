@@ -6,6 +6,18 @@ namespace Roloc.Services
     [CreateAssetMenu(menuName = "Ring Rush/Ads configuration")]
     public sealed class AdsConfiguration : ScriptableObject
     {
+        public static bool IsAdvertisingBuild
+        {
+            get
+            {
+#if UNITY_IOS && RING_RUSH_DISTRIBUTION_ADS && !UNITY_EDITOR && !DEVELOPMENT_BUILD
+                return Application.identifier == "com.clearjar.ringrush";
+#else
+                return false;
+#endif
+            }
+        }
+
         [Tooltip("Published privacy policy describing Unity advertising and privacy choices.")]
         public string PrivacyPolicyUrl = "";
         [Header("LevelPlay iOS dashboard identifiers")]

@@ -38,9 +38,9 @@ The reviewed iOS export includes IronSourceAdQualitySDK 9.9.0 through LevelPlay 
 
 Unity's [Unity Ads disclosure table](https://docs.unity.com/en-us/grow/ads/privacy/apple-privacy-survey) includes user/device identifiers, approximate location, purchase history, ad activity, other usage, performance and other device information. The [LevelPlay disclosure](https://docs.unity.com/en-us/grow/levelplay/platform/legal-resources/apple-privacy-questionnaire) is a separate inventory. Review both against the final binary and configuration; an empty collected-data list in a bundled manifest is not evidence that an SDK collects nothing. Do not infer that purchase-related SDK data is absent solely because Ring Rush has no purchases.
 
-## Future advertising policy addition
+## Published advertising policy addition — September 8, 2026
 
-This is proposed wording for the future ads release, not a change to the public Google Doc. Assign its actual build/version and effective date when releasing it, retain the ad-free build 9 section, and reconcile the final SDK data categories and support/deletion process before publishing.
+The public Google Doc now includes a version-specific section for advertising-enabled build 10 and later, with an updated September 8, 2026 date. Connector readback and an unauthenticated export verified the addition, vendor links, and preserved build-9 disclosure. The following summarizes the published addition; App Store privacy and age-rating answers still need review before submitting the new binary.
 
 **Advertising-enabled versions:** These versions use Unity LevelPlay to manage advertisements supplied by Unity Ads. Ads include gameplay banners, occasional full-screen ads between games, and optional rewarded ads that let eligible players continue a run. Build 9 remains ad-free and does not include these advertising SDKs.
 

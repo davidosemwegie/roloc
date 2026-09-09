@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04e0b1f4429f45cbbbc6385e22d23802, type: 3}
   m_Name: AdsConfiguration
   m_EditorClassIdentifier: Roloc.Services::Roloc.Services.AdsConfiguration
-  PrivacyPolicyUrl: ''
+  PrivacyPolicyUrl: https://docs.google.com/document/d/1mDMFBulWr3so1DPojF6IYVHLHNd9H61ACp3FKwtMak0/view
   IosAppKey: 27fdef9ad
   IosBannerAdUnitId: sc23sll38nkxeete
   IosRewardedAdUnitId: k62ws729b3wloc8c
   IosInterstitialAdUnitId: 7ehidbf3tz1elcyf
   IosConsentAppId: ca-app-pub-6400654457067913~9383583266
-  ConsentMessagesPublished: 0
+  ConsentMessagesPublished: 1
