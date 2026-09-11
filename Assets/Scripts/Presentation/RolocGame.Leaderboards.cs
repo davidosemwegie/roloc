@@ -112,8 +112,12 @@ namespace Roloc.Presentation
         {
             if (leaderboards == null || !leaderboards.IsConfigured || !leaderboards.IsParticipating || localBestSyncing) return;
             localBestSyncing = true;
-            StartCoroutine(leaderboards.SyncBest(LocalLeaderboardBest(), _ => {
+            int requestedBest = LocalLeaderboardBest();
+            StartCoroutine(leaderboards.SyncBest(requestedBest, receipt => {
                 localBestSyncing = false;
+                // A run may finish while an older upload is in flight. Coalesce the newer saved best.
+                if ((receipt == null || receipt.status == "synced") && LocalLeaderboardBest() > requestedBest)
+                { SyncLocalHighScore(); return; }
                 if (leaderboardDay == "all-time" && leaderboardVisible && overlay.gameObject.activeSelf) ShowLeaderboardBoard();
             }, _ => localBestSyncing = false));
         }
