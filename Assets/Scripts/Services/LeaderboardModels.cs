@@ -12,6 +12,7 @@ namespace Roloc.Services
         public bool Terminal => status == "accepted" || status == "rejected" || status == "expired";
     }
     [Serializable] public sealed class LeaderboardEntry { public string nickname; public int score, rank; public bool isMe; }
+    [Serializable] public sealed class LeaderboardBest { public int score; public string status; }
     [Serializable] public sealed class LeaderboardBoard
     {
         public string date, mode;
@@ -35,6 +36,7 @@ namespace Roloc.Services
         public double elapsedMs;
     }
     [Serializable] internal sealed class LeaderboardTicketNumbers { public double score; }
+    [Serializable] internal sealed class LeaderboardBestNumbers { public double score; }
     [Serializable] internal sealed class LeaderboardEntryNumbers { public double score, rank; }
     [Serializable] internal sealed class LeaderboardBoardNumbers
     {

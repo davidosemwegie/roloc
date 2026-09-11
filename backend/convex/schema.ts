@@ -22,6 +22,11 @@ export default defineSchema({
   leaderboardProfiles: defineTable({ userId: v.id("users"), nickname: v.string(), nicknameKey: v.string(), participating: v.boolean(), hasJoinedLeaderboard: v.optional(v.boolean()), updatedAt: v.number() })
     .index("by_userId", ["userId"]).index("by_nicknameKey", ["nicknameKey"]),
   leaderboardControls: defineTable({ key: v.literal("public"), enabled: v.boolean(), updatedAt: v.number() }).index("by_key", ["key"]),
+  leaderboardAllTimeBests: defineTable({
+    userId: v.id("users"), score: v.number(), negativeScore: v.number(), receivedAt: v.number(), tieKey: v.string(),
+    excluded: v.boolean(), exclusionReason: v.optional(v.string()),
+  }).index("by_userId", ["userId"])
+    .index("by_excluded_and_score", ["excluded", "negativeScore", "receivedAt", "tieKey"]),
   leaderboardRuns: defineTable({
     userId: v.id("users"), requestId: v.string(), mode: v.union(v.literal("flow"), v.literal("rush")), date: v.string(),
     status: v.union(v.literal("open"), v.literal("accepted"), v.literal("rejected"), v.literal("expired")),

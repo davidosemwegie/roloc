@@ -3,7 +3,55 @@ import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { DAY, midnight, utcDate, fail, integer } from "./model";
-import { mode, profileValue, ticketValue, entryValue, publicScores, publicLimits, publicUser, enabled, ownedRun, ticket } from "./leaderboardModel";
+import { mode, profileValue, ticketValue, entryValue, publicScores, allTimeScores, publicLimits, publicUser, enabled, ownedRun, ticket } from "./leaderboardModel";
+
+// Local Flow/Lively records have no date or run ticket. Keep them separate from daily results.
+export const syncBest = mutation({ args: { score: v.number() }, returns: v.object({ score: v.number(), status: v.union(v.literal("synced"), v.literal("excluded")) }), handler: async (ctx, args) => {
+  const userId = await publicUser(ctx);
+  integer(args.score, 0, 65536, "score");
+  const profile = await ctx.db.query("leaderboardProfiles").withIndex("by_userId", q => q.eq("userId", userId)).unique();
+  if (!profile?.participating || !profile.nickname) fail("OPT_IN_REQUIRED", "Choose a nickname and enable leaderboard participation.");
+  const best = await ctx.db.query("leaderboardAllTimeBests").withIndex("by_userId", q => q.eq("userId", userId)).unique();
+  if (best?.excluded) return { score: best.score, status: "excluded" as const };
+  // Retried or older uploads are read-only, even while new submissions are paused.
+  if (args.score <= (best?.score ?? 0)) return { score: best?.score ?? 0, status: "synced" as const };
+  if (!await enabled(ctx)) fail("PAUSED", "Leaderboard submissions are paused. Your saved high score will retry later.");
+  await publicLimits.limit(ctx, "bestSyncs", { key: userId, throws: true });
+  const value = { userId, score: args.score, negativeScore: -args.score, receivedAt: Date.now(), tieKey: best?.tieKey ?? "", excluded: false };
+  if (best) {
+    await allTimeScores.delete(ctx, best);
+    await ctx.db.replace(best._id, value);
+    await allTimeScores.insert(ctx, (await ctx.db.get(best._id))!);
+  } else {
+    const id = await ctx.db.insert("leaderboardAllTimeBests", value);
+    await ctx.db.patch(id, { tieKey: id });
+    await allTimeScores.insert(ctx, (await ctx.db.get(id))!);
+  }
+  return { score: args.score, status: "synced" as const };
+} });
+
+export const allTimeBoard = query({ args: {}, returns: v.object({ date: v.literal("all-time"), mode: v.literal("flow"), participants: v.number(), provisional: v.boolean(), enabled: v.boolean(), entries: v.array(entryValue), personal: v.union(entryValue, v.null()) }), handler: async ctx => {
+  const userId = await publicUser(ctx);
+  const bests = await ctx.db.query("leaderboardAllTimeBests").withIndex("by_excluded_and_score", q => q.eq("excluded", false)).take(100);
+  const own = await ctx.db.query("leaderboardAllTimeBests").withIndex("by_userId", q => q.eq("userId", userId)).unique();
+  const entries = await Promise.all(bests.map(async best => {
+    const profile = await ctx.db.query("leaderboardProfiles").withIndex("by_userId", q => q.eq("userId", best.userId)).unique();
+    return { nickname: profile?.nickname || "Player", score: best.score, rank: bests.findIndex(row => row.score === best.score) + 1, isMe: best.userId === userId };
+  }));
+  let personal = entries.find(entry => entry.isMe) ?? null;
+  if (!personal && own && !own.excluded) {
+    const profile = await ctx.db.query("leaderboardProfiles").withIndex("by_userId", q => q.eq("userId", userId)).unique();
+    personal = { nickname: profile?.nickname || "Player", score: own.score, rank: 1 + await allTimeScores.count(ctx, { bounds: { lower: { key: own.score, inclusive: false } } }), isMe: true };
+  }
+  return { date: "all-time" as const, mode: "flow" as const, participants: await allTimeScores.count(ctx), provisional: false, enabled: await enabled(ctx), entries, personal };
+} });
+
+export const excludeAllTime = internalMutation({ args: { userId: v.id("users"), reason: v.string() }, returns: v.null(), handler: async (ctx, args) => {
+  if (!args.reason.trim() || args.reason.length > 240) fail("INVALID_ARGUMENT", "Supply a brief exclusion reason.");
+  const best = await ctx.db.query("leaderboardAllTimeBests").withIndex("by_userId", q => q.eq("userId", args.userId)).unique();
+  if (best && !best.excluded) { await allTimeScores.delete(ctx, best); await ctx.db.patch(best._id, { excluded: true, exclusionReason: args.reason }); }
+  return null;
+} });
 
 export const profile = query({ args: {}, returns: v.union(profileValue, v.null()), handler: async ctx => {
   const userId = await publicUser(ctx);

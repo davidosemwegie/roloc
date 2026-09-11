@@ -67,6 +67,42 @@ namespace Roloc.Services.Tests
             Drive(Client().StartRun("flow", _ => Assert.Fail(), value => error = value));
             Assert.That(error, Does.Contain("Join"));
         }
+        [Test] public void OptOutAndZeroBestDoNotAttemptHistoricalUpload()
+        {
+            bool completed = false;
+            Drive(Client().SyncBest(42, receipt => { Assert.That(receipt, Is.Null); completed = true; }, _ => Assert.Fail()));
+            Assert.That(completed, Is.True);
+            Seed(true); completed = false;
+            Drive(Client().SyncBest(0, receipt => { Assert.That(receipt, Is.Null); completed = true; }, _ => Assert.Fail()));
+            Assert.That(completed, Is.True);
+        }
+        [Test] public void OfflineHistoricalUploadLeavesDailyQueueAndLocalBestIntactForRetry()
+        {
+            Seed(true);
+            var saves = new SaveService(directory);
+            saves.GetRecord("Flow", "Lively").HighScore = 42;
+            saves.Save();
+            var client = Client(); string error = null;
+            Drive(client.SyncBest(saves.GetRecord("Flow", "Lively").HighScore, _ => Assert.Fail(), value => error = value));
+            Assert.That(error, Does.Contain("not configured"));
+            Assert.That(client.BestSyncMessage, Does.Contain("will sync"));
+            Assert.That(Client().PendingCount, Is.EqualTo(1));
+            Assert.That(new SaveService(directory).GetRecord("Flow", "Lively").HighScore, Is.EqualTo(42));
+        }
+        [TestCase(-1)] [TestCase(65537)] public void InvalidHistoricalBestIsNotClampedOrUploaded(int score)
+        {
+            Seed(true); string error = null;
+            Drive(Client().SyncBest(score, _ => Assert.Fail(), value => error = value));
+            Assert.That(error, Does.Contain("cannot be ranked"));
+        }
+        [Test] public void HistoricalBestReceiptsDecodeConvexNumbersAndRejectMalformedValues()
+        {
+            var receipt = Read<LeaderboardBest>("{\"status\":\"success\",\"value\":{\"score\":42.0,\"status\":\"synced\"}}");
+            Assert.That(receipt.score, Is.EqualTo(42)); Assert.That(receipt.status, Is.EqualTo("synced"));
+            Assert.That(Read<LeaderboardBest>("{\"status\":\"success\",\"value\":{\"score\":42.0,\"status\":\"excluded\"}}").status, Is.EqualTo("excluded"));
+            foreach (string value in new[] { "{\"score\":1.5,\"status\":\"synced\"}", "{\"score\":65537.0,\"status\":\"synced\"}", "{\"score\":42.0,\"status\":\"unknown\"}" })
+                Assert.Throws<TargetInvocationException>(() => Read<LeaderboardBest>("{\"status\":\"success\",\"value\":" + value + "}"));
+        }
         [Test] public void OfflineStartAbandonsRequestIdBeforeNextRun()
         {
             Seed(true);
