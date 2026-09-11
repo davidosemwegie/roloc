@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Reflection;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -116,6 +117,27 @@ namespace Roloc.Services.Tests
         [Test] public void MissingServerProfileDoesNotCreateAnOptedInIdentity()
         {
             Assert.That(Read<LeaderboardProfile>("{\"status\":\"success\",\"value\":null}"), Is.Null);
+        }
+        [TestCase(true)] [TestCase(false)] public void DelayedProfileReadsCannotUndoParticipationChanges(bool participating)
+        {
+            var client = Client();
+            var beforeEdit = ReplyCallback<LeaderboardProfile>(client.LoadProfile(_ => { }));
+            var save = ReplyCallback<LeaderboardProfile>(client.SetProfile("Player", participating, _ => { }));
+            var duringEdit = ReplyCallback<LeaderboardProfile>(client.LoadProfile(_ => { }));
+            save(new LeaderboardProfile { nickname = "Player", participating = participating });
+            duringEdit(new LeaderboardProfile { nickname = "OldName", participating = !participating });
+            beforeEdit(null);
+            Assert.That(client.CachedProfile.nickname, Is.EqualTo("Player"));
+            Assert.That(client.IsParticipating, Is.EqualTo(participating));
+            Assert.That(Client().IsParticipating, Is.EqualTo(participating));
+        }
+        // Complete the actual transport callbacks in a chosen order without sending a network request.
+        private static Action<T> ReplyCallback<T>(IEnumerator operation)
+        {
+            Assert.That(operation.MoveNext(), Is.True);
+            var request = operation.Current;
+            return (Action<T>)request.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .Single(field => field.FieldType == typeof(Action<T>)).GetValue(request);
         }
         [Test] public void ConvexFloatNumbersAndNullablePersonalStandingDecode()
         {

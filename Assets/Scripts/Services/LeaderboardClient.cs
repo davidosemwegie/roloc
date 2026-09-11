@@ -14,6 +14,7 @@ namespace Roloc.Services
         private readonly string cachePath;
         private LeaderboardCache cache = new LeaderboardCache();
         private bool starting, uploading, syncingBest;
+        private int profileRevision;
         public string BestSyncMessage { get; private set; }
         public LeaderboardProfile CachedProfile => cache.profile;
         public bool IsConfigured => shared.IsConfigured;
@@ -44,14 +45,20 @@ namespace Roloc.Services
 
         public IEnumerator LoadProfile(Action<LeaderboardProfile> done, Action<string> failed = null)
         {
+            int revision = ++profileRevision;
             yield return shared.Send<LeaderboardProfile>("query", "leaderboard:profile", new EmptyArgs(), value =>
-            { cache.profile = value; Persist(); done?.Invoke(value); }, failed);
+            {
+                if (revision == profileRevision) { cache.profile = value; Persist(); }
+                done?.Invoke(cache.profile);
+            }, failed);
         }
         public IEnumerator SetProfile(string nickname, bool participating, Action<LeaderboardProfile> done, Action<string> failed = null)
         {
+            // Invalidate reads started before or during this edit; delayed responses must not undo opt-in/out.
+            profileRevision++;
             yield return shared.Send<LeaderboardProfile>("mutation", "leaderboard:setProfile",
                 new ProfileArgs { nickname = nickname, participating = participating, analyticsEligible = DistributionAnalyticsPolicy.BuildEligible }, value =>
-                { cache.profile = value; Persist(); done?.Invoke(value); }, failed);
+                { profileRevision++; cache.profile = value; Persist(); done?.Invoke(value); }, failed);
         }
         public IEnumerator GetBoard(string mode, string day, Action<LeaderboardBoard> done, Action<string> failed = null)
         {
