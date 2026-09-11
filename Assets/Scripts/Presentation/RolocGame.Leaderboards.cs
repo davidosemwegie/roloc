@@ -12,10 +12,10 @@ namespace Roloc.Presentation
         LeaderboardTicket regularTicket;
         Button leaderboardResultButton;
         int leaderboardViewGeneration, regularStartGeneration, regularRevives;
-        bool regularStarting, regularSubmitted, leaderboardRetrying;
+        bool regularStarting, regularSubmitted, leaderboardRetrying, localBestSyncing;
         double regularStartedAt;
         string regularRankingCaption = "Local score · join Leaderboards to compete";
-        string leaderboardDay = "today";
+        string leaderboardDay = "all-time";
         bool leaderboardVisible;
 
         void InitializeLeaderboards()
@@ -69,7 +69,9 @@ namespace Roloc.Presentation
 
         void SubmitRegularLeaderboard()
         {
-            if (dailyRun || Session.WasTutorial || regularSubmitted || regularTicket == null || Session.State != RoundState.GameOver) return;
+            if (dailyRun || Session.WasTutorial || Session.State != RoundState.GameOver) return;
+            SyncLocalHighScore();
+            if (regularSubmitted || regularTicket == null) return;
             regularSubmitted = true;
             var ticket = regularTicket;
             SetRegularRanking("Saving your leaderboard score…");
@@ -97,15 +99,33 @@ namespace Roloc.Presentation
 
         void RetryLeaderboards()
         {
+            SyncLocalHighScore();
             if (leaderboards == null || !leaderboards.IsConfigured || leaderboardRetrying) return;
             leaderboardRetrying = true;
             StartCoroutine(leaderboards.RetryPending(_ => leaderboardRetrying = false, _ => leaderboardRetrying = false));
         }
 
+        // This is the same per-mode record displayed on the main menu, not the legacy Rush/global record.
+        int LocalLeaderboardBest() => Saves.GetRecord("Flow", "Lively").HighScore;
+
+        void SyncLocalHighScore()
+        {
+            if (leaderboards == null || !leaderboards.IsConfigured || !leaderboards.IsParticipating || localBestSyncing) return;
+            localBestSyncing = true;
+            int requestedBest = LocalLeaderboardBest();
+            StartCoroutine(leaderboards.SyncBest(requestedBest, receipt => {
+                localBestSyncing = false;
+                // A run may finish while an older upload is in flight. Coalesce the newer saved best.
+                if ((receipt == null || receipt.status == "synced") && LocalLeaderboardBest() > requestedBest)
+                { SyncLocalHighScore(); return; }
+                if (leaderboardDay == "all-time" && leaderboardVisible && overlay.gameObject.activeSelf) ShowLeaderboardBoard();
+            }, _ => localBestSyncing = false));
+        }
+
         void OpenLeaderboards()
         {
             CaptureTelemetry("leaderboard_viewed");
-            leaderboardDay = "today";
+            leaderboardDay = "all-time";
             ShowLeaderboardBoard();
             RetryLeaderboards();
         }
@@ -122,9 +142,10 @@ namespace Roloc.Presentation
             float top = height / 2;
             var title = Label(panel, "Leaderboards", 26, Ink, new Vector2(0, top - 37), new Vector2(298, 38));
             title.fontStyle = FontStyle.Bold;
-            Label(panel, "Your best run each UTC day", 13, Muted, new Vector2(0, top - 72), new Vector2(298, 24));
-            LeaderboardTab(panel, "Today", -77, top - 116, leaderboardDay == "today", () => { leaderboardDay = "today"; ShowLeaderboardBoard(); });
-            LeaderboardTab(panel, "Yesterday", 77, top - 116, leaderboardDay == "yesterday", () => { leaderboardDay = "yesterday"; ShowLeaderboardBoard(); });
+            Label(panel, leaderboardDay == "all-time" ? "Your saved high score, shared worldwide" : "Your best run each UTC day", 13, Muted, new Vector2(0, top - 72), new Vector2(298, 24));
+            LeaderboardTab(panel, "All-time", -102, top - 116, leaderboardDay == "all-time", () => { leaderboardDay = "all-time"; ShowLeaderboardBoard(); });
+            LeaderboardTab(panel, "Today", 0, top - 116, leaderboardDay == "today", () => { leaderboardDay = "today"; ShowLeaderboardBoard(); });
+            LeaderboardTab(panel, "Yesterday", 102, top - 116, leaderboardDay == "yesterday", () => { leaderboardDay = "yesterday"; ShowLeaderboardBoard(); });
             var status = Label(panel, "Loading scores…", 12, Muted, new Vector2(0, top - 170), new Vector2(298, 40));
             float listTop = top - 202, listBottom = -top + 163;
             var viewport = Container(panel, "Leaderboard viewport");
@@ -144,37 +165,45 @@ namespace Roloc.Presentation
             profileButton.GetComponent<SoftShape>().shadow = false;
             Button(panel, "Back", new Vector2(0, -top + 30), new Vector2(142, 44), new Vector2(.5f, .5f), Color.clear, Ink,
                 () => { leaderboardVisible = false; leaderboardViewGeneration++; overlay.gameObject.SetActive(false); });
-            StartCoroutine(leaderboards.GetBoard("flow", leaderboardDay, value => {
+            Action<LeaderboardBoard> loaded = value => {
                 if (!LeaderboardViewCurrent(generation, panel)) return;
                 RenderLeaderboardBoard(value, content, status, personal);
-            }, error => {
+                profileButton.GetComponentInChildren<Text>().text = string.IsNullOrEmpty(leaderboards.CachedProfile?.nickname) ? "Join leaderboards" : "Your profile";
+            };
+            Action<string> failed = error => {
                 if (!LeaderboardViewCurrent(generation, panel)) return;
                 status.text = "Couldn’t load scores. Connect and retry.";
                 Button(content, "Retry", new Vector2(151, -24), new Vector2(270, 44), new Vector2(0, 1), Color.clear, Palette[1], ShowLeaderboardBoard);
                 content.sizeDelta = new Vector2(302, 48);
-            }));
+            };
+            StartCoroutine(leaderboardDay == "all-time"
+                ? leaderboards.GetAllTimeBoard(LocalLeaderboardBest(), loaded, failed)
+                : leaderboards.GetBoard("flow", leaderboardDay, loaded, failed));
         }
 
         void LeaderboardTab(RectTransform panel, string caption, float x, float y, bool selected, Action action)
         {
-            var button = Button(panel, caption, new Vector2(x, y), new Vector2(142, 44), new Vector2(.5f, .5f),
+            var button = Button(panel, caption, new Vector2(x, y), new Vector2(94, 44), new Vector2(.5f, .5f),
                 selected ? Palette[1] : Color.white, selected ? Color.white : Ink, action);
             button.GetComponent<SoftShape>().shadow = false;
-            button.GetComponentInChildren<Text>().fontSize = 15;
+            button.GetComponentInChildren<Text>().fontSize = 14;
         }
 
         void RenderLeaderboardBoard(LeaderboardBoard value, RectTransform content, Text status, Text personal)
         {
             if (value == null) { status.text = "Leaderboard unavailable. Try again shortly."; return; }
-            status.text = value.date + " UTC · " + value.participants + " players\n"
-                + (value.provisional ? "Provisional" : "Final") + (value.enabled ? " results" : " · submissions paused");
+            bool allTime = value.date == "all-time";
+            status.text = allTime ? "All-time · " + value.participants + " players\n"
+                + (leaderboards.BestSyncMessage ?? (value.enabled ? "Saved high scores" : "Submissions paused"))
+                : value.date + " UTC · " + value.participants + " players\n"
+                    + (value.provisional ? "Provisional" : "Final") + (value.enabled ? " results" : " · submissions paused");
             var entries = value.entries ?? new LeaderboardEntry[0];
             if (entries.Length == 0)
             {
                 float emptyHeight = ((RectTransform)content.parent).rect.height;
                 content.sizeDelta = new Vector2(302, emptyHeight);
                 content.anchoredPosition = Vector2.zero;
-                Label(content, value.enabled ? "No scores yet\nPlay a ranked run to join the board." : "Rankings are paused\nYou can still choose your nickname.",
+                Label(content, value.enabled ? (allTime ? "No scores yet\nJoin to share your saved high score." : "No scores yet\nPlay a ranked run to join the board.") : "Rankings are paused\nYou can still choose your nickname.",
                     14, Muted, new Vector2(151, -emptyHeight / 2), new Vector2(296, 60), new Vector2(0, 1));
             }
             for (int i = 0; i < entries.Length; i++)
@@ -216,7 +245,7 @@ namespace Roloc.Presentation
             float top = height / 2;
             var title = Label(panel, joining ? "Join leaderboards" : "Your nickname", 25, Ink, new Vector2(0, top - 37), new Vector2(298, 38));
             title.fontStyle = FontStyle.Bold;
-            Label(panel, "Choose a name other players will see.", 14, Muted, new Vector2(0, top - 79), new Vector2(298, 40));
+            Label(panel, "Share your nickname and saved high score.", 14, Muted, new Vector2(0, top - 79), new Vector2(298, 40));
             int generation = leaderboardViewGeneration;
             bool participating = joining || profile.participating;
             var fieldLabel = Label(panel, "Nickname", 14, Ink, new Vector2(0, top - 120), new Vector2(292, 24));
@@ -239,7 +268,7 @@ namespace Roloc.Presentation
             input.onValidateInput = (_, __, character) => IsNicknameCharacter(character) ? character : '\0';
             Label(panel, "3–16 letters, numbers or underscores.", 12, Muted, new Vector2(0, top - 208), new Vector2(292, 32));
             if (joining)
-                Label(panel, "Your nickname is public.\nYour best run counts each day.", 14, Muted,
+                Label(panel, "Your saved best joins All-time.\nOnline runs also count each day.", 14, Muted,
                     new Vector2(0, top - 265), new Vector2(292, 64));
             else
             {
@@ -260,6 +289,7 @@ namespace Roloc.Presentation
                 save.GetComponentInChildren<Text>().text = "Saving…";
                 input.DeactivateInputField();
                 StartCoroutine(leaderboards.SetProfile(nickname, participating, updated => {
+                    SyncLocalHighScore();
                     if (LeaderboardViewCurrent(generation, panel)) back();
                 }, message => {
                     if (!LeaderboardViewCurrent(generation, panel)) return;

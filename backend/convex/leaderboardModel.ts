@@ -13,10 +13,14 @@ export const entryValue = v.object({ nickname: v.string(), score: v.number(), ra
 export const publicScores = new TableAggregate<{ Namespace: string; Key: number; DataModel: DataModel; TableName: "leaderboardBests" }>(components.leaderboardScores, {
   namespace: doc => `${doc.date}/${doc.mode}`, sortKey: doc => doc.score,
 });
+export const allTimeScores = new TableAggregate<{ Key: number; DataModel: DataModel; TableName: "leaderboardAllTimeBests" }>(components.leaderboardAllTimeScores, {
+  sortKey: doc => doc.score,
+});
 export const publicLimits = new RateLimiter(components.rateLimiter, {
   registrations: { kind: "token bucket", rate: 1000, period: HOUR, capacity: 100 },
   leaderboardStarts: { kind: "token bucket", rate: 30, period: MINUTE, capacity: 10 },
   leaderboardSubmissions: { kind: "token bucket", rate: 60, period: MINUTE, capacity: 20 },
+  bestSyncs: { kind: "token bucket", rate: 60, period: MINUTE, capacity: 20 },
   nicknameChanges: { kind: "token bucket", rate: 5, period: HOUR, capacity: 3 },
 });
 export async function publicUser(ctx: QueryCtx | MutationCtx) {

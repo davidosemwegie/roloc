@@ -44,6 +44,19 @@ namespace Roloc.Tests
         T Get<T>(string field) => (T)typeof(RolocGame).GetField(field, Private).GetValue(game);
         void Set(string field, object value) => typeof(RolocGame).GetField(field, Private).SetValue(game, value);
 
+        [UnityTest] public IEnumerator AllTimeUsesTheMenuFlowRecordAndKeepsDailyTabs()
+        {
+            game.Saves.Data.HighScore = 999;
+            game.Saves.GetRecord("Rush", "Lively").HighScore = 999;
+            game.Saves.GetRecord("Flow", "Lively").HighScore = 42;
+            game.Saves.GetRecord("Flow", "Still").HighScore = 88;
+            Assert.That(Invoke("LocalLeaderboardBest"), Is.EqualTo(42));
+            Invoke("OpenLeaderboards"); yield return null;
+            Assert.That(Get<string>("leaderboardDay"), Is.EqualTo("all-time"));
+            var captions = Get<RectTransform>("overlay").GetComponentsInChildren<Button>().Select(button => button.GetComponentInChildren<Text>().text).ToArray();
+            foreach (string caption in new[] { "All-time", "Today", "Yesterday" }) Assert.That(captions, Does.Contain(caption));
+        }
+
         [UnityTest] public IEnumerator OfflineRunStartsImmediatelyAndIncompleteRunDoesNotSubmit()
         {
             game.Saves.Data.SelectedMode = "Rush";
@@ -85,6 +98,14 @@ namespace Roloc.Tests
                 Assert.That(viewport.content.childCount, Is.EqualTo(100));
                 Assert.That(viewport.content.rect.height, Is.GreaterThan(viewport.viewport.rect.height));
                 Assert.That(personal.text, Does.Contain("#119"));
+                AssertLayout(panel);
+                foreach (Transform child in viewport.content) UnityEngine.Object.Destroy(child.gameObject);
+                yield return null;
+                Invoke("RenderLeaderboardBoard", new LeaderboardBoard { enabled = true, date = "all-time", participants = 120,
+                    entries = entries, personal = new LeaderboardEntry { rank = 119, score = 42 } }, viewport.content, status, personal);
+                Assert.That(status.text, Does.StartWith("All-time"));
+                Assert.That(status.text, Does.Not.Contain("Final").And.Not.Contain("UTC"));
+                Assert.That(personal.text, Does.Contain("42 matches"));
                 AssertLayout(panel);
             }
         }

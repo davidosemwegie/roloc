@@ -73,6 +73,8 @@ Nickname, best score, and rank are visible to other players. Authentication iden
 
 Run tickets and their attached validation summaries expire seven days after their upload deadline. Independent run-history records described below persist beyond ticket expiry. Best-score records expire one year after the day's upload deadline. Profile and authentication records persist independently; include these and both Daily and regular leaderboard aggregates in the operator deletion process. Retention purges run in bounded batches and do not promise immediate removal from provider backups.
 
+The All-time board additionally uploads the installation's saved Flow/Lively high score after the player enables participation, including scores earned before joining or offline. It uses the same local record displayed on the main menu, without a historical gameplay trace or original achievement timestamp. Convex stores one increasing best per guest, its server receipt time, and moderation status in `leaderboardAllTimeBests`; nickname, score and rank are public. All-time bests persist until operator deletion, independently of the one-year daily-best purge. Disabling participation stops future best uploads but leaves existing scores visible. Include this table and the `leaderboardAllTimeScores` aggregate in complete deletion, as described in [LEADERBOARDS.md](LEADERBOARDS.md).
+
 Update the release's published policy and App Store disclosures to cover public nicknames and regular-run summaries before enabling this feature for players. The public casual leaderboard does not collect App Attest information or independently verify gameplay or advertising completion. This section documents implementation data flow; it does not publish or replace the public privacy policy.
 
 

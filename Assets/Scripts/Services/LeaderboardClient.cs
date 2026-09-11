@@ -6,14 +6,16 @@ using UnityEngine;
 
 namespace Roloc.Services
 {
-    /// <summary>Installation-scoped casual rankings. Only completed, server-ticketed runs enter the durable queue.</summary>
+    /// <summary>Installation-scoped rankings. Daily runs use tickets; all-time scores retry from the local save.</summary>
     public sealed class LeaderboardClient
     {
         private const int MaxPending = 32;
         private readonly DailyClient shared;
         private readonly string cachePath;
         private LeaderboardCache cache = new LeaderboardCache();
-        private bool starting, uploading;
+        private bool starting, uploading, syncingBest;
+        private int profileRevision;
+        public string BestSyncMessage { get; private set; }
         public LeaderboardProfile CachedProfile => cache.profile;
         public bool IsConfigured => shared.IsConfigured;
         public bool IsParticipating => cache.profile != null && cache.profile.participating;
@@ -43,18 +45,57 @@ namespace Roloc.Services
 
         public IEnumerator LoadProfile(Action<LeaderboardProfile> done, Action<string> failed = null)
         {
+            int revision = ++profileRevision;
             yield return shared.Send<LeaderboardProfile>("query", "leaderboard:profile", new EmptyArgs(), value =>
-            { cache.profile = value; Persist(); done?.Invoke(value); }, failed);
+            {
+                if (revision == profileRevision) { cache.profile = value; Persist(); }
+                done?.Invoke(cache.profile);
+            }, failed);
         }
         public IEnumerator SetProfile(string nickname, bool participating, Action<LeaderboardProfile> done, Action<string> failed = null)
         {
+            // Invalidate reads started before or during this edit; delayed responses must not undo opt-in/out.
+            profileRevision++;
             yield return shared.Send<LeaderboardProfile>("mutation", "leaderboard:setProfile",
                 new ProfileArgs { nickname = nickname, participating = participating, analyticsEligible = DistributionAnalyticsPolicy.BuildEligible }, value =>
-                { cache.profile = value; Persist(); done?.Invoke(value); }, failed);
+                { profileRevision++; cache.profile = value; Persist(); done?.Invoke(value); }, failed);
         }
         public IEnumerator GetBoard(string mode, string day, Action<LeaderboardBoard> done, Action<string> failed = null)
         {
             yield return shared.Send("query", "leaderboard:board", new BoardArgs { mode = mode, day = day }, done, failed);
+        }
+        public IEnumerator GetAllTimeBoard(int localBest, Action<LeaderboardBoard> done, Action<string> failed = null)
+        {
+            // Refresh opt-in before publishing a historical score, including after a cache loss or nickname reset.
+            bool loaded = false;
+            yield return LoadProfile(_ => loaded = true, failed);
+            if (!loaded) yield break;
+            yield return SyncBest(localBest);
+            // A paused or rejected upload must not prevent reading the existing board.
+            yield return shared.Send("query", "leaderboard:allTimeBoard", new EmptyArgs(), done, failed);
+        }
+        public IEnumerator SyncBest(int score, Action<LeaderboardBest> done = null, Action<string> failed = null)
+        {
+            while (syncingBest) yield return null;
+            BestSyncMessage = null;
+            if (!IsParticipating || score == 0) { done?.Invoke(null); yield break; }
+            if (score < 0 || score > 65536)
+            {
+                BestSyncMessage = "This saved score cannot be ranked.";
+                failed?.Invoke(BestSyncMessage); yield break;
+            }
+            syncingBest = true;
+            try
+            {
+                yield return shared.Send<LeaderboardBest>("mutation", "leaderboard:syncBest", new BestArgs { score = score }, value => {
+                    BestSyncMessage = value.status == "excluded" ? "Your high score is not eligible for ranking." : null;
+                    done?.Invoke(value);
+                }, error => {
+                    BestSyncMessage = "Saved high score will sync when available.";
+                    failed?.Invoke(error);
+                });
+            }
+            finally { syncingBest = false; }
         }
         public IEnumerator StartRun(string mode, Action<LeaderboardTicket> done, Action<string> failed = null)
         {
@@ -167,6 +208,7 @@ namespace Roloc.Services
         [Serializable] private sealed class EmptyArgs { }
         [Serializable] private sealed class ProfileArgs { public string nickname; public bool participating, analyticsEligible; }
         [Serializable] private sealed class BoardArgs { public string mode, day; }
+        [Serializable] private sealed class BestArgs { public int score; }
         [Serializable] private sealed class StartArgs { public string mode, requestId; public int clientRulesRevision = 1; public bool analyticsEligible; }
         [Serializable] private sealed class RunArgs { public string runId; }
         [Serializable] private sealed class SubmitArgs { public string runId; public int score, revives; public double elapsedMs; }

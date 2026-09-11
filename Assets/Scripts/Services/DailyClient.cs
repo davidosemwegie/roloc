@@ -426,6 +426,12 @@ namespace Roloc.Services
                 LeaderboardWire.ValidateTicket(ticket);
                 ticket.score = LeaderboardWire.Integer(JsonUtility.FromJson<DailyReply<LeaderboardTicketNumbers>>(json).value.score);
             }
+            if (reply?.value is LeaderboardBest best)
+            {
+                best.score = LeaderboardWire.Integer(JsonUtility.FromJson<DailyReply<LeaderboardBestNumbers>>(json).value.score);
+                if (best.score > 65536 || (best.status != "synced" && best.status != "excluded"))
+                    throw new FormatException("Invalid high score receipt.");
+            }
             if (reply?.value is LeaderboardBoard board)
             {
                 var wire = JsonUtility.FromJson<DailyReply<LeaderboardBoardNumbers>>(json).value;

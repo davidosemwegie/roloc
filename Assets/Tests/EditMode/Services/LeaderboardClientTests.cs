@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Reflection;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -67,6 +68,42 @@ namespace Roloc.Services.Tests
             Drive(Client().StartRun("flow", _ => Assert.Fail(), value => error = value));
             Assert.That(error, Does.Contain("Join"));
         }
+        [Test] public void OptOutAndZeroBestDoNotAttemptHistoricalUpload()
+        {
+            bool completed = false;
+            Drive(Client().SyncBest(42, receipt => { Assert.That(receipt, Is.Null); completed = true; }, _ => Assert.Fail()));
+            Assert.That(completed, Is.True);
+            Seed(true); completed = false;
+            Drive(Client().SyncBest(0, receipt => { Assert.That(receipt, Is.Null); completed = true; }, _ => Assert.Fail()));
+            Assert.That(completed, Is.True);
+        }
+        [Test] public void OfflineHistoricalUploadLeavesDailyQueueAndLocalBestIntactForRetry()
+        {
+            Seed(true);
+            var saves = new SaveService(directory);
+            saves.GetRecord("Flow", "Lively").HighScore = 42;
+            saves.Save();
+            var client = Client(); string error = null;
+            Drive(client.SyncBest(saves.GetRecord("Flow", "Lively").HighScore, _ => Assert.Fail(), value => error = value));
+            Assert.That(error, Does.Contain("not configured"));
+            Assert.That(client.BestSyncMessage, Does.Contain("will sync"));
+            Assert.That(Client().PendingCount, Is.EqualTo(1));
+            Assert.That(new SaveService(directory).GetRecord("Flow", "Lively").HighScore, Is.EqualTo(42));
+        }
+        [TestCase(-1)] [TestCase(65537)] public void InvalidHistoricalBestIsNotClampedOrUploaded(int score)
+        {
+            Seed(true); string error = null;
+            Drive(Client().SyncBest(score, _ => Assert.Fail(), value => error = value));
+            Assert.That(error, Does.Contain("cannot be ranked"));
+        }
+        [Test] public void HistoricalBestReceiptsDecodeConvexNumbersAndRejectMalformedValues()
+        {
+            var receipt = Read<LeaderboardBest>("{\"status\":\"success\",\"value\":{\"score\":42.0,\"status\":\"synced\"}}");
+            Assert.That(receipt.score, Is.EqualTo(42)); Assert.That(receipt.status, Is.EqualTo("synced"));
+            Assert.That(Read<LeaderboardBest>("{\"status\":\"success\",\"value\":{\"score\":42.0,\"status\":\"excluded\"}}").status, Is.EqualTo("excluded"));
+            foreach (string value in new[] { "{\"score\":1.5,\"status\":\"synced\"}", "{\"score\":65537.0,\"status\":\"synced\"}", "{\"score\":42.0,\"status\":\"unknown\"}" })
+                Assert.Throws<TargetInvocationException>(() => Read<LeaderboardBest>("{\"status\":\"success\",\"value\":" + value + "}"));
+        }
         [Test] public void OfflineStartAbandonsRequestIdBeforeNextRun()
         {
             Seed(true);
@@ -80,6 +117,27 @@ namespace Roloc.Services.Tests
         [Test] public void MissingServerProfileDoesNotCreateAnOptedInIdentity()
         {
             Assert.That(Read<LeaderboardProfile>("{\"status\":\"success\",\"value\":null}"), Is.Null);
+        }
+        [TestCase(true)] [TestCase(false)] public void DelayedProfileReadsCannotUndoParticipationChanges(bool participating)
+        {
+            var client = Client();
+            var beforeEdit = ReplyCallback<LeaderboardProfile>(client.LoadProfile(_ => { }));
+            var save = ReplyCallback<LeaderboardProfile>(client.SetProfile("Player", participating, _ => { }));
+            var duringEdit = ReplyCallback<LeaderboardProfile>(client.LoadProfile(_ => { }));
+            save(new LeaderboardProfile { nickname = "Player", participating = participating });
+            duringEdit(new LeaderboardProfile { nickname = "OldName", participating = !participating });
+            beforeEdit(null);
+            Assert.That(client.CachedProfile.nickname, Is.EqualTo("Player"));
+            Assert.That(client.IsParticipating, Is.EqualTo(participating));
+            Assert.That(Client().IsParticipating, Is.EqualTo(participating));
+        }
+        // Complete the actual transport callbacks in a chosen order without sending a network request.
+        private static Action<T> ReplyCallback<T>(IEnumerator operation)
+        {
+            Assert.That(operation.MoveNext(), Is.True);
+            var request = operation.Current;
+            return (Action<T>)request.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                .Single(field => field.FieldType == typeof(Action<T>)).GetValue(request);
         }
         [Test] public void ConvexFloatNumbersAndNullablePersonalStandingDecode()
         {
